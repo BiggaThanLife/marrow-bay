@@ -1,5 +1,7 @@
 # Marrow Bay: project overview
 
+**[▶ Play now](https://biggathanlife.github.io/marrow-bay/)**
+
 ## What this is
 
 A mobile-first, single-file HTML sandbox game (`marrow-bay.html`, about 1,700 lines, vanilla JS in one IIFE, Canvas 2D). It is an open-world tidal city where the world and NPCs react to the player's background and actions.
