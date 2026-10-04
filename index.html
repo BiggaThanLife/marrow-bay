@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Marrow Bay</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e3edef; --panel:#f6fafa; --line:#aebfc6; --text:#14262f; --muted:#506671;
+  --accent:#0f8f7c; --accent-ink:#ffffff; --warn:#b5472f; --good:#2f7a3c; --amber:#a76d0b;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10202a; --panel:#1a2f3c; --line:#2f4a5b; --text:#e6efe9; --muted:#9bb2bc;
+    --accent:#4fd1b5; --accent-ink:#0d1b22; --warn:#ff9a7a; --good:#8fd49a; --amber:#f2b84b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10202a; --panel:#1a2f3c; --line:#2f4a5b; --text:#e6efe9; --muted:#9bb2bc;
+  --accent:#4fd1b5; --accent-ink:#0d1b22; --warn:#ff9a7a; --good:#8fd49a; --amber:#f2b84b;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;margin:0;overflow:hidden;overscroll-behavior:none;position:fixed;inset:0}
+body{background:var(--bg);color:var(--text);font:400 16px/1.4 "DM Sans",system-ui,sans-serif;-webkit-text-size-adjust:100%;user-select:none;-webkit-user-select:none}
+#app{position:absolute;inset:0;display:flex;flex-direction:column;max-width:640px;margin:0 auto;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);height:100%}
+h1,h2{font-family:"Silkscreen","Courier New",monospace;font-weight:700;margin:0 0 8px;line-height:1.2}
+h1{font-size:1.8rem} h2{font-size:1rem}
+p{margin:0 0 8px}
+.muted{color:var(--muted)} .small{font-size:.82rem}
+.bad{color:var(--warn);font-weight:700} .good{color:var(--good);font-weight:700} .amber{color:var(--amber);font-weight:700}
+#hud{flex:none;padding:5px 6px 4px}
+.stats{display:grid;grid-template-columns:1.35fr .8fr 1fr .8fr;gap:4px;margin:0 0 4px}
+.stats div{background:var(--panel);border:2px solid var(--line);padding:2px 5px;min-width:0}
+.stats dt{font-size:.66rem;color:var(--muted);line-height:1.1}
+.stats dd{margin:1px 0 0;font:700 .64rem/1.2 "Silkscreen","Courier New",monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bars{display:grid;grid-template-columns:1fr 1fr .8fr;gap:4px}
+.bar{position:relative;height:16px;background:var(--panel);border:2px solid var(--line);overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--accent);width:50%;opacity:.8}
+.bar.heat i{background:var(--warn)}
+.bar span{position:absolute;left:5px;top:0;font-size:.68rem;line-height:12px;font-weight:700;text-shadow:0 0 3px var(--panel)}
+#stage{position:relative;flex:1;min-height:0;border-top:3px solid var(--line);border-bottom:3px solid var(--line);background:#2c5b78;overflow:hidden}
+canvas#scene{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+#note{position:absolute;left:6px;right:6px;top:6px;pointer-events:none;font-size:.85rem;font-weight:700;color:#fff;text-shadow:0 1px 3px #000,0 0 6px #000}
+#mission{position:absolute;left:6px;top:30px;max-width:80%;pointer-events:none;font-size:.78rem;font-weight:700;background:rgba(10,20,30,.78);color:#ffd88a;padding:2px 7px;border:1px solid #ffd88a}
+#mission[hidden]{display:none}
+#sheet{position:absolute;left:0;right:0;bottom:0;max-height:74%;overflow-y:auto;overscroll-behavior:contain;background:var(--panel);border-top:3px solid var(--accent);padding:12px 12px 14px;touch-action:pan-y}
+#sheet[hidden]{display:none}
+#actions{display:grid;gap:7px;margin-top:6px}
+.btn{display:block;width:100%;min-height:46px;text-align:left;padding:8px 12px;font:700 .98rem "DM Sans",system-ui,sans-serif;color:var(--text);background:transparent;border:2px solid var(--accent);cursor:pointer}
+.btn small{display:block;font-weight:400;font-size:.82rem;opacity:.85;line-height:1.25;margin-top:1px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.quiet{border-color:var(--line);color:var(--muted);font-weight:500}
+.btn.warn{border-color:var(--warn);color:var(--warn)}
+.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;margin:4px 0 8px}
+.kv div{border-bottom:1px solid var(--line);padding:2px 0;display:flex;justify-content:space-between;gap:8px}
+.meter{height:10px;background:var(--bg);border:2px solid var(--line);margin:3px 0 8px}
+.meter i{display:block;height:100%;background:var(--accent)}
+#bar{flex:none;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:5px 6px}
+#bar[hidden]{display:none}
+#bar button{min-height:44px;font:700 .72rem "Silkscreen","Courier New",monospace;color:var(--text);background:var(--panel);border:2px solid var(--line);cursor:pointer;padding:0 2px}
+#bar button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud" hidden>
+    <dl class="stats">
+      <div><dt>Time</dt><dd id="h-time"></dd></div>
+      <div><dt>Cash</dt><dd id="h-cash"></dd></div>
+      <div><dt>District</dt><dd id="h-dist"></dd></div>
+      <div><dt>Tide</dt><dd id="h-tide"></dd></div>
+    </dl>
+    <div class="bars">
+      <div class="bar"><i id="b-hunger"></i><span id="t-hunger">Fed</span></div>
+      <div class="bar"><i id="b-energy"></i><span id="t-energy">Rested</span></div>
+      <div class="bar heat"><i id="b-heat" style="width:0"></i><span id="t-heat">Clear</span></div>
+    </div>
+  </header>
+  <div id="stage">
+    <canvas id="scene" width="176" height="200" aria-label="Map of Marrow Bay"></canvas>
+    <div id="note" aria-live="polite"></div>
+    <div id="mission" hidden></div>
+    <section id="sheet" hidden aria-live="polite"><div id="text"></div><div id="actions"></div></section>
+  </div>
+  <nav id="bar" hidden>
+    <button type="button" id="b-bag">Bag</button>
+    <button type="button" id="b-build">Build</button>
+    <button type="button" id="b-biz">Biz</button>
+    <button type="button" id="b-phone">Phone</button>
+    <button type="button" id="b-go">Go</button>
+  </nav>
+</div>
+
+<script>
+(()=>{
+"use strict";
+const $=(s,e=document)=>e.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rnd(a,b+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const money=n=>'$'+Math.round(n);
+const hash=(x,y)=>(((x*73856093)^(y*19349663))>>>0);
+const man=(a,b,c,d)=>Math.abs(a-c)+Math.abs(b-d);
+const SAVE='marrowbay_v3';
+
+/* ================= WORLD ================= */
+const TS=16,VW=176,W=64,H=38;
+let VH=200;
+const T={WATER:0,ROAD:1,BLD:2,GRASS:3,FARM:4,PLAZA:5,DOCK:6,LOT:7,PARK:8};
+const PASSABLE=new Set([1,3,4,5,6,7,8]);
+const XS=[10,15,20,25,30,35,40,45,50,55,60],HY=[2,7,12,17,22,27,32];
+const district=(x,y)=>x<10?'Greenbelt':x>=41?(y<22?'Neon Mile':'Foundry Row'):y<12?'Highline':(y>=28||(x>=31&&y>=23))?'Dockside':'Grid';
+const isWater=(x,y)=>x>=61||y>=34||(x>=41&&x<=44);
+const map=Array.from({length:H},(_,y)=>Array.from({length:W},(_,x)=>{
+  if(isWater(x,y))return T.WATER;
+  if(y===33&&((x>=10&&x<=40)||(x>=45&&x<=60)))return T.DOCK;
+  return T.GRASS;
+}));
+XS.forEach(x=>{for(let y=0;y<=32;y++)map[y][x]=T.ROAD});
+HY.forEach(y=>{for(let x=10;x<=60;x++){if(x>=41&&x<=44&&y!==17&&y!==27)continue;map[y][x]=T.ROAD}});
+[17,27].forEach(y=>{for(let x=0;x<10;x++)map[y][x]=T.ROAD});
+const FARM_TILES=[];
+[19,21].forEach(y=>{for(let x=2;x<=7;x++){map[y][x]=T.FARM;FARM_TILES.push([x,y])}});
+
+const POIS={},blocks=[];
+function fill(x,y,t){for(let j=0;j<4;j++)for(let i=0;i<4;i++)map[y+j][x+i]=t}
+function addPOI(id,name,kind,bx,by){
+  blocks.push({x:bx,y:by,kind,poi:id,key:bx+','+by});
+  POIS[id]={id,name,kind,d:district(bx+1,by+1),ex:bx+1,ey:by+4,bx,by};
+  fill(bx,by,T.BLD);
+}
+const SPEC={
+ '1,0':['estate','Ashgrove Estate'],'2,0':['bank','Marrow Bank'],'3,1':['club','The Gilded Tide'],'0,1':['flats','Terrace Flats'],
+ '0,2':['realty',"Lou's Realty"],'1,2':['market','Market Hall'],'2,2':['plaza'],'3,2':['diner',"Teo's Diner"],'4,2':['studio','Studio Row'],
+ '0,3':['workshop','Tinker Works'],'1,3':['lot'],'2,3':['clinic','Bell Clinic'],'4,3':['lot'],
+ '4,4':['dock','Dock Office'],'5,4':['bunk','Bunkhouse'],'3,5':['gull','The Rusty Gull'],'1,5':['lot'],'4,5':['lot'],
+ '7,0':['casino','Lucky Tide Casino'],'8,1':['velvet','The Velvet Room'],'9,0':['pawn','Pawn and Loan'],'7,2':['loft','Neon Lofts'],
+ '7,4':['garage',"Mack's Garage"],'8,4':['foundry','Iron Works']
+};
+[0,1,2,3,4,5,7,8,9].forEach(cx=>{for(let cy=0;cy<6;cy++){
+  const bx=11+5*cx,by=3+5*cy,s=SPEC[cx+','+cy],d=district(bx+1,by+1);
+  if(s){
+    if(s[0]==='plaza')fill(bx,by,T.PLAZA);
+    else if(s[0]==='lot')fill(bx,by,T.LOT);
+    else addPOI(s[0],s[1],s[0],bx,by);
+  }else if(cx<=5&&cy<=1&&(cx+cy)%3===0)fill(bx,by,T.PARK);
+  else{blocks.push({x:bx,y:by,kind:(d==='Dockside'||d==='Foundry Row')?'warehouse':'tower',poi:null,key:bx+','+by});fill(bx,by,T.BLD)}
+}});
+addPOI('barn','Briar Barn','barn',2,11);
+[[4,3],[4,28]].forEach(([x,y])=>{blocks.push({x,y,kind:'farmstead',poi:null,key:x+','+y});fill(x,y,T.BLD)});
+POIS.plaza={id:'plaza',name:'Central Plaza',kind:'plaza',d:'Grid',ex:22,ey:15};
+const blockByKey=k=>blocks.find(b=>b.key===k);
+const STOPS=[
+ {id:0,name:'Greenbelt Gate',x:9,y:17},{id:1,name:'Terrace Lift',x:20,y:7},{id:2,name:'Central Station',x:20,y:17},
+ {id:3,name:'Dockside Stop',x:35,y:27},{id:4,name:'Neon Mile Stop',x:50,y:17},{id:5,name:'Foundry Stop',x:50,y:27}
+];
+
+const pass=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&PASSABLE.has(map[y][x]);
+function bfs(sx,sy,tx,ty){
+  if(!pass(tx,ty)||!pass(sx,sy))return null;
+  if(sx===tx&&sy===ty)return [];
+  const prev=new Int32Array(W*H).fill(-1),s=sy*W+sx,g=ty*W+tx;
+  prev[s]=s;const q=[s];
+  for(let i=0;i<q.length;i++){
+    const c=q[i];if(c===g)break;
+    const cx=c%W,cy=(c/W)|0;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx=cx+dx,ny=cy+dy;
+      if(!pass(nx,ny))continue;
+      const n=ny*W+nx;if(prev[n]!==-1)continue;
+      prev[n]=c;q.push(n);
+    }
+  }
+  if(prev[g]===-1)return null;
+  const path=[];let c=g;
+  while(c!==s){path.push([c%W,(c/W)|0]);c=prev[c]}
+  return path.reverse();
+}
+function spotNear(poi,id){
+  const c=[];
+  for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+    if(Math.abs(dx)+Math.abs(dy)>2)continue;
+    const x=poi.ex+dx,y=poi.ey+dy;
+    if(pass(x,y)&&map[y][x]!==T.FARM)c.push([x,y]);
+  }
+  let h=0;for(const ch of id)h=(h*31+ch.charCodeAt(0))>>>0;
+  return c[h%c.length];
+}
+
+/* ================= DATA ================= */
+const RENT={barn:20,bunk:45,studio:100,flats:180,loft:260};
+const RES=['barn','bunk','studio','flats','loft'];
+const OWNER={market:'mina',diner:'teo',dock:'duarte',gull:'gus',estate:'ashgrove',bank:'cordelia',clinic:'bell',realty:'lou',garage:'mack',foundry:'ines',velvet:'vex'};
+const OPEN={market:[8,20],diner:[6,22],bank:[9,17],estate:[8,18],dock:[6,18],workshop:[8,18],club:[18,27],gull:[12,27],realty:[9,18],garage:[8,19],foundry:[6,19],velvet:[18,29],casino:[12,29],pawn:[10,22]};
+const DM={Highline:2,Grid:1.4,Dockside:1,Greenbelt:.8,'Neon Mile':1.6,'Foundry Row':.9};
+const PRICE={Highline:4200,Grid:2800,Dockside:1500,Greenbelt:900,'Neon Mile':3600,'Foundry Row':1800};
+const TR={Highline:22,Grid:28,Dockside:20,'Neon Mile':34,'Foundry Row':18,Greenbelt:8};
+const BG={
+ farm:{n:'Greenbelt farmhand',desc:'You grew up on a Greenbelt farm. The city buys what you grow and looks down on how you talk.',
+   tags:['rural','hardworking','broke'],cash:40,rep:{Greenbelt:25,Highline:-12},home:'barn',inv:{seeds:6},perk:'Harvests yield 50% more.'},
+ dock:{n:"Dockhand's kid",desc:'Your family has hauled cargo on the Dockside for three generations. The union knows your name.',
+   tags:['working-class','strong','union'],cash:60,rep:{Dockside:25,Highline:-8,Grid:2},home:'bunk',inv:{},perk:'Dock work pays more.'},
+ banker:{n:'Disgraced banker',desc:'You were rising fast on the Highline until a bank collapse put your name in the papers.',
+   tags:['educated','disgraced','smooth'],cash:320,rep:{Highline:8,Dockside:-14},home:'flats',inv:{},perk:'Smooth talk gets better prices.'},
+ artist:{n:'Street artist',desc:'You came to Marrow Bay with a sketchbook and nowhere to stay. The Grid is your canvas.',
+   tags:['creative','outsider','broke'],cash:25,rep:{Grid:6,'Neon Mile':4},home:'studio',inv:{},perk:'Busking pays much more.'}
+};
+const NAMES={crops:'crops',meals:'meals',fish:'fish',smoked:'smoked fish',scrap:'scrap',trinkets:'trinkets',seeds:'seeds',loot:'hot goods'};
+const EVENTS=[
+ {id:'glut',name:'Harvest glut',desc:'Crops sell cheap at the market today.'},
+ {id:'strike',name:'Dock strike',desc:'The piers are shut. Dockside workers spend the day fishing and idling.'},
+ {id:'gala',name:'Highline gala',desc:'Rich crowds tip well on the plaza, and the Estate pays extra.'},
+ {id:'heat',name:'Heatwave',desc:'Everyone tires and hungers faster today.'}
+];
+const RUM={
+ thief:{d:-30,t:'They say you robbed the Market Hall.'},
+ defaulter:{d:-25,t:'They say you skipped out on a bank loan.'},
+ generous:{d:14,t:'They say you feed strangers for free.'},
+ successful:{d:10,t:'They say your business is doing well.'}
+};
+const PROJECTS=[
+ {id:'crane',name:'Repair the harbor crane',d:'Dockside',need:{scrap:40},desc:'Dock gigs pay 25% more.'},
+ {id:'irrig',name:'Greenbelt irrigation channel',d:'Greenbelt',need:{crops:30},desc:'Crops grow a day faster.'},
+ {id:'lamps',name:'Plaza lamps',d:'Grid',need:{trinkets:5},desc:'Busking pays 30% more.'},
+ {id:'commons',name:'Highline garden commons',d:'Highline',need:{crops:20,cash:100},desc:'Estate gigs pay 20% more.'}
+];
+const STRUCTS={
+ stall:{n:'Market stall',cost:120,desc:'Stock it and set a price. People buy from it on their own.'},
+ planter:{n:'Greenhouse',cost:90,desc:'Grows crops in any district, in 2 days.'},
+ smoker:{n:'Smoker',cost:70,desc:'Turns 2 fish into 2 smoked fish.'},
+ bench:{n:'Workshop bench',cost:100,desc:'Craft trinkets from scrap anywhere.'},
+ sign:{n:'Signboard',cost:15,desc:'Draws shoppers to stalls within 5 tiles.'},
+ house:{n:'House',cost:900,desc:'A home you build yourself. $35 a month in upkeep.'}
+};
+const FAIR={meals:12,smoked:12,fish:7,crops:5,trinkets:30};
+const HUNG={meals:45,smoked:35,fish:20,crops:12};
+const MK=[.7,1,1.25],MKN=['Low','Fair','High'];
+const VEH={
+ none:{n:'On foot',sp:4.8,price:0,ins:0,fuel:false},
+ bike:{n:'Bicycle',sp:8,price:90,ins:0,fuel:false},
+ scooter:{n:'Scooter',sp:11,price:420,ins:8,fuel:true},
+ sedan:{n:'Sedan',sp:15,price:1900,ins:25,fuel:true},
+ coupe:{n:'Sports coupe',sp:20,price:5200,ins:55,fuel:true}
+};
+const BT={
+ cafe:{n:'Café',fit:400,price:12,cost:5,per:.5,cap:7,sign:'CAFE',col:['#f0c05a','#c48a2a'],dep:{crops:1,fish:2,smoked:2},d:'Sells meals. Runs on supplies, or your own crops and fish.'},
+ bar:{n:'Bar',fit:700,price:9,cost:2.5,per:.55,cap:9,sign:'BAR',col:['#8a4fb0','#5e3380'],d:'Sells drinks. Wholesale supplies are automatic.'},
+ workshop:{n:'Workshop',fit:600,price:22,cost:9,per:.35,cap:4,sign:'MAKER',col:['#8f98a2','#5f6770'],dep:{scrap:1},d:'Makes goods. Feed it scrap to cut costs.'},
+ rental:{n:'Apartments',fit:900,sign:'FLATS',col:['#c9a58c','#97765f'],d:'Tenants pay rent every day. Occupancy follows your standing.'},
+ farm:{n:'Farm',fit:350,sign:'FARM',col:['#9bbf6a','#6c8f45'],d:'Grows crops each day. Sell wholesale or keep them. Greenbelt only.'},
+ home:{n:'Home',fit:300,sign:'HOME',col:['#7aa7d6','#4f78a6'],d:'Live here. $60 a month in upkeep.'}
+};
+const TRAITS=['reliable','sticky','charming','guard','quick'];
+const TRAITN={reliable:'Reliable',sticky:'Sticky fingers',charming:'Charming',guard:'Guard',quick:'Quick'};
+const WN=['Ana','Ben','Cleo','Dev','Eli','Fay','Gil','Hana','Ivo','Jo','Kai','Lena','Milo','Nia','Omar','Pia'];
+const LN=['Reed','Park','Cruz','Hale','Ito','Voss','Bryce','Lund','Moss','Shah'];
+const WAGE={cordelia:60,halloran:40,mina:30,teo:28,duarte:38,pip:6,wren:20,reyes:36,ashgrove:70,gus:26,bell:45,vex:80,mack:50,ines:60,lou:55};
+const NPCS=[
+ {id:'cordelia',name:'Cordelia Vance',role:'Banker',d:'Highline',home:'flats',work:'bank',hang:'club',col:'#6b4590',
+  aff:{educated:12,smooth:8,disgraced:-30,rural:-12,'in-debt':-18,landowner:12,shopkeeper:5,'known-thief':-30,broke:-6,'local-hero':6,employer:6},
+  tier:['Vance does not look up from her ledger.','Vance glances at you. "Be brief."','Vance nods. "Good day."','Vance smiles. "A pleasure, as always."'],
+  react:{disgraced:'"I remember the collapse. Your name was on the paperwork."',educated:'"You speak like someone who has read a ledger. Refreshing."','in-debt':'"I hear you owe money around town. Interesting."',rural:'"Greenbelt? Marrow Bay eats farm folk alive."',landowner:'"A property owner. We should talk about financing."'},
+  topic:'"The terraces are the only part of Marrow Bay the tide never reaches."'},
+ {id:'halloran',name:'Mr. Halloran',role:'Landlord',d:'Grid',home:'studio',work:'studio',hang:'plaza',col:'#8a6a3a',
+  aff:{'in-debt':-35,broke:-8,hardworking:8,landowner:15,'known-thief':-30,'local-hero':8,disgraced:-8},
+  tier:['Halloran shakes his head. "No."','Halloran squints. "Rent is rent."','Halloran tips his hat.','Halloran grins. "My favorite tenant."'],
+  react:{'in-debt':'"You are behind. I keep a list, you know."',hardworking:'"Steady work, steady rent. That is all I ask."',landowner:'"Fellow owner. Mind the property taxes."',broke:'"Hard times. I have seen them come and go."'},
+  topic:'"Every landlord on the Grid bought a lot, then watched the tide eat the profit."'},
+ {id:'mina',name:'Mina Okafor',role:'Market vendor',d:'Grid',home:'studio',work:'market',hang:'plaza',col:'#d98a2b',
+  aff:{rural:16,creative:8,'known-thief':-45,'local-hero':10,shopkeeper:10,'in-debt':-5,smooth:-4},
+  tier:['Mina folds her arms. "We are not open to you."','Mina answers flatly. "What do you need?"','Mina waves. "Morning!"','Mina beams. "There you are. Fresh stock for you."'],
+  react:{rural:'"Greenbelt produce? Bring me your harvest. I pay fair."','known-thief':'"Missing apples, the day you showed up. Funny."',creative:'"You paint? My stall could use a sign."',shopkeeper:'"Another business on the Grid. Welcome to the fight."'},
+  topic:'"Prices swing with the harvest. A glut means cheap crops by noon."'},
+ {id:'teo',name:'Big Teo',role:'Diner cook',d:'Grid',home:'studio',work:'diner',hang:'diner',col:'#c8553d',
+  aff:{hardworking:12,broke:6,'working-class':8,smooth:-6,'known-thief':-30,'local-hero':12,'in-debt':-3},
+  tier:['Teo points at the door.','Teo grunts. "Order or move."','Teo nods. "Sit anywhere."','Teo slides a plate over. "On the house, almost."'],
+  react:{hardworking:'"You look like you earn your keep. I respect that."',broke:'"Thin pockets? Work a shift and I will feed you."',smooth:'"Fancy talk does not fry an egg."','working-class':'"Dockside? My people too."'},
+  topic:'"Quiet nights, loud mornings. This diner runs on the dock shift."'},
+ {id:'duarte',name:'Foreman Duarte',role:'Dock foreman',d:'Dockside',home:'bunk',work:'dock',hang:'gull',col:'#2f7f8a',
+  aff:{strong:15,union:20,'working-class':14,hardworking:10,educated:-10,disgraced:-14,smooth:-10,'known-thief':-35,'local-hero':10,employer:-4},
+  tier:['Duarte spits. "Walk on."','Duarte eyes you. "What."','Duarte nods. "Need work?"','Duarte claps your shoulder. "Good to see you."'],
+  react:{union:'"Union card? Then you are one of ours."',strong:'"Those arms could move crates all day."',educated:'"Soft hands. Do not fall in the harbor."',disgraced:'"Bankers sank half my crew\'s pensions."','working-class':'"Dock families stick together."'},
+  topic:'"When the piers shut, fish cost more. Nobody hauls, nobody eats cheap."'},
+ {id:'pip',name:'Pip',role:'Runner',d:'Grid',home:'bunk',work:'plaza',hang:'plaza',col:'#4aa36b',
+  aff:{outsider:16,creative:10,broke:8,'known-thief':8,'local-hero':8,educated:-4},
+  tier:['Pip darts away from you.','Pip shrugs. "Dunno you."','Pip grins. "Hey."','Pip bounces over. "My favorite!"'],
+  react:{outsider:'"You are new here too, right? It shows."',creative:'"Draw me something? I trade rumors for it."','known-thief':'"Heard you lifted something. Nice."',broke:'"We are all running on fumes, huh."'},
+  topic:'"I know every shortcut from the Grid to the Docks. I also pick the flats clean at low tide."'},
+ {id:'wren',name:'Old Wren',role:'Farmer',d:'Greenbelt',home:'barn',work:'barn',hang:'plaza',col:'#7a9a3a',
+  aff:{rural:25,hardworking:10,smooth:-10,educated:-6,disgraced:-8,'working-class':4,'known-thief':-30,'local-hero':10,landowner:6},
+  tier:['Wren turns back to the fence.','Wren grunts. "Hmph."','Wren tips a hat. "Afternoon."','Wren smiles slowly. "Good to see a Greenbelt face."'],
+  react:{rural:'"You smell of soil and honest work."',hardworking:'"The fields need hands like yours."',smooth:'"You talk like someone who never pulled a root."',educated:'"Book learning does not grow beans."'},
+  topic:'"Plant in the morning, harvest in three days. The city pays more than it should."'},
+ {id:'reyes',name:'Constable Reyes',role:'Constable',d:'Grid',home:'studio',work:'plaza',hang:'diner',col:'#3a4f9a',
+  aff:{'known-thief':-50,'in-debt':-6,'local-hero':20,outsider:-6,'working-class':4,disgraced:-4,hardworking:5},
+  tier:['Reyes rests a hand on her belt. "Move along."','Reyes watches you. "Staying out of trouble?"','Reyes nods. "Evening."','Reyes smiles. "Heard good things about you."'],
+  react:{'known-thief':'"I know your face. One more slip and you are in the cells."','local-hero':'"Word is you feed people in this town. Keep it up."',outsider:'"New in town? Keep your nose clean."'},
+  topic:'"Quiet beat, mostly. Trouble comes in with the tide."'},
+ {id:'ashgrove',name:'Lady Ashgrove',role:'Councilwoman',d:'Highline',home:'flats',work:'estate',hang:'club',col:'#9a3a6a',
+  aff:{educated:10,landowner:22,shopkeeper:8,rural:-12,'working-class':-14,broke:-10,disgraced:-22,'in-debt':-15,'known-thief':-40,creative:6,'local-hero':12,employer:8},
+  tier:['Ashgrove turns to her guests.','Ashgrove nods curtly. "Yes?"','Ashgrove offers a gloved hand. "Welcome."','Ashgrove lights up. "Marrow Bay needs people like you."'],
+  react:{landowner:'"You hold land? Then you have a voice at the council."','working-class':'"The docks keep us fed. I do not forget that. I do forget names."',disgraced:'"A scandal clings to you. Do not bring it here."',rural:'"Greenbelt hands make the best gardeners. Mind the roses."','local-hero':'"They say you feed strangers. Admirable."'},
+  topic:'"The terraces vote. The docks sulk. The Greenbelt never shows up."'},
+ {id:'gus',name:'Gus',role:'Bartender',d:'Dockside',home:'bunk',work:'gull',hang:'gull',col:'#5a7a8a',
+  aff:{broke:10,outsider:10,'working-class':10,'in-debt':4,smooth:-4,disgraced:-4,'known-thief':-15,'local-hero':8},
+  tier:['Gus wipes the same glass. "We are closed."','Gus slides a cloth over the bar. "Yeah?"','Gus nods. "What will it be?"','Gus pours without asking. "You look like you need one."'],
+  react:{broke:'"Tab is open. Pay when you can."',outsider:'"New face. Marrow Bay will either chew you up or keep you."','in-debt':'"Owing money? Welcome to the club."'},
+  topic:'"The tide tells you everything. Rich at high water, bare mud at low."'},
+ {id:'bell',name:'Dr. Imani Bell',role:'Doctor',d:'Grid',home:'studio',work:'clinic',hang:'plaza',col:'#3a9a8a',
+  aff:{broke:8,'working-class':6,hardworking:6,'known-thief':-10,disgraced:-4,'local-hero':10,educated:4},
+  tier:['Dr. Bell does not meet your eyes.','Dr. Bell checks her watch. "Quickly."','Dr. Bell smiles. "How are you holding up?"','Dr. Bell relaxes. "Good to see you walking."'],
+  react:{broke:'"If money is the problem, we will work something out."',hardworking:'"You are overdoing it. I can see it."','local-hero':'"People talk about your kindness. Take care of yourself too."'},
+  topic:'"Half my patients are exhaustion. The other half are dock injuries."'},
+ {id:'vex',name:'Vex Calloway',role:'Fixer',d:'Neon Mile',home:'loft',work:'velvet',hang:'casino',col:'#b04a8a',
+  aff:{'known-thief':25,outsider:10,smooth:10,creative:6,'working-class':4,educated:-4,'local-hero':-8,'in-debt':8,hardworking:-4,disgraced:6},
+  tier:['Vex does not know you, and likes it that way.','Vex gives you a flat look. "Not yet."','Vex smirks. "I have heard of you."','Vex grins. "Right on time. I have work."'],
+  react:{'known-thief':'"Word travels. A reputation like yours opens doors here."',smooth:'"You carry yourself well. Useful."',outsider:'"New in town and hungry. Good."','local-hero':'"A do-gooder. Do not let it slow you down."'},
+  topic:'"Everyone in this city is for sale. The trick is knowing the price."'},
+ {id:'mack',name:'Mack Torres',role:'Mechanic',d:'Foundry Row',home:'loft',work:'garage',hang:'garage',col:'#c07a2a',
+  aff:{strong:10,hardworking:10,'working-class':8,educated:-4,'known-thief':-20,'local-hero':8,'in-debt':-4,creative:4},
+  tier:['Mack wipes his hands and walks off.','Mack nods. "Looking, or buying?"','Mack grins. "Got something you will like."','Mack slaps a hood. "For you, a fair price."'],
+  react:{strong:'"Good shoulders. You could lift an engine."',hardworking:'"You look like you pay your bills. Rare."','known-thief':'"If you boosted a car, do not park it here."'},
+  topic:'"Two wheels or four, everything breaks eventually."'},
+ {id:'ines',name:'Ines Park',role:'Foundry boss',d:'Foundry Row',home:'loft',work:'foundry',hang:'foundry',col:'#a05a3a',
+  aff:{strong:14,'working-class':10,union:-8,hardworking:12,educated:6,'known-thief':-30,'in-debt':-8,landowner:10,shopkeeper:8,employer:12,'local-hero':8},
+  tier:['Ines barely looks up from the furnace.','Ines nods. "Make it quick."','Ines wipes her hands. "Need hours?"','Ines grins. "Good, I can use you."'],
+  react:{strong:'"You could handle the crucible line."',union:'"A union man. Mind the schedule and we are fine."',employer:'"Fellow boss. Keep your payroll honest."',landowner:'"Owners keep this district alive."'},
+  topic:'"The foundry never sleeps. Scrap in, steel out."'},
+ {id:'lou',name:'Lou Bernstein',role:'Estate agent',d:'Grid',home:'studio',work:'realty',hang:'plaza',col:'#3f7fa8',
+  aff:{landowner:18,shopkeeper:10,educated:6,smooth:8,broke:-10,'in-debt':-25,'known-thief':-25,'local-hero':8,disgraced:-6,employer:8},
+  tier:['Lou does not meet your eyes. "Not interested."','Lou sighs. "Browsing?"','Lou smiles. "Let me show you something."','Lou beams. "My best client."'],
+  react:{landowner:'"A fellow property person. I have just the thing."',broke:'"Everyone starts somewhere. Just not here."','in-debt':'"I do not sell to people who owe."',smooth:'"You close like a closer."'},
+  topic:'"Location, location, and the tide table."'}
+];
+const NPC={};
+NPCS.forEach(n=>{NPC[n.id]=n;n.wage=WAGE[n.id];if(n.id==='cordelia'||n.id==='ashgrove')n.wants='trinkets'});
+const TIPS=[
+ 'Fish bite best at high tide. At low tide the flats are full of scrap.',
+ "Old Wren's plots grow in three days. Greenbelt hands get more out of them.",
+ 'Highline crowds tip well during a gala.',
+ 'The bank lends to people who look respectable. Owing money changes how everyone treats you.',
+ 'A low price wins customers from the diner. A high price only sells to people who like you.',
+ 'Empty buildings are for sale at Lou\'s Realty. A café with two staff pays for itself fast.',
+ 'A bike or the tram beats walking. Vex pays well for couriers, if you are quick.',
+ 'Constable Reyes gives up the chase if you outrun him and lay low at home.'
+];
+
+/* ================= STATE ================= */
+let G=null,modal=false,dismissable=true,placing=null;
+const day=()=>Math.floor(G.t/1440)+1;
+const hourOf=()=>Math.floor(G.t/60)%24;
+const isNight=()=>{const h=hourOf();return h>=21||h<5};
+const clockNow=()=>G?G.t:600+performance.now()/40;
+const tideV=(t=clockNow())=>Math.sin(2*Math.PI*t/(12.4*60));
+const tideName=(t=clockNow())=>{const v=tideV(t);return v>.45?'high':v<-.45?'low':(Math.cos(2*Math.PI*t/(12.4*60))>0?'rising':'falling')};
+const npcS=n=>G.npcs[n.id];
+const known=type=>{const r=G.rumors.find(r=>r.type===type);return r?r.knows.length:0};
+const bizOf=k=>G.biz.find(b=>b.key===k);
+function tagsNow(){
+  const t=[...BG[G.bg].tags];
+  if(G.debt>0||G.arrears>0)t.push('in-debt');
+  if(known('thief')>=3)t.push('known-thief');
+  if(G.structs.some(s=>s.type==='stall')||G.biz.some(b=>b.type&&b.type!=='home'&&b.type!=='rental'))t.push('shopkeeper');
+  if(G.structs.length||G.biz.length||Object.keys(G.owned).length)t.push('landowner');
+  if(G.biz.some(b=>b.workers.length))t.push('employer');
+  if(known('generous')>=3)t.push('local-hero');
+  return t;
+}
+const has=t=>tagsNow().includes(t);
+const rumorDelta=n=>G.rumors.reduce((s,r)=>s+(r.knows.includes(n.id)?RUM[r.type].d*r.str/100:0),0);
+const att=n=>{let a=0;for(const t of tagsNow())a+=n.aff[t]||0;return a+G.rep[n.d]*.35+npcS(n).m+rumorDelta(n)};
+const tier=a=>a<-30?0:a<0?1:a<30?2:3;
+const LAB=['hostile','cold','neutral','warm'];
+const buyF=n=>[9,1.2,1,.9][tier(att(n))]*(has('smooth')?.92:1);
+const sellF=n=>[0,.85,1,1.1][tier(att(n))];
+const payF=n=>[0,.85,1,1.15][tier(att(n))];
+const standing=v=>v<-30?'despised':v<-10?'distrusted':v<10?'unknown':v<30?'respected':'admired';
+const isOpen=id=>{if(G.mod&&G.mod.closed.includes(id))return false;const o=OPEN[id];if(!o)return true;const h=hourOf();return(h>=o[0]&&h<o[1])||h<o[1]-24};
+const fmtHr=h=>{h%=24;return (h%12||12)+(h<12?' am':' pm')};
+const mealPrice=()=>Math.round(9*(1+Math.min(.6,G.demand*.05))*G.mod.meal);
+const fishMod=()=>clamp(1+(50-G.fishStock)/80,.6,1.8)*G.mod.fish;
+const scrapMod=()=>clamp(1+(60-G.flats)/60,.7,2);
+const structAt=(x,y)=>G.structs.find(s=>s.x===x&&s.y===y);
+const signNear=st=>G.structs.some(s=>s.type==='sign'&&Math.hypot(s.x-st.x,s.y-st.y)<=5);
+let noteTimer=null;
+function notify(m,sticky){const e=$('#note');e.textContent=m;clearTimeout(noteTimer);if(!sticky)noteTimer=setTimeout(()=>e.textContent='',7000)}
+function addRumor(type,ids){
+  let r=G.rumors.find(x=>x.type===type);
+  if(r){r.str=100;ids.forEach(i=>{if(!r.knows.includes(i))r.knows.push(i)})}
+  else G.rumors.push({type,str:100,knows:[...ids]});
+}
+function projPct(p){const d=PROJECTS.find(x=>x.id===p.id),k=Object.keys(d.need);return Math.round(k.reduce((s,x)=>s+Math.min(1,(p.have[x]||0)/d.need[x]),0)/k.length*100)}
+function checkProject(p){
+  const d=PROJECTS.find(x=>x.id===p.id);
+  if(!p.done&&Object.keys(d.need).every(k=>(p.have[k]||0)>=d.need[k])){p.done=true;G.fx[p.id]=true;notify(`Project complete: ${d.name}. ${d.desc}`);news(`Project complete: ${d.name}. ${d.desc}`,3);return true}
+  return false;
+}
+/* homes */
+function homePoi(){
+  const h=G.home;
+  if(h.startsWith('S:')){const s=G.structs.find(x=>'S:'+x.id===h);if(s)return{id:h,name:'Your house',ex:s.x,ey:s.y,d:district(s.x,s.y)}}
+  if(h.startsWith('B:')){const b=blockByKey(h.slice(2));if(b)return{id:h,name:'Your building',ex:b.x+1,ey:b.y+4,d:district(b.x+1,b.y+1)}}
+  return POIS[POIS[h]?h:'barn'];
+}
+function homeBill(){
+  const h=G.home;
+  if(h.startsWith('S:'))return 35;
+  if(h.startsWith('B:'))return 60;
+  return G.owned[h]?Math.round(RENT[h]*.3):RENT[h];
+}
+function monthlyBills(){
+  const lines=[];
+  lines.push(['Home',homeBill()]);
+  Object.keys(G.owned).forEach(id=>{if(G.home!==id)lines.push([POIS[id].name+' upkeep',Math.round(RENT[id]*.3)])});
+  G.structs.forEach(s=>{if(s.type==='house'&&G.home!=='S:'+s.id)lines.push(['House upkeep',35])});
+  Object.keys(G.veh.owned).forEach(k=>{if(G.veh.owned[k]&&!G.veh.stolen[k]&&VEH[k].ins)lines.push([VEH[k].n+' insurance',VEH[k].ins])});
+  G.biz.forEach(b=>{if(G.home==='B:'+b.key)return;lines.push(['Property tax',Math.round(b.price*.01)]);if(b.type&&b.type!=='home')lines.push(['Business license',20])});
+  return lines;
+}
+function chargeBills(){
+  const lines=monthlyBills(),total=Math.round(lines.reduce((s,l)=>s+l[1],0)*G.mod.bills);
+  const paid=Math.min(G.cash,total);G.cash-=paid;G.arrears+=total-paid;G.lastBills=total;
+  notify(total-paid>0?`Monthly bills ${money(total)}. You came up ${money(total-paid)} short.`:`Monthly bills paid: ${money(total)}.`);
+}
+
+/* ================= BUSINESS ================= */
+function makePool(){G.pool=Array.from({length:4},()=>{const skill=ri(1,3);return{id:Math.random().toString(36).slice(2,8),name:pick(WN)+' '+pick(LN),skill,wage:[0,16,24,34][skill]+ri(-2,3),trait:pick(TRAITS)}})}
+function payOut(b,amt){
+  const fromTill=Math.min(b.till,amt);b.till-=fromTill;let rest=amt-fromTill;
+  const fromCash=Math.min(G.cash,rest);G.cash-=fromCash;rest-=fromCash;
+  return rest<=0;
+}
+function runBiz(b){
+  const t=BT[b.type];if(!t)return;
+  const dist=b.d,rep=G.rep[dist];
+  let appeal=clamp(1+rep/100,.4,1.5)*(1+.25*(b.level-1));
+  if(known('thief')>=3)appeal*=.8;
+  if(known('successful'))appeal*=1.08;
+  b.workers.forEach(w=>{if(w.trait==='charming')appeal*=1.1});
+  if(G.ev&&G.ev.id==='gala'&&dist==='Highline')appeal*=1.3;
+  if(G.ev&&G.ev.id==='strike'&&dist==='Dockside')appeal*=.75;
+  appeal*=(G.mod.traffic[dist]||1);
+  const r={units:0,rev:0,cost:0,wages:0,theft:0,note:''};
+  const wcap=b.workers.reduce((s,w)=>s+(4+w.skill*3)*(w.trait==='quick'?1.3:1),0);
+  if(b.type==='rental'){
+    const units=4+2*(b.level-1),occ=clamp(.5+rep/200+.06*b.level,.35,1);
+    r.rev=Math.round(units*8*occ);r.units=units;b.till+=r.rev;
+  }else if(b.type==='farm'){
+    const f=dist==='Greenbelt'?1:.5,crops=Math.round((3+wcap)*f*rnd(.8,1.1)*G.mod.yield);
+    r.units=crops;r.cost=Math.round(crops*1.5);payOut(b,r.cost);
+    if(b.auto){r.rev=crops*4;b.till+=r.rev}else b.store+=crops;
+  }else if(b.type!=='home'){
+    const cap=Math.round((3+wcap)*(t.cap/7)),dem=TR[dist]*t.per*appeal*[1.3,1,.65][b.mk]*rnd(.85,1.15);
+    const units=Math.floor(Math.min(dem,cap)),used=Math.min(b.supplies,units),buy=units-used;
+    b.supplies-=used;r.units=units;r.rev=Math.round(units*t.price*MK[b.mk]);b.till+=r.rev;
+    r.cost=Math.round(buy*t.cost);if(r.cost)payOut(b,r.cost);
+    const sticky=b.workers.filter(w=>w.trait==='sticky').length,guard=b.workers.some(w=>w.trait==='guard');
+    if(sticky&&!guard){r.theft=Math.min(b.till,Math.round(r.rev*.08*sticky));b.till-=r.theft}
+  }
+  b.workers=b.workers.filter(w=>{
+    const ok=payOut(b,w.wage);
+    if(ok){r.wages+=w.wage;return true}
+    notify(`${w.name} quit. Wages went unpaid.`);return false;
+  });
+  if(b.till>150&&Math.random()<.07*(b.workers.some(w=>w.trait==='guard')?.3:1)){const loss=Math.round(b.till*.5);b.till-=loss;r.note=`Robbed. ${money(loss)} taken.`;{notify(`Break-in at your ${t.n.toLowerCase()}. ${money(loss)} gone.`);news(`A ${t.n.toLowerCase()} in the ${dist} was broken into.`,2)}}
+  r.profit=r.rev-r.cost-r.wages-r.theft;b.last=r;
+}
+
+/* ================= TIME, NEEDS, ECONOMY ================= */
+function needs(m,sleep){
+  const h=m/60,k=((G.ev&&G.ev.id==='heat')?1.3:1)*G.mod.drain;
+  G.hunger-=h*(sleep?1.2:2.2)*k;
+  if(!sleep)G.energy-=h*2.5*k;
+  G.hunger=clamp(G.hunger,0,100);G.energy=clamp(G.energy,0,100);
+}
+function advance(m,sleep,quiet){
+  const b=G.t;needs(m,sleep);G.t+=m;
+  const d0=Math.floor(b/1440),d1=Math.floor(G.t/1440);
+  for(let d=d0+1;d<=d1;d++)newDay(d);
+  const h0=Math.floor(b/60),h1=Math.floor(G.t/60);
+  for(let h=h0+1;h<=h1&&h<=h0+30;h++)hourly(h);
+  if(m>=60)syncNPCs();else if(h1>h0)NPCS.forEach(n=>{if(!(n.id==='reyes'&&n.chasing))assign(n,false)});
+  if(!quiet)hud();
+}
+function newDay(d){
+  G.ev=Math.random()<.5?null:pick(EVENTS);
+  dayNews();
+  if(d%30===0)chargeBills();
+  G.plots.forEach(p=>{if(p.s===1){p.d--;if(p.d<=0)p.s=2}});
+  G.structs.forEach(s=>{if(s.type==='planter'&&s.s===1){s.d--;if(s.d<=0)s.s=2}});
+  G.biz.forEach(runBiz);
+  makePool();
+  if(G.debt>0&&day()-G.loanDay>(G.loanTerm||10)&&!G.flags.defRum){G.flags.defRum=1;addRumor('defaulter',['cordelia'])}
+  G.rumors.forEach(r=>r.str-=4);G.rumors=G.rumors.filter(r=>r.str>=12);
+  G.projects.forEach(p=>{
+    if(p.done)return;const d=PROJECTS.find(x=>x.id===p.id);
+    NPCS.filter(n=>n.d===d.d).forEach(n=>{
+      const s=npcS(n);if(s.cash<40||Math.random()>.35)return;
+      const k=Object.keys(d.need).find(k=>(p.have[k]||0)<d.need[k]);if(!k)return;
+      const amt=k==='cash'?8:Math.max(1,Math.round(d.need[k]*.04));
+      p.have[k]=Math.min(d.need[k],(p.have[k]||0)+amt);s.cash-=k==='cash'?8:5;
+    });
+    checkProject(p);
+  });
+  if(G.ev)notify(`News: ${G.ev.name}. ${G.ev.desc}`);
+  save();
+}
+function npcEat(n,s){
+  const pm=mealPrice(),tr=tier(att(n)),pat=n.d==='Highline'?1.15:1;
+  let best=null;
+  G.structs.forEach(st=>{
+    if(st.type!=='stall')return;
+    const rng=signNear(st)?26:13;if(Math.hypot(st.x-n.x,st.y-n.y)>rng)return;
+    ['meals','smoked','fish','crops'].forEach(k=>{
+      if(!(st.stock[k]>0))return;
+      const pr=Math.round(FAIR[k]*MK[st.mk]),max=FAIR[k]*(.95+.12*tr)*pat;
+      if(tr<1||pr>max||pr>s.cash)return;
+      const eff=pr/HUNG[k];if(!best||eff<best.eff)best={st,k,pr,eff};
+    });
+  });
+  if(best&&(best.eff<=pm/45*1.15||tr>=2)){
+    best.st.stock[best.k]--;best.st.stored+=best.pr;best.st.earned+=best.pr;
+    s.cash-=best.pr;s.hunger=Math.min(100,s.hunger+HUNG[best.k]);
+    if(best.st.earned>=100&&!G.flags.succRum){G.flags.succRum=1;addRumor('successful',[n.id])}
+  }else if(s.cash>=pm){s.cash-=pm;s.hunger=Math.min(100,s.hunger+45);G.demand+=1}
+  else if(s.cash>=5){s.cash-=5;s.hunger=Math.min(100,s.hunger+15)}
+}
+function npcBuyTrinket(n,s){
+  const tr=tier(att(n));if(tr<1)return;
+  const st=G.structs.find(x=>x.type==='stall'&&x.stock.trinkets>0&&Math.hypot(x.x-n.x,x.y-n.y)<=(signNear(x)?26:13));
+  if(!st)return;
+  const pr=Math.round(FAIR.trinkets*MK[st.mk]);
+  if(pr>FAIR.trinkets*(.95+.12*tr)*1.15||pr>s.cash)return;
+  st.stock.trinkets--;st.stored+=pr;st.earned+=pr;s.cash-=pr;
+}
+function hourly(h){
+  const hr=h%24,t=h*60,high=tideV(t)>.45,low=tideV(t)<-.45;
+  G.fishStock=clamp(G.fishStock+(high?2.5:1.2),0,100);
+  G.flats=clamp(G.flats+(high?1.5:.3),0,100);
+  G.demand=Math.max(0,G.demand-.6);
+  const R=NPC.reyes,rn=Math.hypot(R.x-G.p.x,R.y-G.p.y)<9&&!R.indoors;
+  const atHome=Math.hypot(homePoi().ex-G.p.x,homePoi().ey-G.p.y)<2.5;
+  G.heat=Math.max(0,G.heat-(atHome?.7:rn?0:.2)*(G.mod.cops?.4:1));
+  const out=NPCS.filter(n=>!n.indoors);
+  for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++){
+    const a=out[i],b=out[j];if(Math.hypot(a.x-b.x,a.y-b.y)>3.5)continue;
+    G.rumors.forEach(r=>{const ka=r.knows.includes(a.id),kb=r.knows.includes(b.id);if(ka!==kb&&Math.random()<.45)r.knows.push(ka?b.id:a.id)});
+  }
+  const strike=G.ev&&G.ev.id==='strike';
+  NPCS.forEach(n=>{
+    const s=npcS(n);
+    if(hr>=22||hr<7)s.hunger=Math.min(100,s.hunger+2);else s.hunger=Math.max(0,s.hunger-4.5);
+    if(hr===17&&n.act!=='home'&&!(strike&&n.d==='Dockside'&&n.id!=='duarte'))s.cash+=n.wage;
+    if(n.indoors)return;
+    if(n.d==='Dockside'&&n.act==='hang'&&high&&G.fishStock>5){G.fishStock-=4;s.cash+=4}
+    if(n.id==='pip'&&low&&G.flats>8){G.flats-=6;s.cash+=5}
+    if(s.hunger<45)npcEat(n,s);
+    if(n.wants==='trinkets'&&s.cash>60&&Math.random()<.05)npcBuyTrinket(n,s);
+  });
+  if(G.fishStock<25&&!G.flags.fishNews){G.flags.fishNews=1;alertNews('News: Fish are getting scarce. Prices are climbing.')}
+  if(G.fishStock>45)G.flags.fishNews=0;
+  if(G.flats<20&&!G.flags.flatNews){G.flags.flatNews=1;alertNews('News: The mudflats have been picked clean. Scrap is in demand.')}
+  if(G.flats>45)G.flags.flatNews=0;
+  if(G.demand>=8&&!G.flags.rushNews){G.flags.rushNews=1;alertNews('News: The diner is slammed. Meals cost more.')}
+  if(G.demand<3)G.flags.rushNews=0;
+}
+
+/* ================= NPC MOVEMENT ================= */
+function actFor(n){
+  const h=hourOf();
+  let a=(h>=22||h<7)?'home':h<17?'work':'hang';
+  if(a==='work'&&G.ev&&G.ev.id==='strike'&&n.d==='Dockside'&&n.id!=='duarte')a='hang';
+  return a;
+}
+function goto(n,s){n.path=bfs(Math.round(n.x),Math.round(n.y),s[0],s[1])||[]}
+function assign(n,instant){
+  const a=actFor(n);n.act=a;
+  const homeP=POIS[n.home];
+  if(a==='home'){
+    if(instant){n.indoors=true;n.path=[];n.x=homeP.ex;n.y=homeP.ey}
+    else if(!n.indoors){goto(n,[homeP.ex,homeP.ey]);n.goHome=true}
+  }else{
+    const s=spotNear(POIS[a==='work'?n.work:n.hang],n.id);
+    if(instant){n.indoors=false;n.x=s[0];n.y=s[1];n.path=[]}
+    else{
+      if(n.indoors){n.indoors=false;n.x=homeP.ex;n.y=homeP.ey}
+      goto(n,s);n.goHome=false;
+    }
+  }
+}
+function syncNPCs(){NPCS.forEach(n=>{if(n.id==='reyes'&&n.chasing)return;assign(n,true)})}
+function initNPCs(){NPCS.forEach(n=>{n.x=0;n.y=0;n.path=[];n.indoors=true;n.goHome=false;n.act='home';n.chasing=false;n.rt=0});syncNPCs()}
+function moveEnt(e,dt,sp){
+  if(!e.path||!e.path.length)return false;
+  const [nx,ny]=e.path[0],dx=nx-e.x,dy=ny-e.y,d=Math.hypot(dx,dy),st=sp*dt;
+  if(d<=st){e.x=nx;e.y=ny;e.path.shift()}
+  else{e.x+=dx/d*st;e.y+=dy/d*st}
+  if(Math.abs(dx)>.01)e.face=dx>0?1:-1;
+  return true;
+}
+
+/* ================= HUD / UI ================= */
+const sheet=$('#sheet');
+function missionText(){
+  const m=G.mission;if(!m)return '';
+  const left=Math.max(0,Math.round(m.deadline-G.t)),nxt=POIS[m.stops[m.i]];
+  return `${m.title}: go to ${nxt.name}${m.night&&!isNight()?' after 9 pm':''} (${left} min left)`;
+}
+function hud(){
+  const el=$('#hud');
+  if(!G){el.hidden=true;$('#bar').hidden=true;$('#mission').hidden=true;return}
+  el.hidden=false;$('#bar').hidden=false;
+  const h=hourOf(),m=Math.floor(G.t%60);
+  $('#h-time').textContent=`Day ${day()}, ${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`;
+  $('#h-cash').textContent=money(G.cash);
+  $('#h-dist').textContent=district(Math.round(G.p.x),Math.round(G.p.y));
+  $('#h-tide').textContent=tideName();
+  $('#b-hunger').style.width=G.hunger+'%';
+  $('#b-energy').style.width=G.energy+'%';
+  $('#t-hunger').textContent=G.hunger<20?'Starving':G.hunger<45?'Hungry':'Fed';
+  $('#t-energy').textContent=G.energy<20?'Exhausted':G.energy<45?'Tired':'Rested';
+  $('#b-heat').style.width=(G.heat/5*100)+'%';
+  $('#t-heat').textContent=G.heat>=.5?'\u2605'.repeat(Math.min(5,Math.ceil(G.heat))):'Clear';
+  $('#b-build').classList.toggle('on',!!placing);
+  $('#b-phone').textContent=G.news.some(x=>x.id>G.newsRead)?'Phone \u25CF':'Phone';
+  const ms=$('#mission');ms.hidden=!G.mission;if(G.mission)ms.textContent=missionText();
+}
+function ui(html,btns=[],isModal=true,dismiss=true){
+  modal=isModal;dismissable=dismiss;
+  if(!isModal){sheet.hidden=true;return}
+  $('#text').innerHTML=html;
+  const a=$('#actions');a.replaceChildren();
+  btns.forEach((b,i)=>{
+    const el=document.createElement('button');el.type='button';
+    const cls=b.cls??(i===0?'primary':'');
+    el.className='btn'+(cls?' '+cls:'');
+    el.innerHTML='<span>'+esc(b.label)+'</span>'+(b.sub?'<small>'+esc(b.sub)+'</small>':'');
+    el.disabled=!!b.off;el.addEventListener('click',b.fn);a.appendChild(el);
+  });
+  sheet.hidden=false;sheet.scrollTop=0;
+}
+function worldPanel(){ui('',[],false);if(G)hud()}
+const closeMenu=()=>{save();worldPanel()};
+const leaveBtn={label:'Leave',cls:'quiet',fn:closeMenu};
+const msgP=m=>m?`<p class="amber">${esc(m)}</p>`:'';
+
+$('#b-bag').addEventListener('click',()=>{if(G){placing=null;notify('');bag()}});
+$('#b-phone').addEventListener('click',()=>{if(G){placing=null;notify('');phone()}});
+$('#b-biz').addEventListener('click',()=>{if(G){placing=null;notify('');bizOverview()}});
+$('#b-go').addEventListener('click',()=>{if(G){placing=null;notify('');goMenu()}});
+$('#b-build').addEventListener('click',()=>{
+  if(!G)return;
+  if(placing){placing=null;notify('');hud();return}
+  buildMenu();
+});
+
+/* ================= TITLE / START ================= */
+function title(){
+  G=null;hud();placing=null;applyBridge(false);
+  const saved=loadSave();
+  ui(`<h1>Marrow Bay</h1><p>A tidal city of six districts, from the Greenbelt farms to the Neon Mile and the Foundry. Work, build a business, buy property, get wheels, or cut corners.</p>
+  <p class="muted">Nobody is scripted. People react to who you are, what you own, and what you do.</p>`,
+  [...(saved?[{label:'Continue',sub:`Day ${Math.floor(saved.t/1440)+1}, ${BG[saved.bg].n}`,fn:()=>{G=saved;migrate();G.p.path=[];G.p.onArrive=null;initNPCs();recomputeMods();hud();worldPanel()}}]:[]),
+   {label:'New game',cls:saved?'':'primary',fn:()=>saved?ask('Start a new game?','This replaces your saved game once you begin.','Start over',chooseBg,title):chooseBg()}],true,false);
+}
+function chooseBg(){
+  ui('<h2>Who are you?</h2><p class="muted">Your background decides where you start, how people see you, and what you are good at.</p>',
+    Object.entries(BG).map(([k,v],i)=>({label:v.n,sub:`${v.perk} Starts with ${money(v.cash)}.`,cls:i?'':'primary',fn:()=>start(k)})),true,false);
+}
+function start(k){
+  const b=BG[k],h=POIS[b.home];
+  G={bg:k,cash:b.cash,hunger:80,energy:90,t:8*60,
+     rep:{Greenbelt:0,Highline:0,Grid:0,Dockside:0,'Neon Mile':0,'Foundry Row':0,...b.rep},
+     inv:{crops:0,meals:0,fish:0,smoked:0,scrap:0,trinkets:0,seeds:0,loot:0,...b.inv},
+     home:b.home,owned:{},debt:0,arrears:0,loanDay:0,loanTerm:10,structs:[],biz:[],pool:[],plots:FARM_TILES.map(([x,y])=>({x,y,s:0,d:0})),
+     gifts:0,flags:{},ev:null,npcs:{},rumors:[],projects:PROJECTS.map(p=>({id:p.id,have:{},done:false})),fx:{},
+     fishStock:70,flats:70,demand:0,heat:0,mission:null,lastBills:0,news:[],newsSeq:0,newsRead:0,met:{},evs:[],queue:[],gps:null,
+     veh:{owned:{},stolen:{},fuel:{},active:'none'},
+     p:{x:h.ex,y:h.ey,path:[],onArrive:null,face:1}};
+  NPCS.forEach(n=>G.npcs[n.id]={m:0,chat:-1,cash:n.wage*2+10,hunger:70});
+  makePool();initNPCs();recomputeMods();news('You arrive in Marrow Bay.',1);save();hud();
+  ui(`<h2>${esc(b.n)}</h2><p>${esc(b.desc)}</p><p>You live at <b>${esc(h.name)}</b>. Rent is ${money(RENT[b.home])} a month.</p>
+  <p class="muted">Tap the map to walk. Buildings marked FOR SALE can be bought from Lou's Realty. Tram stops and taxis are under Go.</p>`,
+  [{label:'Step outside',fn:()=>{worldPanel();notify('Tap the map to walk. Tap buildings, plots, stops, or people.')}}],true,false);
+}
+function save(){try{if(G){G.p.path=[];localStorage.setItem(SAVE,JSON.stringify(G))}}catch(e){}}
+function loadSave(){try{const s=localStorage.getItem(SAVE);return s?JSON.parse(s):null}catch(e){return null}}
+
+/* ================= BAG / TOWN / BIZ OVERVIEW / GO ================= */
+function bag(){
+  const b=BG[G.bg],tg=tagsNow();
+  const inv=Object.keys(NAMES).map(k=>`<div><span>${NAMES[k]}</span><b>${G.inv[k]}</b></div>`).join('');
+  const st=Object.keys(G.rep).map(d=>`<div><span>${d}</span><b>${standing(G.rep[d])}</b></div>`).join('');
+  const btns=[];
+  if(G.inv.meals>0)btns.push({label:'Eat a meal',sub:'Restores 45 fullness',fn:()=>{G.inv.meals--;G.hunger=clamp(G.hunger+45,0,100);advance(15,false,true);hud();bag()}});
+  if(G.inv.smoked>0)btns.push({label:'Eat smoked fish',sub:'Restores 35 fullness',cls:'',fn:()=>{G.inv.smoked--;G.hunger=clamp(G.hunger+35,0,100);hud();bag()}});
+  if(G.inv.crops>0)btns.push({label:'Eat raw crops',sub:'Restores 12 fullness',cls:'',fn:()=>{G.inv.crops--;G.hunger=clamp(G.hunger+12,0,100);hud();bag()}});
+  btns.push({label:'Wait one hour',cls:btns.length?'':'primary',fn:()=>{advance(60);bag()}});
+  btns.push({label:'Close',cls:'quiet',fn:closeMenu},{label:'Quit to title',cls:'quiet',fn:()=>ask('Quit to title?','Your game is saved automatically.','Quit',()=>{save();title()},bag)});
+  const hp=homePoi();
+  ui(`<h2>${esc(b.n)}</h2><p class="muted">Day ${day()}. Home: ${esc(hp.name)}, ${money(homeBill())} a month.</p>
+  ${G.debt>0?`<p class="bad">Bank debt: ${money(G.debt)}</p>`:''}${G.arrears>0?`<p class="bad">Bills owed: ${money(G.arrears)}</p>`:''}
+  <p><b>How people see you:</b> ${tg.map(esc).join(', ')}</p>
+  <h2>Standing</h2><div class="kv">${st}</div><h2>Bag</h2><div class="kv">${inv}</div>`,btns);
+}
+function town(){
+  const lv=(v,lo,hi)=>v<lo?'scarce':v>hi?'plentiful':'steady';
+  const evl=G.evs.map(e=>`<p><b>${esc(e.name)}</b> <span class="muted">${Math.max(0,e.until-day())} day(s) left. ${esc(e.desc)}</span></p>`).join('');
+  const rum=G.rumors.map(r=>`<p>${esc(RUM[r.type].t)} <span class="muted">${r.knows.length} of ${NPCS.length} have heard.</span></p>`).join('')||'<p class="muted">Nobody is talking about you yet.</p>';
+  ui(`<h2>Town</h2><p><b>Today:</b> ${G.ev?esc(G.ev.name+'. '+G.ev.desc):'A quiet day.'}</p>${evl}
+  <div class="kv"><div><span>Fish</span><b>${lv(G.fishStock,30,70)}</b></div><div><span>Scrap on the flats</span><b>${lv(G.flats,30,70)}</b></div>
+  <div><span>Diner meal</span><b>${money(mealPrice())}</b></div><div><span>Tide</span><b>${tideName()}</b></div></div>
+  <h2>Talk of the town</h2>${rum}`,
+  [{label:'District projects',sub:'Fund repairs that help a whole district',fn:projects},{label:'Close',cls:'quiet',fn:closeMenu}]);
+}
+function projects(){
+  ui(`<h2>District projects</h2><p class="muted">The city funds these slowly on its own. Your help speeds them up.</p>`,
+    [...G.projects.map(p=>{const d=PROJECTS.find(x=>x.id===p.id);return{label:d.name,sub:p.done?'Complete. '+d.desc:`${d.d}, ${projPct(p)}% funded. ${d.desc}`,cls:'',fn:()=>projectMenu(p)}}),{label:'Back',cls:'quiet',fn:town}]);
+}
+function projectMenu(p,msg){
+  const d=PROJECTS.find(x=>x.id===p.id);
+  const rows=Object.keys(d.need).map(k=>`<p>${k==='cash'?'Cash':NAMES[k]}: ${p.have[k]||0} of ${d.need[k]}</p>`).join('');
+  const btns=p.done?[]:Object.keys(d.need).map(k=>{
+    const def=d.need[k]-(p.have[k]||0),have=k==='cash'?G.cash:G.inv[k],give=Math.min(def,k==='cash'?Math.min(have,50):have);
+    return{label:k==='cash'?`Give ${money(Math.max(0,give))}`:`Give ${Math.max(0,give)} ${NAMES[k]}`,sub:def<=0?'Fully supplied':give>0?`${def} still needed`:'You have none to give',off:give<=0||def<=0,
+      fn:()=>{if(k==='cash')G.cash-=give;else G.inv[k]-=give;p.have[k]=(p.have[k]||0)+give;G.rep[d.d]=clamp(G.rep[d.d]+2,-100,100);advance(10);
+        const fin=checkProject(p);projectMenu(p,fin?'The project is finished!':'Thank you. The district notices.')}};
+  });
+  ui(`<h2>${esc(d.name)}</h2><p class="muted">${d.d}. ${esc(d.desc)}</p>${msgP(msg)}<div class="meter"><i style="width:${projPct(p)}%"></i></div>${rows}${p.done?'<p class="good">Complete.</p>':''}`,
+    [...btns,{label:'Back',cls:'quiet',fn:projects}]);
+}
+function bizOverview(){
+  const lines=monthlyBills(),tot=lines.reduce((s,l)=>s+l[1],0);
+  const nextBill=30-(day()-1)%30;
+  const tills=G.biz.reduce((s,b)=>s+b.till,0)+G.structs.reduce((s,x)=>s+(x.stored||0),0);
+  const vehs=Object.keys(G.veh.owned).filter(k=>G.veh.owned[k]).map(k=>`${VEH[k].n}${G.veh.stolen[k]?' (stolen)':''}`).join(', ')||'none';
+  const btns=G.biz.map(b=>({label:`${b.type?BT[b.type].n:'Empty building'}, ${b.d}`,sub:b.type&&b.type!=='home'?`Till ${money(b.till)}, ${b.workers.length} staff${b.last?`, last day ${b.last.profit>=0?'+':''}${money(b.last.profit)}`:''}`:'Tap to manage',cls:'',fn:()=>bizMenu(b)}));
+  btns.unshift({label:'Collect all tills',sub:money(tills),off:tills<=0,cls:'primary',fn:()=>{G.biz.forEach(b=>{G.cash+=b.till;b.till=0});G.structs.forEach(s=>{if(s.stored){G.cash+=s.stored;s.stored=0}});advance(10);bizOverview()}});
+  btns.push({label:'Close',cls:'quiet',fn:closeMenu});
+  ui(`<h2>Properties and business</h2><div class="kv"><div><span>Buildings</span><b>${G.biz.length}</b></div><div><span>Vehicles</span><b>${esc(vehs)}</b></div>
+  <div><span>Next bills</span><b>${money(tot)} in ${nextBill} d</b></div><div><span>Owed</span><b>${money(G.arrears)}</b></div></div>
+  <p class="muted small">Tap a building on the map, or from here, to manage staff, supplies, and prices.</p>`,btns);
+}
+const TAXI=[['Home','home'],["Lou's Realty",'realty'],['Market Hall','market'],['Marrow Bank','bank'],['Dock Office','dock'],['Lucky Tide Casino','casino'],["Mack's Garage",'garage'],['Briar Barn','barn'],['Central Plaza','plaza']];
+function goMenu(){
+  const p=G.p,near=STOPS.map(s=>({s,d:man(Math.round(p.x),Math.round(p.y),s.x,s.y)})).sort((a,b)=>a.d-b.d)[0];
+  const veh=Object.keys(G.veh.owned).filter(k=>G.veh.owned[k]);
+  const btns=[];
+  if(near.d<=2)btns.push({label:`Ride the tram from ${near.s.name}`,sub:G.passUntil>day()?'Your pass is active':'$2 per ride',fn:()=>stopMenu(near.s)});
+  else btns.push({label:`Walk to ${near.s.name}`,sub:`${near.d} tiles away. Trams are cheap and fast.`,fn:()=>{worldPanel();walkTo(near.s.x,near.s.y,()=>stopMenu(near.s))}});
+  btns.push({label:'Call a taxi',sub:G.heat>=2?'Drivers will not stop for you right now':'Door to door, any destination',off:G.heat>=2,cls:'',fn:taxiMenu});
+  btns.push({label:`Ride: ${VEH[G.veh.active].n}`,sub:veh.length?'Switch vehicle':'Buy wheels at Mack\'s Garage on the Foundry Row',cls:'',off:!veh.length,fn:vehMenu});
+  btns.push({label:'Close',cls:'quiet',fn:closeMenu});
+  ui(`<h2>Get around</h2><p class="muted">Walking is slow. A bike, the tram, or a taxi saves hours.</p>`,btns);
+}
+function vehMenu(){
+  const ks=['none',...Object.keys(G.veh.owned).filter(k=>G.veh.owned[k])];
+  ui(`<h2>Choose your ride</h2>`,[...ks.map(k=>({label:VEH[k].n+(G.veh.active===k?' (current)':''),sub:VEH[k].fuel&&k!=='none'?`Speed ${VEH[k].sp}, fuel ${Math.round(G.veh.fuel[k]||0)}%`:`Speed ${VEH[k].sp}`,cls:G.veh.active===k?'primary':'',fn:()=>{G.veh.active=k;closeMenu();notify(VEH[k].n+'.')}})),{label:'Back',cls:'quiet',fn:goMenu}]);
+}
+function teleport(x,y,minutes,msg){
+  advance(minutes);G.p.x=x;G.p.y=y;G.p.path=[];G.p.onArrive=null;closeMenu();notify(msg);
+}
+function taxiMenu(){
+  const p=G.p;
+  ui(`<h2>Taxi</h2><p class="muted">Cabs charge by distance.</p>`,[...TAXI.map(([n,id])=>{
+    const t=id==='home'?homePoi():POIS[id],d=man(Math.round(p.x),Math.round(p.y),t.ex,t.ey),cost=Math.round(4+d*.3);
+    return{label:n,sub:`${money(cost)}, about ${Math.round(5+d*.2)} min`,off:G.cash<cost,cls:'',fn:()=>{G.cash-=cost;teleport(t.ex,t.ey,Math.round(5+d*.2),`The cab drops you at ${n}.`)}};
+  }),{label:'Back',cls:'quiet',fn:goMenu}]);
+}
+function stopMenu(s){
+  if(G.mod.tram)return ui(`<h2>${esc(s.name)}</h2><p>The trams are not running.</p>`,[leaveBtn]);
+  const pass=G.passUntil>day();
+  ui(`<h2>${esc(s.name)}</h2><p class="muted">Trams run all day.${pass?` Your pass is valid for ${G.passUntil-day()} more days.`:''}</p>`,[
+    ...STOPS.filter(t=>t.id!==s.id).map(t=>{const d=man(s.x,s.y,t.x,t.y);return{label:`To ${t.name}`,sub:`${pass?'Free':'$2'}, about ${Math.round(10+d*.35)} min`,off:!pass&&G.cash<2,cls:'',fn:()=>{if(!pass)G.cash-=2;teleport(t.x,t.y,Math.round(10+d*.35),`You step off at ${t.name}.`)}}}),
+    {label:'Buy a 30-day pass',sub:'$40. Unlimited rides.',off:G.cash<40||pass,cls:'quiet',fn:()=>{G.cash-=40;G.passUntil=day()+30;stopMenu(s)}},
+    leaveBtn]);
+}
+
+/* ================= TALK ================= */
+function worldLines(){
+  const r=[];
+  if(G.ev)r.push(`${G.ev.name}: ${G.ev.desc}`);
+  if(G.fishStock<30)r.push('Fish are scarce. Too many lines in the water.');
+  if(G.fishStock>70)r.push('The fish are running thick.');
+  if(G.flats<30)r.push('The flats are picked clean. Scrap is hard to find.');
+  if(G.demand>=6)r.push('The diner is slammed. Meals cost more.');
+  const open=G.projects.filter(p=>!p.done);
+  if(open.length){const p=pick(open),d=PROJECTS.find(x=>x.id===p.id);r.push(`${d.name} is ${projPct(p)}% funded.`)}
+  r.push(pick(TIPS));
+  return r;
+}
+function pickpocket(n){
+  let c=.42+(has('creative')?.08:0)+(has('outsider')?.06:0)+(G.fx.kit?.12:0)-G.heat*.05-(n.id==='reyes'?.3:0)+G.mod.heist*.5;
+  advance(5);
+  if(Math.random()<c){
+    const amt=ri(8,40);G.cash+=amt;let m=`You lift ${money(amt)} without a sound.`;
+    if(Math.random()<.25){G.inv.loot++;m+=' And a watch worth fencing.'}
+    talk(n,m);
+  }else{
+    npcS(n).m-=25;addRumor('thief',[n.id]);G.heat=Math.min(5,G.heat+(n.id==='reyes'?3:1.5));
+    notify('You were seen. Police will be looking for you.');talk(n,`${n.name} grabs your wrist. "Hey!"`);
+  }
+}
+function talk(n,extra){
+  if(!G.met[n.id])G.met[n.id]=day();
+  const a=att(n),tr=tier(a),tg=tagsNow(),s=npcS(n);
+  let best=null,bv=-1;
+  tg.forEach(t=>{if(n.react[t]&&Math.abs(n.aff[t]||0)>=bv){bv=Math.abs(n.aff[t]||0);best=t}});
+  const why=tg.filter(t=>n.aff[t]);
+  const heard=G.rumors.filter(r=>r.knows.includes(n.id)).map(r=>RUM[r.type].t);
+  const needsL=[];if(s.hunger<40)needsL.push('hungry');if(s.cash<15)needsL.push('short on cash');
+  const cls=tr>=3?'good':tr===0?'bad':tr===1?'amber':'';
+  const shop=Object.keys(OWNER).find(k=>OWNER[k]===n.id);
+  const btns=[
+    {label:'Chat',sub:s.chat===day()?'You already chatted today':'Small talk builds trust',off:s.chat===day()||tr===0,
+     fn:()=>{s.chat=day();s.m+=3;advance(10);talk(n,n.topic)}},
+    {label:'Ask about town',sub:tr>=2?'Rumors and tips':'They will not talk about that yet',off:tr<2,fn:()=>{advance(5);talk(n,`"${pick(worldLines())}"`)}},
+    {label:'Give a meal',sub:G.inv.meals>0?`You have ${G.inv.meals}`:'You have none',off:G.inv.meals<1,cls:'',fn:()=>{
+      G.inv.meals--;s.m+=12;s.hunger=Math.min(100,s.hunger+45);G.rep[n.d]=clamp(G.rep[n.d]+2,-100,100);G.gifts++;
+      if(G.gifts===3||G.gifts%5===0)addRumor('generous',[n.id]);
+      talk(n,`${n.name} accepts the meal, surprised.`)}}
+  ];
+  if(shop)btns.push({label:`Visit ${POIS[shop].name}`,cls:'',fn:()=>goPOI(POIS[shop])});
+  btns.push({label:'Pickpocket',sub:'Risky. Raises your wanted level if caught.',cls:'quiet',fn:()=>pickpocket(n)});
+  btns.push(leaveBtn);
+  ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}, ${n.d}. Attitude: <span class="${cls}">${LAB[tr]}</span>${needsL.length?`. Seems ${needsL.join(' and ')}.`:'.'}</p>
+  <p>${esc(n.tier[tr])}</p>${best?`<p>${esc(n.react[best])}</p>`:''}${heard.length?`<p class="amber">${esc(n.name.split(' ')[0])} has heard: ${esc(heard[0])}</p>`:''}${extra?`<p class="amber">${esc(extra)}</p>`:''}
+  ${why.length?`<p class="muted small">Shaped by: ${why.map(esc).join(', ')}.</p>`:''}`,btns);
+}
+
+/* ================= POI MENUS ================= */
+function refuse(poi,n){
+  const neg=tagsNow().filter(t=>(n.aff[t]||0)<0);
+  ui(`<h2>${esc(poi.name)}</h2><p>${esc(n.name)} will not deal with you.${neg.length?` They hold "${neg.map(esc).join('", "')}" against you.`:''}</p>
+  <p class="muted">Build standing in ${n.d}, or earn their trust with gifts and good deeds. Rumors count too.</p>`,[leaveBtn]);
+}
+function openPOI(poi){
+  const n=OWNER[poi.id]?NPC[OWNER[poi.id]]:null;
+  if(n&&!G.met[n.id])G.met[n.id]=day();
+  if(poi.id!==G.home&&G.mod.closed.includes(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>Closed: ${esc(G.mod.names[poi.id])}.</p>`,[leaveBtn]);
+  if(poi.id!==G.home&&!isOpen(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>Closed. Opens at ${fmtHr(OPEN[poi.id][0])}.</p>`,[leaveBtn]);
+  if(n&&poi.id!==G.home&&tier(att(n))===0)return refuse(poi,n);
+  (MENUS[poi.id]||info)(poi,n);
+}
+function info(poi){ui(`<h2>${esc(poi.name)}</h2><p>Residents live here. Nobody answers the door.</p>`,[leaveBtn])}
+function gig(n,{hrs,base,mult=1,rep,label}){
+  if(G.energy<hrs*7)return `You are too tired for ${hrs} hours of work.`;
+  const pay=Math.round(base*mult*(n?payF(n):1));
+  G.cash+=pay;advance(hrs*60);G.energy=clamp(G.energy-hrs*4,0,100);
+  G.rep[rep]=clamp(G.rep[rep]+1,-100,100);
+  return `You worked ${label} for ${hrs} hours and earned ${money(pay)}.`;
+}
+function sellScreen(mult,title,back,msg){
+  const base={crops:6,meals:14,fish:9,smoked:18,trinkets:26,scrap:4},ev=G.ev&&G.ev.id;
+  const pr=k=>{let v=base[k]*mult*G.mod.sell;if(k==='crops'){if(ev==='glut')v*=.6;v*=G.mod.crops}if(k==='fish')v*=fishMod()*(ev==='strike'?1.3:1);if(k==='smoked')v*=Math.min(1.5,fishMod());if(k==='scrap')v*=scrapMod();return Math.max(1,Math.round(v))};
+  const items=Object.keys(base).filter(k=>G.inv[k]>0);
+  ui(`<h2>${esc(title)}</h2>${msgP(msg)}${items.length?'':'<p>You have nothing to sell.</p>'}<p class="muted small">Prices move with harvests, strikes, and how much the city has fished or scavenged.</p>`,
+    [...items.map(k=>({label:`Sell all ${NAMES[k]} (${G.inv[k]})`,sub:`${money(pr(k))} each, ${money(pr(k)*G.inv[k])} total`,fn:()=>{
+      const tot=pr(k)*G.inv[k];G.cash+=tot;G.inv[k]=0;advance(10);sellScreen(mult,title,back,`Sold for ${money(tot)}.`)}})),
+     {label:'Back',cls:'quiet',fn:back}]);
+}
+const MENUS={};
+MENUS.market=(poi,n,msg)=>{
+  const f=buyF(n),seed=Math.round(4*f);
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the counter.</p>${msgP(msg)}`,[
+    {label:'Sell goods',fn:()=>sellScreen(sellF(n),poi.name,()=>MENUS.market(poi,n))},
+    {label:'Buy a seed packet',sub:`${money(seed)} each. Plant it in a plot or Greenhouse.`,cls:'',off:G.cash<seed,fn:()=>{G.cash-=seed;G.inv.seeds++;advance(5);MENUS.market(poi,n,'You bought a seed.')}},
+    {label:'Pocket something and run',sub:'Free, but the whole Grid may hear about it',cls:'quiet',fn:()=>{
+      let c=.4;if(has('smooth'))c-=.12;if(has('creative'))c-=.08;if(has('known-thief'))c+=.15;
+      advance(10);
+      if(Math.random()<c){addRumor('thief',['mina','reyes']);news('Theft reported at the Market Hall.',2);npcS(NPC.mina).m-=20;G.rep.Grid=clamp(G.rep.Grid-10,-100,100);G.heat=Math.min(5,G.heat+2);MENUS.market(poi,n,'Caught! Mina shouts for the constable. Run.')}
+      else{G.inv.crops+=2;MENUS.market(poi,n,'You slip two crops into your coat and walk off.')}}},
+    leaveBtn]);
+};
+MENUS.diner=(poi,n,msg)=>{
+  const price=Math.round(mealPrice()*buyF(n));
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} is behind the grill.</p>${msgP(msg)}`,[
+    {label:'Order a meal',sub:`${money(price)}. Restores 45 fullness.`,off:G.cash<price,fn:()=>{G.cash-=price;G.hunger=clamp(G.hunger+45,0,100);G.demand+=1;advance(30);MENUS.diner(poi,n,'You eat a hot meal.')}},
+    {label:'Work a kitchen shift',sub:`4 hours, about ${money(22*payF(n))}`,cls:'',fn:()=>MENUS.diner(poi,n,gig(n,{hrs:4,base:22,rep:'Grid',label:'the grill'}))},
+    leaveBtn]);
+};
+MENUS.dock=(poi,n,msg)=>{
+  const strike=G.ev&&G.ev.id==='strike';
+  const mult=(has('strong')?1.4:1)*(has('union')?1.2:1)*(G.fx.crane?1.25:1);
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the hiring line.</p>${strike?'<p class="bad">The dock strike has shut the piers.</p>':''}${msgP(msg)}`,[
+    {label:'Haul cargo',sub:`4 hours, about ${money(26*mult*payF(n))}`,off:strike,fn:()=>MENUS.dock(poi,n,gig(n,{hrs:4,base:26,mult,rep:'Dockside',label:'hauling cargo'}))},
+    leaveBtn]);
+};
+MENUS.estate=(poi,n,msg)=>{
+  if(has('known-thief'))return ui(`<h2>${esc(poi.name)}</h2><p>The steward turns you away. Word of the theft reached the terraces.</p>`,[leaveBtn]);
+  const gala=G.ev&&G.ev.id==='gala';
+  const mult=(has('rural')?1.3:1)*(has('disgraced')?.7:1)*(gala?1.5:1)*(G.fx.commons?1.2:1);
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Lady Ashgrove's gardens need constant tending.</p>${msgP(msg)}`,[
+    {label:'Tend the gardens',sub:`4 hours, about ${money(34*mult*payF(n))}`,fn:()=>MENUS.estate(poi,n,gig(n,{hrs:4,base:34,mult,rep:'Highline',label:'in the gardens'}))},
+    leaveBtn]);
+};
+function craftTrinket(){G.inv.scrap-=3;G.inv.trinkets++;advance(120);G.energy=clamp(G.energy-6,0,100)}
+MENUS.workshop=(poi,n,msg)=>{
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Benches, tools, and the smell of solder.</p>${msgP(msg)}`,[
+    {label:'Craft a trinket',sub:`Uses 3 scrap, 2 hours. You have ${G.inv.scrap}.`,off:G.inv.scrap<3,fn:()=>{craftTrinket();MENUS.workshop(poi,n,'You made a trinket.')}},
+    {label:'Repair shift',sub:'3 hours, about $18',cls:'',fn:()=>MENUS.workshop(poi,n,gig(null,{hrs:3,base:18,mult:has('creative')?1.2:1,rep:'Grid',label:'repairs'}))},
+    leaveBtn]);
+};
+MENUS.gull=(poi,n,msg)=>{
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} polishes a glass.</p>${msgP(msg)}`,[
+    {label:'Listen for rumors',sub:'1 hour, free',fn:()=>{advance(60);MENUS.gull(poi,n,pick(worldLines()))}},
+    {label:'Buy a round for the bar',sub:'$15. Dockside will remember.',cls:'',off:G.cash<15,fn:()=>{G.cash-=15;G.rep.Dockside=clamp(G.rep.Dockside+4,-100,100);npcS(n).m+=5;advance(60);MENUS.gull(poi,n,'Glasses are raised. Dockside thinks better of you.')}},
+    leaveBtn]);
+};
+MENUS.club=(poi,n,msg)=>{
+  const ok=(G.rep.Highline>=-10||has('educated')||has('smooth'))&&!has('known-thief');
+  if(!ok)return ui(`<h2>${esc(poi.name)}</h2><p>The doorman looks you over and shakes his head. "Members and guests only."</p><p class="muted">Your standing on the Highline is too low.</p>`,[leaveBtn]);
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Candlelight and low talk above the tide.</p>${msgP(msg)}`,[
+    {label:'Mingle with the guests',sub:'$30, 2 hours. Raises Highline standing.',off:G.cash<30,fn:()=>{G.cash-=30;G.rep.Highline=clamp(G.rep.Highline+(has('smooth')?8:5),-100,100);advance(120);MENUS.club(poi,n,'You work the room and a few doors open.')}},
+    leaveBtn]);
+};
+MENUS.bank=(poi,n,msg)=>{
+  const t=tier(att(n)),can=t>=2&&G.debt===0&&!has('known-thief'),biz=G.biz.some(b=>b.type);
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} watches from behind glass.</p>${msgP(msg)}${G.debt>0?`<p class="bad">You owe ${money(G.debt)}.</p>`:''}`,[
+    {label:'Borrow $150',sub:can?'Repay $180 within 10 days or word gets out.':G.debt>0?'Repay what you owe first':'Your standing is too low for a loan',off:!can,fn:()=>ask('Take the loan?','You will owe $180 within 10 days. Missing the deadline damages your name.','Take it',()=>{G.cash+=150;G.debt=180;G.loanDay=day();G.loanTerm=10;G.flags.defRum=0;advance(20);MENUS.bank(poi,n,'The loan is approved. Do not forget it.')},()=>MENUS.bank(poi,n))},
+    {label:'Business loan, $800',sub:can&&biz?'Repay $960 within 20 days. Needs a business.':!biz?'Open a business first':'Your standing is too low',off:!(can&&biz),cls:'',fn:()=>ask('Take the business loan?','You will owe $960 within 20 days. Missing the deadline damages your name.','Take it',()=>{G.cash+=800;G.debt=960;G.loanDay=day();G.loanTerm=20;G.flags.defRum=0;advance(30);MENUS.bank(poi,n,'The business loan is approved.')},()=>MENUS.bank(poi,n))},
+    {label:'Repay debt',sub:G.debt>0?`Pay up to ${money(Math.min(G.cash,G.debt))}`:'You owe nothing',off:G.debt<=0||G.cash<1,cls:'',fn:()=>{const p=Math.min(G.cash,G.debt);G.cash-=p;G.debt-=p;if(G.debt<=0)G.flags.defRum=0;advance(10);MENUS.bank(poi,n,G.debt>0?`You paid ${money(p)}.`:'Debt cleared.')}},
+    leaveBtn]);
+};
+MENUS.clinic=(poi,n,msg)=>{
+  const free=tier(att(n))>=2&&(has('broke')||G.cash<20);
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Clean sheets and a ticking clock.</p>${msgP(msg)}`,[
+    {label:'Get treated',sub:free?'Dr. Bell waves the fee':'$10. Restores energy.',off:!free&&G.cash<10,fn:()=>{if(!free)G.cash-=10;G.energy=clamp(G.energy+35,0,100);advance(60,true);MENUS.clinic(poi,n,'You feel better.')}},
+    leaveBtn]);
+};
+function homeMenu(poi,msg){
+  const sleepM=()=>{const tod=G.t%1440;let m=(7*60-tod+1440)%1440;if(m<360)m=360;return m};
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Home. ${money(homeBill())} a month.</p>${msgP(msg)}${G.arrears>0?`<p class="bad">Bills owed: ${money(G.arrears)}</p>`:''}`,[
+    {label:'Sleep until morning',sub:'Lowers your wanted level',fn:()=>{const m=sleepM();advance(m,true);G.energy=clamp(G.energy+m/60*14,0,100);G.heat=Math.max(0,G.heat-1);hud();homeMenu(poi,`You slept ${Math.round(m/60)} hours.`)}},
+    {label:'Nap for 2 hours',cls:'',fn:()=>{advance(120,true);G.energy=clamp(G.energy+25,0,100);hud();homeMenu(poi,'You napped.')}},
+    {label:'Cook a meal',sub:'2 crops make 1 meal',off:G.inv.crops<2,cls:'',fn:()=>{G.inv.crops-=2;G.inv.meals++;advance(60);homeMenu(poi,'You cooked a meal.')}},
+    {label:'Cook fish stew',sub:'1 fish and 1 crop make 2 meals',off:G.inv.fish<1||G.inv.crops<1,cls:'',fn:()=>{G.inv.fish--;G.inv.crops--;G.inv.meals+=2;advance(60);homeMenu(poi,'You made a stew. Two meals.')}},
+    {label:'Pay owed bills',sub:G.arrears>0?`Pay up to ${money(Math.min(G.cash,G.arrears))}`:'Nothing owed',off:G.arrears<=0||G.cash<1,cls:'',fn:()=>{const p=Math.min(G.cash,G.arrears);G.cash-=p;G.arrears-=p;homeMenu(poi,`You paid ${money(p)}.`)}},
+    leaveBtn]);
+}
+RES.forEach(id=>MENUS[id]=(poi)=>poi.id===G.home?homeMenu(poi):info(poi));
+
+/* ----- Realty ----- */
+MENUS.realty=(poi,n,msg)=>{
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} has listings across the city.</p>${msgP(msg)}`,[
+    {label:'Apartments',sub:'Rent or buy a place to live',fn:()=>resList()},
+    {label:'Buildings for sale',sub:'Buy an empty building and start a business',cls:'',fn:()=>buildingList()},
+    leaveBtn]);
+};
+function resList(){
+  ui(`<h2>Apartments</h2><p class="muted">Renting costs monthly. Owning costs about 30% of the rent as upkeep.</p>`,
+    [...RES.map(id=>({label:POIS[id].name+(G.home===id?' (home)':G.owned[id]?' (owned)':''),sub:`${POIS[id].d}. Rent ${money(RENT[id])}/mo, buy ${money(RENT[id]*28)}`,cls:'',fn:()=>resMenu(id)})),{label:'Back',cls:'quiet',fn:()=>MENUS.realty(POIS.realty,NPC.lou)}]);
+}
+function resMenu(id,msg){
+  const own=!!G.owned[id],cur=G.home===id;
+  const dep=RENT[id],price=Math.round(RENT[id]*28*buyF(NPC.lou));
+  ui(`<h2>${esc(POIS[id].name)}</h2><p class="muted">${POIS[id].d}</p>${msgP(msg)}`,[
+    own?{label:cur?'You live here':'Move in',sub:'No rent. Upkeep only.',off:cur,fn:()=>{G.home=id;resMenu(id,'You moved in.')}}
+       :{label:'Rent it',sub:`${money(dep)} now, then every month`,off:cur||G.cash<dep,fn:()=>{G.cash-=dep;G.home=id;resMenu(id,'You rented the place and moved in.')}},
+    {label:own?'Sell your unit':'Buy a unit',sub:own?`Get ${money(RENT[id]*28*.7)}`:`${money(price)}`,off:!own&&G.cash<price,cls:'',fn:()=>{
+      if(own)return ask('Sell your unit?',`You get ${money(RENT[id]*28*.7)}.`+(G.home===id?' You live here, so you will move to the Bunkhouse.':''),'Yes, sell',()=>{G.cash+=Math.round(RENT[id]*28*.7);delete G.owned[id];if(G.home===id)G.home='bunk';resMenu(id,'Sold.')},()=>resMenu(id));
+      ask('Buy this unit?',`It costs ${money(price)} and you move in right away.`,'Yes, buy',()=>{G.cash-=price;G.owned[id]=true;G.home=id;resMenu(id,'It is yours. You moved in.')},()=>resMenu(id))}},
+    {label:'Back',cls:'quiet',fn:resList}]);
+}
+function buildingList(){
+  const v=blocks.filter(b=>!b.poi&&!bizOf(b.key)).map(b=>({b,d:district(b.x+1,b.y+1),p:PRICE[district(b.x+1,b.y+1)]})).sort((a,b)=>a.p-b.p);
+  ui(`<h2>Buildings for sale</h2><p class="muted">Each lists with the district and price. You can also tap a FOR SALE sign on the map.</p>`,
+    [...v.slice(0,10).map(x=>({label:`${x.d}, ${money(x.p)}`,sub:`Block at ${x.b.x},${x.b.y}`,cls:'',fn:()=>vacantMenu(x.b)})),{label:'Back',cls:'quiet',fn:()=>MENUS.realty(POIS.realty,NPC.lou)}]);
+}
+function vacantMenu(b,msg){
+  const d=district(b.x+1,b.y+1),lou=NPC.lou;
+  if(tier(att(lou))===0)return refuse(POIS.realty,lou);
+  const price=Math.round(PRICE[d]*buyF(lou));
+  ui(`<h2>Empty building, ${d}</h2><p class="muted">Foot traffic here: ${TR[d]>=30?'heavy':TR[d]>=20?'steady':'light'}. Convert it into a café, bar, workshop, rental, farm, or home after buying.</p>${msgP(msg)}`,[
+    {label:`Buy for ${money(price)}`,sub:`Property tax about ${money(price*.01)} a month`,off:G.cash<price,fn:()=>{
+      ask('Buy this building?',`It costs ${money(price)}. Property tax applies every month.`,'Yes, buy',()=>{G.cash-=price;G.biz.push({key:b.key,d,type:null,price,workers:[],supplies:0,till:0,level:1,mk:1,store:0,auto:true,last:null});advance(30);bizMenu(bizOf(b.key),'You own it now.')},()=>vacantMenu(b))}},
+    {label:'Close',cls:'quiet',fn:closeMenu}]);
+}
+function propertyMenu(b){const biz=bizOf(b.key);if(biz)bizMenu(biz);else vacantMenu(b)}
+function bizMenu(biz,msg){
+  if(!biz.type){
+    return ui(`<h2>Empty building, ${biz.d}</h2><p class="muted">Choose what to turn it into.</p>${msgP(msg)}`,[
+      ...Object.entries(BT).filter(([k])=>k!=='farm'||biz.d==='Greenbelt').map(([k,t],i)=>({label:`${t.n}, fit-out ${money(t.fit)}`,sub:t.d,cls:i?'':'primary',off:G.cash<t.fit,fn:()=>ask(`Convert to a ${t.n.toLowerCase()}?`,`The fit-out costs ${money(t.fit)}.`,'Yes, convert',()=>{G.cash-=t.fit;biz.paid=(biz.paid||biz.price)+t.fit;biz.type=k;news(`A new ${t.n.toLowerCase()} opens in ${biz.d}.`,2);advance(120);bizMenu(biz,`Now a ${t.n.toLowerCase()}.`)},()=>bizMenu(biz))})),
+      {label:'Sell it back',sub:`Get ${money(biz.price*.7)}`,cls:'quiet',fn:()=>sellBiz(biz)},{label:'Close',cls:'quiet',fn:closeMenu}]);
+  }
+  const t=BT[biz.type],btns=[];
+  const L=biz.last;
+  if(biz.type==='home'){
+    const hp={id:'B:'+biz.key,name:'Your building'};
+    return ui(`<h2>${t.n}</h2><p class="muted">${biz.d}. ${t.d}</p>${msgP(msg)}`,[
+      G.home==='B:'+biz.key?{label:'Sleep, cook, rest',fn:()=>homeMenu(homePoi())}:{label:'Make this my home',fn:()=>{G.home='B:'+biz.key;bizMenu(biz,'You moved in.')}},
+      {label:'Sell the building',sub:`Get ${money((biz.paid||biz.price)*.7)}`,cls:'quiet',fn:()=>sellBiz(biz)},leaveBtn]);
+  }
+  btns.push({label:'Collect till',sub:money(biz.till),off:biz.till<=0,fn:()=>{G.cash+=biz.till;biz.till=0;advance(5);bizMenu(biz,'Cash collected.')}});
+  if(t.dep)btns.push({label:'Add supplies',sub:`In stock: ${biz.supplies}. Use your own goods to save money.`,cls:'',fn:()=>depositMenu(biz)});
+  if(biz.type==='farm'){
+    btns.push({label:`Auto-sell crops: ${biz.auto?'On':'Off'}`,sub:biz.auto?'Sells wholesale at $4 each':'Crops pile up for you to collect',cls:'',fn:()=>{biz.auto=!biz.auto;bizMenu(biz)}});
+    btns.push({label:'Take stored crops',sub:`${biz.store} waiting`,off:biz.store<=0,cls:'',fn:()=>{G.inv.crops+=biz.store;biz.store=0;bizMenu(biz,'Crops added to your bag.')}});
+  }
+  if(biz.type!=='rental')btns.push({label:`Staff (${biz.workers.length}/${1+biz.level})`,sub:'Hire and fire',cls:'',fn:()=>staffMenu(biz)});
+  if(biz.type==='cafe'||biz.type==='bar'||biz.type==='workshop')btns.push({label:`Price: ${MKN[biz.mk]}`,sub:'Low sells more, High sells less',cls:'',fn:()=>{biz.mk=(biz.mk+1)%3;bizMenu(biz)}});
+  if(biz.level<3)btns.push({label:`Upgrade to level ${biz.level+1}`,sub:`${money(700*biz.level)}. More demand and room for staff.`,off:G.cash<700*biz.level,cls:'',fn:()=>ask(`Upgrade to level ${biz.level+1}?`,`It costs ${money(700*biz.level)}.`,'Yes, upgrade',()=>{G.cash-=700*biz.level;biz.paid=(biz.paid||biz.price)+700*biz.level;biz.level++;bizMenu(biz,'Upgraded.')},()=>bizMenu(biz))});
+  btns.push({label:'Sell the building',sub:`Get ${money((biz.paid||biz.price)*.7)}`,cls:'quiet',fn:()=>sellBiz(biz)},leaveBtn);
+  ui(`<h2>${t.n}, level ${biz.level}</h2><p class="muted">${biz.d}. ${t.d}</p>${msgP(msg)}
+  <div class="kv"><div><span>Till</span><b>${money(biz.till)}</b></div><div><span>Supplies</span><b>${biz.supplies}</b></div><div><span>Staff</span><b>${biz.workers.length}</b></div>
+  ${L?`<div><span>Last day</span><b>${L.profit>=0?'+':''}${money(L.profit)}</b></div><div><span>Sold</span><b>${L.units}</b></div><div><span>Wages</span><b>${money(L.wages)}</b></div>`:''}</div>${L&&L.theft?`<p class="bad small">Staff skimmed ${money(L.theft)}.</p>`:''}${L&&L.note?`<p class="bad small">${esc(L.note)}</p>`:''}`,btns);
+}
+function sellBiz(biz){ask('Sell this building?',`You get about ${money((biz.paid||biz.price)*.7+biz.till)}. Staff and stock go with it.`,'Yes, sell',()=>doSellBiz(biz),()=>bizMenu(biz))}
+function doSellBiz(biz){
+  const get=Math.round((biz.paid||biz.price)*.7+biz.till);
+  G.cash+=get;G.biz=G.biz.filter(b=>b!==biz);if(G.home==='B:'+biz.key)G.home='bunk';closeMenu();notify(`Sold for ${money(get)}.`);
+}
+function depositMenu(biz,msg){
+  const t=BT[biz.type];
+  const btns=Object.keys(t.dep).filter(k=>G.inv[k]>0).map(k=>({label:`Add all ${NAMES[k]} (${G.inv[k]})`,sub:`+${t.dep[k]} supply each`,fn:()=>{biz.supplies+=G.inv[k]*t.dep[k];G.inv[k]=0;depositMenu(biz,'Stocked.')}}));
+  ui(`<h2>Supplies</h2><p class="muted">In stock: ${biz.supplies}. Missing supplies are bought wholesale at ${money(t.cost)} each.</p>${msgP(msg)}${btns.length?'':'<p>You have nothing this business can use.</p>'}`,[...btns,{label:'Back',cls:'quiet',fn:()=>bizMenu(biz)}]);
+}
+function staffMenu(biz,msg){
+  const full=biz.workers.length>=1+biz.level;
+  ui(`<h2>Staff</h2><p class="muted">Each worker adds capacity. Wages are paid daily from the till, then from your cash.</p>${msgP(msg)}`,[
+    ...biz.workers.map(w=>({label:`Fire ${w.name}`,sub:`Skill ${w.skill}, ${money(w.wage)}/day, ${TRAITN[w.trait]}`,cls:'quiet',fn:()=>ask(`Fire ${w.name}?`,'They will leave right away.','Yes, fire',()=>{biz.workers=biz.workers.filter(x=>x!==w);staffMenu(biz,`${w.name} is gone.`)},()=>staffMenu(biz))})),
+    ...G.pool.map((w,i)=>({label:`Hire ${w.name}`,sub:`Skill ${w.skill}, ${money(w.wage)}/day, ${TRAITN[w.trait]}`,off:full,cls:i?'':'primary',fn:()=>{biz.workers.push(w);G.pool=G.pool.filter(x=>x!==w);staffMenu(biz,`${w.name} joins the team.`)}})),
+    {label:'Back',cls:'quiet',fn:()=>bizMenu(biz)}]);
+}
+
+/* ----- Neon Mile and Foundry ----- */
+MENUS.casino=(poi,n,msg)=>{
+  const bet=(amt)=>{
+    if(G.cash<amt)return MENUS.casino(poi,n,'You cannot cover that bet.');
+    advance(30);
+    if(Math.random()<.47){G.cash+=amt;MENUS.casino(poi,n,`You win ${money(amt)}.`)}
+    else{G.cash-=amt;MENUS.casino(poi,n,`You lose ${money(amt)}.`)}
+  };
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Lights, chips, and exits that are hard to find.</p>${msgP(msg)}`,[
+    {label:'Bet $20',sub:'Win double or lose it',off:G.cash<20,fn:()=>bet(20)},
+    {label:'Bet $100',sub:'Win double or lose it',off:G.cash<100,cls:'',fn:()=>bet(100)},
+    {label:'High roller, $500',sub:'Win double or lose it',off:G.cash<500,cls:'',fn:()=>ask('Bet $500?','You can lose all of it.','Place the bet',()=>bet(500),()=>MENUS.casino(poi,n))},leaveBtn]);
+};
+MENUS.pawn=(poi,n,msg)=>{
+  const cold=G.heat>=2;
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">No questions, no receipts.</p>${msgP(msg)}${cold?'<p class="bad">The owner will not deal with you while police are on your tail.</p>':''}`,[
+    {label:'Fence hot goods',sub:`${G.inv.loot} items, $35 each`,off:cold||G.inv.loot<1,fn:()=>{const t=G.inv.loot*35;G.cash+=t;G.inv.loot=0;advance(15);MENUS.pawn(poi,n,`You walk away with ${money(t)}.`)}},
+    {label:'Sell trinkets',sub:`${G.inv.trinkets} items, $32 each`,off:G.inv.trinkets<1,cls:'',fn:()=>{const t=G.inv.trinkets*32;G.cash+=t;G.inv.trinkets=0;advance(10);MENUS.pawn(poi,n,`Sold for ${money(t)}.`)}},
+    {label:'Buy a burglar kit',sub:G.fx.kit?'You already have one':'$90. Improves pickpocketing and heists.',off:G.cash<90||G.fx.kit,cls:'',fn:()=>{G.cash-=90;G.fx.kit=true;MENUS.pawn(poi,n,'You pocket a roll of tools.')}},
+    {label:'Fence a stolen vehicle',sub:Object.keys(G.veh.stolen).some(k=>G.veh.stolen[k])?'$600':'You have none',off:cold||!Object.keys(G.veh.stolen).some(k=>G.veh.stolen[k]),cls:'',fn:()=>{
+      const k=Object.keys(G.veh.stolen).find(x=>G.veh.stolen[x]);G.veh.owned[k]=false;G.veh.stolen[k]=false;if(G.veh.active===k)G.veh.active='none';G.cash+=600;MENUS.pawn(poi,n,'The car disappears and cash appears.')}},
+    leaveBtn]);
+};
+MENUS.garage=(poi,n,msg)=>{
+  const f=buyF(n);
+  const btns=Object.keys(VEH).filter(k=>k!=='none').map(k=>{
+    const price=Math.round(VEH[k].price*f);
+    return{label:G.veh.owned[k]?`${VEH[k].n} (owned)`:`${VEH[k].n}, ${money(price)}`,sub:`Speed ${VEH[k].sp}${VEH[k].fuel?', fuel needed':', no fuel'}${VEH[k].ins?`, insurance ${money(VEH[k].ins)}/mo`:''}`,off:!!G.veh.owned[k]||G.cash<price,cls:'',fn:()=>ask(`Buy the ${VEH[k].n.toLowerCase()}?`,`It costs ${money(price)}.`,'Yes, buy',()=>{G.cash-=price;G.veh.owned[k]=true;G.veh.fuel[k]=100;G.veh.active=k;MENUS.garage(poi,n,`You ride off on the ${VEH[k].n.toLowerCase()}.`)},()=>MENUS.garage(poi,n))};
+  });
+  const a=G.veh.active,tank=VEH[a].fuel?Math.round(G.veh.fuel[a]||0):100,fuelCost=Math.round((100-tank)*.3);
+  btns.push({label:'Refuel',sub:VEH[a].fuel?`${tank}% now, ${money(fuelCost)} to fill`:'Your ride does not need fuel',off:!VEH[a].fuel||tank>=100||G.cash<fuelCost,cls:'primary',fn:()=>{G.cash-=fuelCost;G.veh.fuel[a]=100;advance(10);MENUS.garage(poi,n,'Tank full.')}});
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} wipes his hands.</p>${msgP(msg)}`,[...btns.slice(-1),...btns.slice(0,-1),leaveBtn]);
+};
+MENUS.foundry=(poi,n,msg)=>{
+  const mult=(has('strong')?1.3:1)*(has('working-class')?1.1:1);
+  const price=Math.round(60*buyF(n));
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the furnace line.</p>${msgP(msg)}`,[
+    {label:'Foundry shift',sub:`5 hours, about ${money(48*mult*payF(n))}`,fn:()=>MENUS.foundry(poi,n,gig(n,{hrs:5,base:48,mult,rep:'Foundry Row',label:'at the furnace'}))},
+    {label:'Buy 10 scrap',sub:`${money(price)}. Feeds workshops and projects.`,off:G.cash<price,cls:'',fn:()=>{G.cash-=price;G.inv.scrap+=10;advance(15);MENUS.foundry(poi,n,'Ten pieces loaded.')}},
+    leaveBtn]);
+};
+MENUS.loft=(poi)=>poi.id===G.home?homeMenu(poi):info(poi);
+
+/* ----- Velvet Room: crime jobs ----- */
+const JOB_POIS=['market','diner','dock','gull','bank','clinic','workshop','garage','foundry','pawn','casino','estate','club','realty'];
+function startMission(m){G.mission=m;notify(`Job accepted: ${m.title}.`);closeMenu()}
+MENUS.velvet=(poi,n,msg)=>{
+  if(G.mission)return ui(`<h2>${esc(poi.name)}</h2><p>${esc(n.name)} says: "Finish what you started."</p><p class="muted">${esc(missionText())}</p>`,[{label:'Drop the job',cls:'quiet',fn:()=>ask('Drop this job?','Vex will remember that you walked away.','Drop it',()=>{G.mission=null;npcS(NPC.vex).m-=4;closeMenu()},()=>MENUS.velvet(POIS.velvet,NPC.vex))},leaveBtn]);
+  const p=G.p,mk=()=>{
+    const a=pick(JOB_POIS),b=pick(JOB_POIS.filter(x=>x!==a)),d=man(Math.round(p.x),Math.round(p.y),POIS[a].ex,POIS[a].ey)+man(POIS[a].ex,POIS[a].ey,POIS[b].ex,POIS[b].ey);
+    return{a,b,d};
+  };
+  const j=mk();
+  const target=pick(['market','diner','gull','clinic','dock']);
+  const heistT=pick(['bank','estate','club','casino']);
+  const boostT=pick(['garage','foundry','dock']);
+  const tools=G.fx.kit?.18:0;
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} slides a note across the table.</p>${msgP(msg)}`,[
+    {label:'Courier run',sub:`${POIS[j.a].name} to ${POIS[j.b].name}. ${money(50+j.d*.8)}, ${Math.round(j.d*.9+25)} min. A bike helps.`,fn:()=>startMission({type:'courier',title:'Courier run',stops:[j.a,j.b],i:0,deadline:G.t+j.d*.9+25,reward:Math.round(50+j.d*.8)})},
+    {label:'Collect a debt',sub:`Lean on ${POIS[target].name}. ${money(110)}. Raises heat.`,cls:'',fn:()=>startMission({type:'collect',title:'Debt collection',stops:[target],i:0,deadline:G.t+420,reward:110})},
+    {label:'Smash and grab',sub:`${POIS[heistT].name}, after dark. Big payout, big heat.`,cls:'',fn:()=>startMission({type:'heist',title:'Smash and grab',stops:[heistT],i:0,deadline:G.t+1200,reward:260,night:true,odds:.4+tools+(has('smooth')?.05:0)+(has('creative')?.05:0)+G.mod.heist})},
+    {label:'Boost a car',sub:`Take a sedan from ${POIS[boostT].name}. A free ride, but hot.`,cls:'',fn:()=>startMission({type:'boost',title:'Boost a car',stops:[boostT],i:0,deadline:G.t+480,reward:0,odds:.55+tools})},
+    leaveBtn]);
+};
+function missionTick(){
+  const m=G.mission;if(!m)return;
+  if(G.t>m.deadline){G.mission=null;notify(`Job failed: ${m.title}. Out of time.`);G.rep['Neon Mile']=clamp(G.rep['Neon Mile']-3,-100,100);return}
+  const poi=POIS[m.stops[m.i]];
+  if(Math.hypot(G.p.x-poi.ex,G.p.y-poi.ey)>1.3)return;
+  if(m.night&&!isNight())return;
+  m.i++;
+  if(m.i<m.stops.length){notify(`Package picked up. Deliver it to ${POIS[m.stops[m.i]].name}.`);return}
+  G.mission=null;const vex=npcS(NPC.vex);
+  if(m.type==='courier'){G.cash+=m.reward;vex.m+=5;G.rep['Neon Mile']=clamp(G.rep['Neon Mile']+3,-100,100);notify(`Delivered. You earn ${money(m.reward)}.`)}
+  else if(m.type==='collect'){
+    if(Math.random()<.7){G.cash+=m.reward;G.heat=Math.min(5,G.heat+1);vex.m+=6;G.rep[poi.d]=clamp(G.rep[poi.d]-6,-100,100);const o=OWNER[poi.id]&&NPC[OWNER[poi.id]];if(o)npcS(o).m-=15;{news(`Shakedown reported at ${poi.name}.`,2);notify(`They pay up. You earn ${money(m.reward)}, and made an enemy.`)}}
+    else{G.heat=Math.min(5,G.heat+2.2);notify('They call the police. Run!')}
+  }else if(m.type==='heist'){
+    if(Math.random()<m.odds){const c=ri(180,320);G.cash+=c;G.inv.loot+=ri(1,3);G.heat=Math.min(5,G.heat+2);vex.m+=10;{news(`Overnight break-in at ${poi.name}. Police are investigating.`,3);notify(`You are in and out. ${money(c)} and some goods. Police are alerted.`)}}
+    else{G.heat=Math.min(5,G.heat+3.5);news(`Alarm at ${poi.name}: an attempted break-in.`,3);notify('Alarm! You bolt with nothing. Run!')}
+  }else if(m.type==='boost'){
+    if(Math.random()<m.odds){G.veh.owned.sedan=true;G.veh.stolen.sedan=true;G.veh.fuel.sedan=60;G.veh.active='sedan';G.heat=Math.min(5,G.heat+2);{news(`A sedan was stolen near ${poi.name}.`,2);notify('Hotwired. The sedan is yours, but it is hot.')}}
+    else{G.heat=Math.min(5,G.heat+3);notify('The owner spots you. Run!')}
+  }
+  hud();
+}
+
+/* ================= CRIME / POLICE ================= */
+function bust(){
+  const R=NPC.reyes,fine=50*Math.ceil(G.heat),pay=Math.min(G.cash,fine);
+  G.cash-=pay;G.arrears+=fine-pay;G.inv.loot=0;G.heat=0;G.mission=null;R.chasing=false;
+  Object.keys(G.veh.stolen).forEach(k=>{if(G.veh.stolen[k]){G.veh.owned[k]=false;G.veh.stolen[k]=false;if(G.veh.active===k)G.veh.active='none'}});
+  addRumor('thief',['reyes']);news('Constable Reyes made an arrest after a chase through the city.',2);
+  advance(240,true,true);
+  const pl=POIS.plaza;G.p.x=pl.ex;G.p.y=pl.ey;G.p.path=[];G.p.onArrive=null;assign(R,true);
+  hud();
+  ui(`<h2>Busted</h2><p>Constable Reyes catches you. Four hours in a cell, a fine of ${money(fine)}, and your hot goods and stolen cars are gone.</p>`,[{label:'Walk out',fn:closeMenu}],true,false);
+}
+
+/* ================= TILE INTERACTIONS ================= */
+function plotMenu(pl,msg){
+  if(tier(att(NPC.wren))===0)return ui(`<h2>Greenbelt plot</h2><p>Old Wren shoos you off the field. "Not you."</p><p class="muted">Build standing in the Greenbelt first.</p>`,[leaveBtn]);
+  if(pl.s===0)ui(`<h2>Empty plot</h2>${msgP(msg)}`,[
+    {label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${G.fx.irrig?2:3} days.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;pl.s=1;pl.d=(G.fx.irrig?2:3)+G.mod.growth;advance(20);plotMenu(pl,'You planted a seed.')}},leaveBtn]);
+  else if(pl.s===1)ui(`<h2>Growing</h2><p>${pl.d} day${pl.d>1?'s':''} until harvest.</p>`,[leaveBtn]);
+  else ui(`<h2>Ready to harvest</h2>`,[{label:'Harvest',fn:()=>{
+    const n=Math.round(ri(3,4)*(has('rural')?1.5:1)*G.mod.yield);G.inv.crops+=n;pl.s=0;G.rep.Greenbelt=clamp(G.rep.Greenbelt+1,-100,100);G.energy=clamp(G.energy-4,0,100);advance(30);
+    plotMenu(pl,`You harvested ${n} crops.`)}},leaveBtn]);
+}
+function plazaMenu(msg){
+  const gala=G.ev&&G.ev.id==='gala',evening=hourOf()>=17;
+  const est=Math.round(15*(has('creative')?1.8:1)*(gala?1.5:1)*(evening?1.3:1)*(has('known-thief')?.6:1)*(G.fx.lamps?1.3:1)*G.mod.busk);
+  ui(`<h2>Central Plaza</h2><p class="muted">The fountain is the Grid's living room.</p>${msgP(msg)}`,[
+    {label:'Busk for tips',sub:`2 hours, about ${money(est)}`,fn:()=>{
+      if(G.energy<14)return plazaMenu('You are too tired.');
+      const pay=Math.max(2,Math.round(est*rnd(.5,1.5)+(has('smooth')?4:0)));
+      G.cash+=pay;G.rep.Grid=clamp(G.rep.Grid+1,-100,100);advance(120);G.energy=clamp(G.energy-8,0,100);plazaMenu(`The crowd tips you ${money(pay)}.`)}},
+    {label:'Rest on a bench',sub:'1 hour',cls:'',fn:()=>{advance(60,true);G.energy=clamp(G.energy+10,0,100);plazaMenu('You rest.')}},leaveBtn]);
+}
+function waterfront(msg){
+  const tn=tideName(),fs=G.fishStock,fl=G.flats;
+  ui(`<h2>Waterfront</h2><p class="muted">The tide is ${tn}. Fish look ${fs<30?'scarce':fs>70?'plentiful':'steady'}. The flats look ${fl<30?'picked clean':fl>70?'full of scrap':'workable'}.</p>${msgP(msg)}`,[
+    {label:'Fish from the pier',sub:'2 hours. Best at high tide.',fn:()=>{
+      if(G.energy<14)return waterfront('You are too tired.');
+      let n=tn==='high'?ri(2,4):tn==='low'?ri(0,1):ri(1,2);if(has('working-class'))n++;
+      n=Math.round(n*clamp(.3+G.fishStock/70,.3,1.3));
+      G.inv.fish+=n;G.fishStock=clamp(G.fishStock-n*3,0,100);advance(120);G.energy=clamp(G.energy-6,0,100);waterfront(n?`You caught ${n} fish.`:'Nothing bites.')}},
+    {label:'Scavenge the mudflats',sub:tn==='low'?'90 minutes. Scrap is exposed.':'Only at low tide',off:tn!=='low',cls:'',fn:()=>{
+      let n=ri(1,3)+(has('strong')?1:0);n=Math.round(n*clamp(G.flats/60,.3,1.2));
+      G.inv.scrap+=n;G.flats=clamp(G.flats-n*5,0,100);advance(90);G.energy=clamp(G.energy-6,0,100);waterfront(n?`You pulled ${n} pieces of scrap from the mud.`:'The flats have been picked clean.')}},
+    leaveBtn]);
+}
+
+/* ================= BUILDING (small structures) ================= */
+function buildCost(type,d){return Math.round(STRUCTS[type].cost*DM[d])}
+function buildMenu(){
+  ui(`<h2>Build</h2><p class="muted">Pick a structure, then tap a highlighted tile. Costs scale by district. For whole buildings, visit Lou's Realty.</p>`,
+    [...Object.entries(STRUCTS).map(([k,v],i)=>({label:`${v.n}, from ${money(v.cost*.8)}`,sub:v.desc,cls:i?'':'primary',fn:()=>{placing=k;worldPanel();notify(`Tap a highlighted tile to place the ${v.n}. Tap Build again to cancel.`,true)}})),
+     {label:'Close',cls:'quiet',fn:closeMenu}]);
+}
+function canBuild(tx,ty){
+  if(!G||tx<0||ty<0||tx>=W||ty>=H)return false;
+  const t=map[ty][tx];
+  if(t!==T.GRASS&&t!==T.LOT&&t!==T.PARK)return false;
+  if(structAt(tx,ty))return false;
+  if(Object.values(POIS).some(p=>p.ex===tx&&p.ey===ty))return false;
+  if(blocks.some(b=>!b.poi&&b.x+1===tx&&b.y+4===ty))return false;
+  return Math.hypot(tx-G.p.x,ty-G.p.y)<=9;
+}
+function tryPlace(tx,ty){
+  if(!canBuild(tx,ty))return notify('You cannot build there. Try an open highlighted tile nearby.');
+  const d=district(tx,ty),cost=buildCost(placing,d);
+  if(G.cash<cost)return notify(`You need ${money(cost)} to build that in ${d}.`);
+  G.cash-=cost;
+  const st={id:Date.now()+Math.random(),type:placing,x:tx,y:ty,paid:cost};
+  if(placing==='stall'){st.stock={meals:0,smoked:0,fish:0,crops:0,trinkets:0};st.mk=1;st.stored=0;st.earned=0}
+  if(placing==='planter'){st.s=0;st.d=0}
+  G.structs.push(st);
+  const nm=STRUCTS[placing].n;placing=null;advance(60);G.energy=clamp(G.energy-5,0,100);
+  notify(`${nm} built in ${d} for ${money(cost)}.`);hud();save();
+}
+function structMenu(st,msg){
+  const nm=STRUCTS[st.type].n,rm={label:'Dismantle',sub:`Refund ${money(st.paid*.5)}`,cls:'quiet',fn:()=>ask('Dismantle the '+nm.toLowerCase()+'?',`You will get back ${money(st.paid*.5)} and lose it for good.`+(G.home==='S:'+st.id?' This is your home. You will move to the Bunkhouse.':''),'Yes, dismantle',()=>{G.cash+=Math.round(st.paid*.5);G.structs=G.structs.filter(s=>s!==st);if(G.home==='S:'+st.id)G.home='bunk';closeMenu();notify('Dismantled.')},()=>structMenu(st))};
+  if(st.type==='house'){
+    const me=G.home==='S:'+st.id;
+    return ui(`<h2>${nm}</h2><p class="muted">${district(st.x,st.y)}. $35 a month.</p>${msgP(msg)}`,[
+      me?{label:'Sleep, cook, rest',fn:()=>homeMenu(homePoi())}:{label:'Make this my home',fn:()=>{G.home='S:'+st.id;structMenu(st,'You moved in.')}},leaveBtn,rm]);
+  }
+  if(st.type==='stall'){
+    const lines=Object.keys(FAIR).map(k=>`<div><span>${NAMES[k]}</span><b>${st.stock[k]}</b></div>`).join('');
+    const stk=Object.keys(FAIR).filter(k=>G.inv[k]>0).map(k=>({label:`Stock all ${NAMES[k]} (${G.inv[k]})`,sub:`Sells at ${money(FAIR[k]*MK[st.mk])} each`,cls:'',fn:()=>{st.stock[k]+=G.inv[k];G.inv[k]=0;advance(5);structMenu(st,'Stocked.')}}));
+    ui(`<h2>Your stall</h2><p class="muted">${district(st.x,st.y)}. Price: ${MKN[st.mk]}. Sold ${st.earned>0?money(st.earned):'nothing'} so far.${signNear(st)?' A sign draws extra shoppers.':''}</p>${msgP(msg)}<div class="kv">${lines}</div>
+    <p class="muted small">Low prices beat the diner. High prices only sell to people who like you. Hostile locals never buy.</p>`,
+      [{label:'Collect earnings',sub:money(st.stored),off:st.stored<=0,fn:()=>{G.cash+=st.stored;st.stored=0;structMenu(st,'Cash collected.')}},
+       {label:`Price: ${MKN[st.mk]}`,sub:'Tap to change: Low, Fair, High',cls:'',fn:()=>{st.mk=(st.mk+1)%3;structMenu(st)}},
+       ...stk,{label:'Take stock back',cls:'',off:!Object.values(st.stock).some(v=>v>0),fn:()=>{for(const k in st.stock){G.inv[k]+=st.stock[k];st.stock[k]=0}structMenu(st,'Stock returned to your bag.')}},
+       leaveBtn,rm]);
+  }else if(st.type==='planter'){
+    const grow=G.fx.irrig?1:2;
+    if(st.s===0)ui(`<h2>${nm}</h2>${msgP(msg)}`,[{label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${grow} day${grow>1?'s':''}.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;st.s=1;st.d=grow+G.mod.growth;advance(20);structMenu(st,'Planted.')}},leaveBtn,rm]);
+    else if(st.s===1)ui(`<h2>${nm}</h2><p>${st.d} day${st.d>1?'s':''} until harvest.</p>`,[leaveBtn,rm]);
+    else ui(`<h2>${nm}</h2><p class="good">Ready to harvest.</p>`,[{label:'Harvest',fn:()=>{const n=Math.round(4*(has('rural')?1.5:1)*G.mod.yield);G.inv.crops+=n;st.s=0;advance(20);structMenu(st,`You harvested ${n} crops.`)}},leaveBtn,rm]);
+  }else if(st.type==='smoker'){
+    ui(`<h2>${nm}</h2><p class="muted">Smoked fish keep and sell for more.</p>${msgP(msg)}`,[{label:'Smoke 2 fish',sub:`You have ${G.inv.fish} fish. 90 minutes.`,off:G.inv.fish<2,fn:()=>{G.inv.fish-=2;G.inv.smoked+=2;advance(90);structMenu(st,'You smoked two fish.')}},leaveBtn,rm]);
+  }else if(st.type==='bench'){
+    ui(`<h2>${nm}</h2><p class="muted">A bench you can use anywhere in the city.</p>${msgP(msg)}`,[{label:'Craft a trinket',sub:`Uses 3 scrap, 2 hours. You have ${G.inv.scrap}.`,off:G.inv.scrap<3,fn:()=>{craftTrinket();structMenu(st,'You made a trinket.')}},leaveBtn,rm]);
+  }else ui(`<h2>${nm}</h2><p class="muted">Stalls within 5 tiles draw shoppers from twice as far.</p>`,[leaveBtn,rm]);
+}
+
+/* ================= CONFIRM / NEWS / EVENTS / PHONE ================= */
+function ask(title,text,label,fn,back){
+  ui(`<h2>${esc(title)}</h2><p>${esc(text)}</p>`,[{label:'Cancel',fn:back||closeMenu},{label,cls:'warn',fn}]);
+}
+const SEVN=['','Minor','Local','Major','Chaos','Catastrophe'];
+let alertQ=[],bridgeOn=false,gpsPath=[];
+function news(t,sev=1){G.newsSeq=(G.newsSeq||0)+1;G.news.unshift({id:G.newsSeq,d:day(),t,s:sev});if(G.news.length>120)G.news.length=120}
+function alertNews(m,sev=2){notify(m);news(m.replace(/^News: /,''),sev)}
+const timeStr=()=>{const h=hourOf(),m=Math.floor(G.t%60);return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`};
+function migrate(){G.news=G.news||[];G.newsSeq=G.newsSeq||0;G.newsRead=G.newsRead||0;G.met=G.met||{};G.evs=G.evs||[];G.queue=G.queue||[];G.gps=G.gps||null}
+
+/* ----- procedural events ----- */
+const DISTS=['Highline','Grid','Dockside','Greenbelt','Neon Mile','Foundry Row'];
+const ALL=m=>Object.fromEntries(DISTS.map(d=>[d,m]));
+function quakeHit(){
+  const before=G.structs.length;
+  G.structs=G.structs.filter(s=>s.type==='house'||Math.random()>.35);
+  const lost=before-G.structs.length;
+  G.flats=clamp(G.flats+30,0,100);
+  G.projects.forEach(p=>{if(!p.done)Object.keys(p.have).forEach(k=>p.have[k]=Math.floor(p.have[k]*.75))});
+  return lost?`${lost} of your small structures were destroyed.`:'';
+}
+const EVT=[
+ {id:'fair',sev:1,w:10,dur:[1,1],mk:()=>{const d=pick(['Grid','Highline','Dockside','Neon Mile']);return{name:`${d} street fair`,desc:`A street fair fills the ${d}. Shops there are packed.`,mod:{traffic:{[d]:1.35}}}}},
+ {id:'derby',sev:1,w:7,dur:[1,1],mk:()=>({name:'Fishing derby',desc:'The Dockside holds a fishing derby. The piers are crowded and the fish are thinning.',mod:{traffic:{Dockside:1.2}},start:()=>{G.fishStock=clamp(G.fishStock-15,0,100)}})},
+ {id:'truck',sev:1,w:8,dur:[1,2],mk:()=>({name:'Produce truck',desc:'A truck from the Greenbelt floods the market. Crops are cheaper.',mod:{crops:.8}})},
+ {id:'band',sev:1,w:7,dur:[1,1],mk:()=>({name:'Buskers festival',desc:'Musicians pack the plaza. Busking pays more.',mod:{busk:1.4}})},
+ {id:'tramstrike',sev:2,w:6,dur:[2,3],mk:()=>({name:'Tram strike',desc:'Tram drivers walked out. The trams are not running.',mod:{tram:true}})},
+ {id:'rally',sev:2,w:6,dur:[2,3],mk:()=>({name:'Food truck rally',desc:'Food trucks undercut the diner. Meals are cheaper.',mod:{meal:.85}})},
+ {id:'roads',sev:2,w:7,dur:[3,4],mk:()=>({name:'Road works',desc:'Torn-up streets slow everything down.',mod:{vspeed:.8}})},
+ {id:'crack',sev:2,w:6,dur:[2,4],mk:()=>({name:'Police crackdown',desc:'Extra patrols across the city. Lay low.',mod:{cops:true}})},
+ {id:'dark',sev:3,w:5,dur:[1,2],mk:()=>({name:'Citywide blackout',desc:'The grid is down. Shops are quiet and crime gets easier.',mod:{traffic:ALL(.7),heist:.15}})},
+ {id:'crash',sev:3,w:4,dur:[3,5],mk:()=>({name:'Market crash',desc:'Markets tumble. The bank is shut and goods sell for less.',mod:{sell:.85,closed:['bank']},start:()=>{NPCS.forEach(n=>{G.npcs[n.id].cash=Math.round(G.npcs[n.id].cash*.7)})}})},
+ {id:'flu',sev:3,w:5,dur:[4,6],mk:()=>({name:'Flu outbreak',desc:'A flu sweeps the city. Everyone tires faster and shops are quiet.',mod:{drain:1.4,traffic:ALL(.85)}})},
+ {id:'surge',sev:3,w:4,dur:[2,3],mk:()=>({name:'Storm surge',desc:'The sea floods the Dockside. Movement there is slow and the docks are shut.',mod:{flood:['Dockside'],closed:['dock'],traffic:{Dockside:.5}},start:()=>{G.fishStock=clamp(G.fishStock+20,0,100)}})},
+ {id:'riot',sev:4,w:3,dur:[3,5],mk:()=>({name:'Neon Mile riots',desc:'Riots tear through the Neon Mile. The casino is shuttered and police are everywhere.',mod:{traffic:{'Neon Mile':.4},closed:['casino'],cops:true,heist:.2}})},
+ {id:'bridge',sev:4,w:3,dur:[4,7],mk:()=>({name:'Harbor Bridge closed',desc:'Cracks forced the Harbor Bridge shut. Take the tram or a taxi to cross.',mod:{bridge:true},follow:['roads',.6]})},
+ {id:'dockfire',sev:4,w:3,dur:[4,6],mk:()=>({name:'Dock fire',desc:'A warehouse fire guts the docks. Debris washes onto the flats.',mod:{closed:['dock'],traffic:{Dockside:.5}},start:()=>{G.flats=clamp(G.flats+40,0,100)}})},
+ {id:'boom',sev:4,w:3,dur:[6,9],mk:()=>({name:'Investor boom',desc:'Money floods the city. Goods sell high, but so do the bills.',mod:{sell:1.2,bills:1.2,traffic:{Highline:1.4}}})},
+ {id:'drought',sev:4,w:3,dur:[6,9],mk:()=>({name:'Drought',desc:'No rain. Crops grow slower and yield less, but sell dear.',mod:{growth:1,yield:.6,crops:1.5}})},
+ {id:'quake',sev:5,w:1.5,dur:[8,12],mk:()=>({name:'Major earthquake',desc:'A quake rocks Marrow Bay. The bridge is down, trams are out, and shops are barely open.',mod:{bridge:true,tram:true,traffic:ALL(.5)},start:()=>quakeHit(),follow:['dockfire',.4]})},
+ {id:'flood',sev:5,w:1.5,dur:[8,10],mk:()=>({name:'Great flood',desc:'Rivers burst their banks. The Dockside and Foundry are underwater, the bridge is shut, and trade there has collapsed.',mod:{flood:['Dockside','Foundry Row'],bridge:true,closed:['dock','foundry','garage'],traffic:{Dockside:.2,'Foundry Row':.2}}})}
+];
+function setBridge(closed){
+  [17,27].forEach(y=>{for(let x=41;x<=44;x++)map[y][x]=closed?T.WATER:T.ROAD});
+  if(closed&&G){
+    const fix=e=>{if(e.x>=40.6&&e.x<=44.4&&(Math.abs(e.y-17)<1.6||Math.abs(e.y-27)<1.6)){e.x=e.x<42.5?40:45;e.y=Math.round(e.y)}};
+    fix(G.p);G.p.path=[];NPCS.forEach(n=>{fix(n);n.path=[]});
+  }
+}
+function applyBridge(c){if(c===bridgeOn)return;bridgeOn=c;setBridge(c)}
+function recomputeMods(){
+  const m={traffic:{},sell:1,crops:1,meal:1,fish:1,drain:1,vspeed:1,flood:[],tram:false,closed:[],cops:false,heist:0,bills:1,growth:0,yield:1,bridge:false,busk:1,names:{}};
+  G.evs.forEach(e=>{
+    const x=e.mod||{};
+    for(const k in x){
+      if(k==='traffic'){for(const d in x.traffic)m.traffic[d]=(m.traffic[d]||1)*x.traffic[d]}
+      else if(['sell','crops','meal','fish','drain','vspeed','bills','yield','busk'].includes(k))m[k]*=x[k];
+      else if(k==='heist'||k==='growth')m[k]+=x[k];
+      else if(k==='flood'||k==='closed'){x[k].forEach(v=>{if(!m[k].includes(v))m[k].push(v);if(k==='closed')m.names[v]=e.name})}
+      else if(x[k]===true)m[k]=true;
+    }
+  });
+  G.mod=m;applyBridge(m.bridge);
+}
+function startEvent(t){
+  const o=t.mk(),dur=ri(t.dur[0],t.dur[1]);
+  G.evs.push({id:t.id,sev:t.sev,name:o.name,desc:o.desc,mod:o.mod||{},until:day()+dur});
+  recomputeMods();
+  let extra='';
+  if(o.start){const r=o.start();if(r)extra=r}
+  if(o.follow&&Math.random()<o.follow[1])G.queue.push({id:o.follow[0],on:day()+1});
+  news(`${SEVN[t.sev]}: ${o.name}. ${o.desc}${extra?' '+extra:''}`,t.sev);
+  if(t.sev>=3)alertQ.push({sev:t.sev,name:o.name,desc:o.desc,extra});
+  else notify(`${o.name}. ${o.desc}`);
+}
+function rollEvent(){
+  if(G.evs.length>=3||Math.random()>.55)return;
+  const k=1+day()/60;
+  const pool=EVT.filter(t=>!G.evs.some(e=>e.id===t.id)).map(t=>({t,w:t.w*(t.sev>=4?k:1)}));
+  const tot=pool.reduce((s,x)=>s+x.w,0);let r=Math.random()*tot;
+  for(const x of pool){r-=x.w;if(r<=0){startEvent(x.t);return}}
+}
+function dayNews(){
+  if(G.ev)news(`${G.ev.name}. ${G.ev.desc}`,2);
+  G.evs=G.evs.filter(e=>{if(day()>=e.until){news(`${e.name} is over.`,1);return false}return true});
+  G.queue=G.queue.filter(q=>{
+    if(day()>=q.on){const t=EVT.find(x=>x.id===q.id);if(t&&!G.evs.some(e=>e.id===t.id))startEvent(t);return false}
+    return true;
+  });
+  rollEvent();
+  recomputeMods();
+  ambientNews();
+}
+function ambientNews(){
+  const c=[`Tide table: ${tideName()} tide this morning.`,`Diner meals are ${money(mealPrice())} today.`];
+  if(G.fishStock<35)c.push('Fishmongers report thin catches across the Dockside.');
+  if(G.fishStock>70)c.push('Fish are plentiful and cheap at the piers.');
+  if(G.heat>=2)c.push('Police are said to be hunting someone across the city.');
+  const open=G.projects.filter(p=>!p.done);
+  if(open.length){const p=pick(open),d=PROJECTS.find(x=>x.id===p.id);c.push(`${d.name} is ${projPct(p)}% funded.`)}
+  news(pick(c),1);
+}
+function showAlert(){
+  const a=alertQ.shift();
+  ui(`<h2>${esc(SEVN[a.sev])}: ${esc(a.name)}</h2><p>${esc(a.desc)}</p>${a.extra?`<p class="amber">${esc(a.extra)}</p>`:''}`,[{label:'Understood',fn:closeMenu}],true,false);
+}
+
+/* ----- phone ----- */
+function phone(msg){
+  const un=G.news.filter(x=>x.id>G.newsRead).length;
+  ui(`<h2>Phone</h2><p class="muted">Day ${day()}, ${timeStr()}. ${G.gps?`GPS route: ${esc(G.gps.name)}.`:'No GPS route.'}</p>${msgP(msg)}`,[
+    {label:'GPS',sub:'Pick a destination. Get a route or auto-walk.',fn:gpsMenu},
+    {label:'News',sub:un?`${un} new`:'Today and earlier days',cls:'',fn:newsMenu},
+    {label:'Contacts',sub:`${Object.keys(G.met).length} people`,cls:'',fn:contactsMenu},
+    {label:'Town board',sub:'Conditions, rumors, projects',cls:'',fn:town},
+    leaveBtn]);
+}
+function gpsList(){
+  const p=G.p,list=[],hp=homePoi();
+  list.push({name:'Home',x:hp.ex,y:hp.ey});
+  if(G.mission){const t=POIS[G.mission.stops[G.mission.i]];list.push({name:`Job: ${t.name}`,x:t.ex,y:t.ey})}
+  Object.values(POIS).forEach(q=>list.push({name:q.name,x:q.ex,y:q.ey}));
+  STOPS.forEach(s=>list.push({name:s.name+' (tram stop)',x:s.x,y:s.y}));
+  G.biz.forEach(b=>{const bl=blockByKey(b.key);if(bl)list.push({name:`Your ${b.type?BT[b.type].n.toLowerCase():'building'} (${b.d})`,x:bl.x+1,y:bl.y+4})});
+  G.structs.filter(s=>s.type==='stall'||s.type==='house').forEach(s=>list.push({name:`Your ${STRUCTS[s.type].n.toLowerCase()}`,x:s.x,y:s.y}));
+  return list.map(d=>({...d,dist:man(Math.round(p.x),Math.round(p.y),d.x,d.y)})).sort((a,b)=>a.dist-b.dist);
+}
+function gpsMenu(){
+  const list=gpsList();
+  ui(`<h2>GPS</h2><p class="muted">${G.gps?`Route to ${esc(G.gps.name)} is active.`:'Pick a destination. Nearest first.'}</p>`,[
+    ...(G.gps?[{label:'Clear route',cls:'warn',fn:()=>{G.gps=null;gpsPath=[];gpsMenu()}}]:[]),
+    ...list.map(d=>({label:d.name,sub:`${d.dist} tiles away`,cls:'',fn:()=>gpsDetail(d)})),
+    {label:'Back',cls:'quiet',fn:()=>phone()}]);
+}
+function gpsDetail(d){
+  const v=VEH[G.veh.active],sp=v.sp*G.mod.vspeed,min=Math.round(d.dist/sp*6),walk=Math.round(d.dist/4.8*6);
+  ui(`<h2>${esc(d.name)}</h2><p>${d.dist} tiles away. About ${min} minutes with your ${v.n.toLowerCase()}${G.veh.active==='none'?'':`, or ${walk} minutes on foot`}.</p>`,[
+    {label:'Guide me on the map',sub:'Shows a dotted route. You walk it yourself.',fn:()=>{G.gps={x:d.x,y:d.y,name:d.name};gpsTick();closeMenu();notify('GPS route set.')}},
+    {label:'Auto-walk there',sub:'Your character follows the route',cls:'',fn:()=>{G.gps={x:d.x,y:d.y,name:d.name};closeMenu();walkTo(d.x,d.y)}},
+    {label:'Back',cls:'quiet',fn:gpsMenu}]);
+}
+function gpsTick(){
+  if(!G.gps){gpsPath=[];return}
+  const p=G.p;
+  if(Math.hypot(G.gps.x-p.x,G.gps.y-p.y)<=1.3){notify('GPS: you have arrived.');G.gps=null;gpsPath=[];return}
+  gpsPath=bfs(Math.round(p.x),Math.round(p.y),G.gps.x,G.gps.y)||[];
+}
+function newsMenu(){
+  G.newsRead=G.newsSeq;hud();
+  const byDay={};G.news.forEach(x=>{(byDay[x.d]=byDay[x.d]||[]).push(x)});
+  const days=Object.keys(byDay).map(Number).sort((a,b)=>b-a).slice(0,8);
+  const cls=s=>s>=4?'bad':s>=3?'amber':'';
+  const html=days.map(d=>`<h2>${d===day()?'Today':'Day '+d}</h2>${byDay[d].map(x=>`<p class="${cls(x.s)}">${esc(x.t)}</p>`).join('')}`).join('')||'<p class="muted">Nothing yet.</p>';
+  ui(`<h2>News</h2>${html}`,[{label:'Back',fn:()=>phone()},leaveBtn]);
+}
+function contactsMenu(){
+  const ids=Object.keys(G.met);
+  ui(`<h2>Contacts</h2>${ids.length?'':'<p class="muted">You have not met anyone yet. Talk to people and they will show up here.</p>'}`,
+    [...ids.map(id=>{const n=NPC[id],tr=tier(att(n));return{label:n.name,sub:`${n.role}, ${LAB[tr]}`,cls:'',fn:()=>callMenu(n)}}),{label:'Back',cls:'quiet',fn:()=>phone()}]);
+}
+function whereIs(n){
+  if(n.indoors)return{text:'at home',x:POIS[n.home].ex,y:POIS[n.home].ey};
+  let best=null,bd=1e9;
+  Object.values(POIS).forEach(p=>{const d=Math.hypot(p.ex-n.x,p.ey-n.y);if(d<bd){bd=d;best=p}});
+  return{text:bd<=4?`near ${best.name}`:`in ${district(Math.round(n.x),Math.round(n.y))}`,x:Math.round(n.x),y:Math.round(n.y)};
+}
+function callMenu(n,msg){
+  const tr=tier(att(n)),s=npcS(n);
+  if(tr===0)return ui(`<h2>${esc(n.name)}</h2><p>The call rings out. They are not picking up.</p>`,[{label:'Back',fn:contactsMenu}]);
+  const w=whereIs(n),sp=[];
+  if(n.id==='teo'){const cost=Math.round(mealPrice()*buyF(n))+3;sp.push({label:'Order delivery',sub:`${money(cost)}. A meal arrives in 30 minutes.`,off:G.cash<cost||!isOpen('diner'),cls:'',fn:()=>{G.cash-=cost;G.hunger=clamp(G.hunger+45,0,100);G.demand+=1;advance(30);callMenu(n,'A hot meal arrives at your door.')}})}
+  if(n.id==='bell'){const free=tr>=2&&(has('broke')||G.cash<20);sp.push({label:'Phone consult',sub:free?'Free for you':'$10. Restores a little energy.',off:!free&&G.cash<10,cls:'',fn:()=>{if(!free)G.cash-=10;G.energy=clamp(G.energy+15,0,100);advance(20);callMenu(n,'Good advice and a firm order to rest.')}})}
+  if(n.id==='lou')sp.push({label:'Ask for new listings',cls:'',fn:buildingList});
+  if(n.id==='vex')sp.push({label:'Ask for work',sub:tr>=2?'Jobs from the fixer':'Vex does not trust you yet',off:tr<2,cls:'',fn:()=>MENUS.velvet(POIS.velvet,NPC.vex)});
+  if(n.id==='cordelia')sp.push({label:'Repay debt by phone',sub:G.debt>0?`You owe ${money(G.debt)}`:'You owe nothing',off:G.debt<=0||G.cash<1,cls:'',fn:()=>{const p=Math.min(G.cash,G.debt);G.cash-=p;G.debt-=p;if(G.debt<=0)G.flags.defRum=0;callMenu(n,`You pay ${money(p)}.`)}});
+  if(n.id==='duarte')sp.push({label:'Ask about dock work',cls:'',fn:()=>callMenu(n,(G.mod.closed.includes('dock')||(G.ev&&G.ev.id==='strike'))?'"Piers are shut. Check back later."':'"The hauling line is open. Come down."')});
+  ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}. Attitude: ${LAB[tr]}.</p>${msgP(msg)}`,[
+    {label:'Chat',sub:s.chat===day()?'You already chatted today':'Keep in touch',off:s.chat===day(),fn:()=>{s.chat=day();s.m+=2;advance(5);callMenu(n,n.topic)}},
+    {label:'Find them on GPS',sub:`They are ${w.text}`,cls:'',fn:()=>{G.gps={x:w.x,y:w.y,name:n.name};gpsTick();phone(`GPS route set to ${n.name}.`)}},
+    {label:'Ask for news',sub:tr>=2?'Rumors and tips':'They will not share that yet',off:tr<2,cls:'',fn:()=>{advance(5);callMenu(n,`"${pick(worldLines())}"`)}},
+    ...sp,{label:'Back',cls:'quiet',fn:contactsMenu}]);
+}
+
+/* ================= COLLAPSE ================= */
+function collapse(){
+  const cost=Math.min(G.cash,15);G.cash-=cost;
+  advance(360,true,true);
+  G.energy=55;G.hunger=Math.max(G.hunger,35);
+  const c=POIS.clinic;G.p.x=c.ex;G.p.y=c.ey;G.p.path=[];G.p.onArrive=null;
+  hud();
+  ui(`<h2>You collapsed</h2><p>You wake at Bell Clinic. Six hours are gone${cost?` and the fee was ${money(cost)}`:''}.</p>`,[{label:'Get up',fn:closeMenu}],true,false);
+}
+
+/* ================= INPUT ================= */
+const cv=$('#scene'),cx=cv.getContext('2d'),stage=$('#stage');
+let camX=0,camY=0,dest=null,last=performance.now();
+function fitCanvas(){
+  const r=stage.getBoundingClientRect();if(!r.width)return;
+  const s=r.width/VW;VH=Math.max(96,Math.round(r.height/s));
+  if(cv.width!==VW)cv.width=VW;if(cv.height!==VH)cv.height=VH;
+}
+new ResizeObserver(fitCanvas).observe(stage);window.addEventListener('resize',fitCanvas);fitCanvas();
+
+function walkTo(tx,ty,then){
+  const p=G.p;
+  const sx=p.path.length?p.path[0][0]:Math.round(p.x),sy=p.path.length?p.path[0][1]:Math.round(p.y);
+  const path=bfs(sx,sy,tx,ty);
+  if(!path)return notify('You cannot get there.');
+  p.path=p.path.length?[p.path[0],...path]:path;
+  p.onArrive=then||null;dest=[tx,ty];
+  if(!p.path.length&&then){p.onArrive=null;then()}
+}
+function goPOI(poi){worldPanel();walkTo(poi.ex,poi.ey,()=>openPOI(poi))}
+function goTalk(n){
+  const p=G.p;
+  if(Math.hypot(n.x-p.x,n.y-p.y)<=1.6){p.path=[];return talk(n)}
+  walkTo(Math.round(n.x),Math.round(n.y),()=>talk(n));
+}
+cv.addEventListener('pointerdown',e=>{
+  if(!G)return;
+  e.preventDefault();
+  if(modal){if(!dismissable)return;worldPanel()}
+  const r=cv.getBoundingClientRect();
+  const fx=((e.clientX-r.left)/r.width*VW+camX)/TS,fy=((e.clientY-r.top)/r.height*VH+camY)/TS;
+  const tx=Math.floor(fx),ty=Math.floor(fy);
+  if(tx<0||ty<0||tx>=W||ty>=H)return;
+  if(placing)return tryPlace(tx,ty);
+  let best=null,bd=1.3;
+  NPCS.forEach(n=>{if(n.indoors)return;const d=Math.hypot(n.x+.5-fx,n.y+.5-fy);if(d<bd){bd=d;best=n}});
+  if(best)return goTalk(best);
+  const stop=STOPS.find(s=>Math.abs(s.x-tx)<=0&&Math.abs(s.y-ty)<=0);
+  if(stop)return walkTo(tx,ty,()=>stopMenu(stop));
+  const st=structAt(tx,ty);
+  if(st)return walkTo(tx,ty,()=>structMenu(st));
+  const t=map[ty][tx];
+  if(t===T.BLD){
+    const b=blocks.find(b=>tx>=b.x&&tx<b.x+4&&ty>=b.y&&ty<b.y+4);
+    if(b&&b.poi)return goPOI(POIS[b.poi]);
+    if(b)return walkTo(b.x+1,b.y+4,()=>propertyMenu(b));
+    return;
+  }
+  if(t===T.FARM){const pl=G.plots.find(q=>q.x===tx&&q.y===ty);return walkTo(tx,ty,()=>plotMenu(pl))}
+  if(t===T.PLAZA)return walkTo(tx,ty,()=>plazaMenu());
+  if(t===T.DOCK)return walkTo(tx,ty,()=>waterfront());
+  if(t===T.WATER)return notify('Deep water.');
+  walkTo(tx,ty);
+});
+
+/* ================= RENDER ================= */
+const COL={tower:['#9aa3b5','#6e7690'],warehouse:['#8a7f6a','#5f5646'],farmstead:['#c9a46a','#8f6f3d'],bank:['#d2c9a8','#a39b7e'],estate:['#9ec29a','#6e946a'],club:['#7b4d8a','#583769'],
+  flats:['#c6a998','#97796a'],market:['#e0a24a','#b37c2c'],diner:['#d26a4f','#a54a35'],studio:['#a8b8c9','#7a8ea3'],workshop:['#8c8f94','#62666b'],
+  clinic:['#e8eef0','#b7c3c8'],dock:['#7b8f9a','#556873'],bunk:['#a0805a','#765a3b'],gull:['#4f8a8e','#366569'],barn:['#b5453a','#8a3128'],
+  casino:['#d04a8a','#8a2a5a'],velvet:['#5a3a7a','#3a2450'],pawn:['#c0a060','#8a7040'],loft:['#9a8ac0','#6a5a90'],realty:['#6aa0c8','#3f6f94'],garage:['#8a8a90','#5a5a60'],foundry:['#a0603a','#703a1a']};
+const SIGN={bank:'BANK',estate:'ESTATE',club:'CLUB',market:'MARKET',diner:'DINER',studio:'STUDIO',workshop:'WORKS',clinic:'CLINIC',dock:'DOCKS',bunk:'BUNKS',gull:'GULL',barn:'BARN',flats:'FLATS',
+  casino:'CASINO',velvet:'VELVET',pawn:'PAWN',loft:'LOFTS',realty:'REALTY',garage:'GARAGE',foundry:'IRON'};
+const GROUND={Highline:'#86b57e',Grid:'#6f9a58',Dockside:'#7c9a6a',Greenbelt:'#79a257','Neon Mile':'#5d6a78','Foundry Row':'#7a7a70'};
+const ROADC={Highline:'#7a7e88',Grid:'#4b505a',Dockside:'#5b5a58',Greenbelt:'#a88a5e','Neon Mile':'#37334d','Foundry Row':'#55534f'};
+function night(){const h=(clockNow()/60)%24;return h>=21||h<5?.5:h>=19?(h-19)/2*.5:h<7?(7-h)/2*.5:0}
+function tree(sx,sy){cx.fillStyle='#5b3d24';cx.fillRect(sx+7,sy+10,2,4);cx.fillStyle='#3f6b3a';cx.fillRect(sx+4,sy+3,8,8);cx.fillStyle='#4f8548';cx.fillRect(sx+5,sy+3,4,3)}
+function drawTile(tx,ty,now){
+  const t=map[ty][tx],sx=tx*TS-camX,sy=ty*TS-camY,d=district(tx,ty),h=hash(tx,ty);
+  if(t===T.WATER){
+    cx.fillStyle='#2c5b78';cx.fillRect(sx,sy,TS,TS);
+    if(Math.sin(now*.002+tx*.9+ty*.7)>.5){cx.fillStyle='#4f86a6';cx.fillRect(sx+3,sy+6,8,1)}
+  }else if(t===T.ROAD){
+    cx.fillStyle=ROADC[d];cx.fillRect(sx,sy,TS,TS);
+    const v=XS.includes(tx),hz=HY.includes(ty)||((ty===17||ty===27)&&tx<10);
+    cx.fillStyle=d==='Greenbelt'?'#8f7348':'rgba(240,230,180,.55)';
+    if(v&&!hz&&ty%2===0)cx.fillRect(sx+7,sy+3,2,5);
+    if(hz&&!v&&tx%2===0)cx.fillRect(sx+3,sy+7,5,2);
+    if(tx>=41&&tx<=44){cx.fillStyle='#d8d0b8';cx.fillRect(sx,sy,TS,2);cx.fillRect(sx,sy+TS-2,TS,2)}
+    if(d==='Neon Mile'&&h%7===0){cx.fillStyle='rgba(255,80,200,.35)';cx.fillRect(sx+2,sy+2,3,1)}
+  }else if(t===T.FARM){
+    cx.fillStyle='#6f5237';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#5c4229';
+    for(let i=2;i<TS;i+=4)cx.fillRect(sx,sy+i,TS,1);
+    const pl=G&&G.plots.find(q=>q.x===tx&&q.y===ty);
+    if(pl&&pl.s===1){cx.fillStyle='#6fbf5a';cx.fillRect(sx+4,sy+6,2,4);cx.fillRect(sx+10,sy+6,2,4)}
+    if(pl&&pl.s===2){cx.fillStyle='#e0b83a';cx.fillRect(sx+3,sy+4,3,7);cx.fillRect(sx+10,sy+4,3,7)}
+  }else if(t===T.PLAZA){
+    cx.fillStyle=(tx+ty)%2?'#cfc5ae':'#c4baa2';cx.fillRect(sx,sy,TS,TS);
+  }else if(t===T.DOCK){
+    cx.fillStyle='#8b6a47';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#6e5236';
+    for(let i=0;i<TS;i+=4)cx.fillRect(sx+i,sy,1,TS);
+    if(tideV()>.45){cx.fillStyle='rgba(44,91,120,.4)';cx.fillRect(sx,sy+8,TS,8)}
+  }else if(t===T.LOT){
+    cx.fillStyle='#b3a587';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#9a8d70';cx.fillRect(sx+3,sy+5,2,1);cx.fillRect(sx+10,sy+11,3,1);
+  }else if(t===T.BLD){
+    cx.fillStyle='#3b3f48';cx.fillRect(sx,sy,TS,TS);
+  }else{
+    cx.fillStyle=GROUND[d];cx.fillRect(sx,sy,TS,TS);
+    cx.fillStyle='rgba(0,0,0,.08)';if(h%5===0)cx.fillRect(sx+(h>>3)%12,sy+(h>>5)%12,2,1);
+    if(t===T.PARK?h%3===0:(h%9===0&&(d==='Highline'||d==='Greenbelt')))tree(sx,sy);
+  }
+}
+function drawBlock(b,lit,now){
+  const sx=b.x*TS-camX,sy=b.y*TS-camY,w=4*TS,hh=4*TS;
+  const biz=G&&!b.poi?bizOf(b.key):null;
+  const bt=biz&&biz.type?BT[biz.type]:null;
+  const c=bt?bt.col:COL[b.kind];
+  cx.fillStyle='rgba(0,0,0,.22)';cx.fillRect(sx+4,sy+hh-2,w-4,3);
+  cx.fillStyle=c[1];cx.fillRect(sx+2,sy+hh-20,w-4,18);
+  cx.fillStyle=c[0];cx.fillRect(sx+2,sy+2,w-4,hh-22);
+  cx.fillStyle='rgba(255,255,255,.25)';cx.fillRect(sx+2,sy+2,w-4,2);
+  cx.fillStyle='rgba(0,0,0,.18)';cx.fillRect(sx+2,sy+hh-22,w-4,2);
+  for(let i=0;i<3;i++){cx.fillStyle=lit?'#ffd88a':'#2c3440';cx.fillRect(sx+22+i*14,sy+hh-16,8,6)}
+  cx.fillStyle='#2a1c12';cx.fillRect(sx+TS+3,sy+hh-12,10,10);
+  const label=b.poi?SIGN[b.kind]:bt?bt.sign:null;
+  cx.font='7px Silkscreen, monospace';cx.textAlign='center';
+  if(label){cx.fillStyle='rgba(0,0,0,.45)';cx.fillRect(sx+6,sy+10,w-12,12);cx.fillStyle='#fff';cx.fillText(label,sx+w/2,sy+19)}
+  else if(!b.poi&&!biz){
+    cx.fillStyle='#fff';cx.fillRect(sx+10,sy+8,w-20,14);cx.fillStyle='#d94a3a';cx.fillRect(sx+10,sy+8,w-20,3);
+    cx.fillStyle='#8a2a1a';cx.fillText('FOR SALE',sx+w/2,sy+19);
+  }else if(biz&&!bt){cx.fillStyle='rgba(0,0,0,.4)';cx.fillRect(sx+8,sy+10,w-16,12);cx.fillStyle='#ffd88a';cx.fillText('YOURS',sx+w/2,sy+19)}
+  if(biz){cx.fillStyle='#4fd1b5';cx.fillRect(sx+w-10,sy-4,1,10);cx.fillRect(sx+w-9,sy-4,6,4)}
+  if(b.poi&&(b.kind==='casino'||b.kind==='velvet')&&lit&&Math.floor(now/400)%2){cx.fillStyle='#ff5ad0';cx.fillRect(sx+4,sy+4,w-8,1)}
+}
+function drawStop(s){
+  const sx=s.x*TS-camX,sy=s.y*TS-camY;
+  cx.fillStyle='#2a3140';cx.fillRect(sx+7,sy-2,2,14);
+  cx.fillStyle='#3a86d6';cx.fillRect(sx+2,sy-6,12,8);cx.fillStyle='#fff';cx.fillRect(sx+4,sy-4,8,1);cx.fillRect(sx+4,sy-2,5,1);
+}
+function drawStruct(st,now){
+  const sx=st.x*TS-camX,sy=st.y*TS-camY;
+  cx.fillStyle='rgba(0,0,0,.2)';cx.fillRect(sx+1,sy+14,14,2);
+  if(st.type==='stall'){
+    for(let i=0;i<4;i++){cx.fillStyle=i%2?'#e8e0c8':'#4fd1b5';cx.fillRect(sx+1+i*3.5,sy+1,4,5)}
+    cx.fillStyle='#8a5a30';cx.fillRect(sx+2,sy+7,12,7);
+    const any=Object.values(st.stock).some(v=>v>0);
+    cx.fillStyle=any?'#e0b83a':'#5a3a1c';cx.fillRect(sx+4,sy+8,3,2);cx.fillRect(sx+9,sy+8,3,2);
+  }else if(st.type==='planter'){
+    cx.fillStyle='#6b4a2c';cx.fillRect(sx+2,sy+9,12,5);
+    cx.fillStyle='rgba(200,235,240,.6)';cx.fillRect(sx+2,sy+3,12,6);
+    if(st.s===1){cx.fillStyle='#6fbf5a';cx.fillRect(sx+5,sy+6,2,3);cx.fillRect(sx+9,sy+6,2,3)}
+    if(st.s===2){cx.fillStyle='#e0b83a';cx.fillRect(sx+4,sy+4,3,5);cx.fillRect(sx+9,sy+4,3,5)}
+  }else if(st.type==='smoker'){
+    cx.fillStyle='#3a3a40';cx.fillRect(sx+4,sy+4,8,10);cx.fillStyle='#e07a3a';cx.fillRect(sx+6,sy+10,4,2);
+    cx.fillStyle='rgba(200,200,200,.6)';cx.fillRect(sx+7,sy+1-(Math.floor(now/400)%2),2,2);
+  }else if(st.type==='bench'){
+    cx.fillStyle='#8a6a40';cx.fillRect(sx+2,sy+7,12,3);cx.fillRect(sx+3,sy+10,2,4);cx.fillRect(sx+11,sy+10,2,4);
+    cx.fillStyle='#c0c4c8';cx.fillRect(sx+5,sy+4,5,2);
+  }else if(st.type==='house'){
+    cx.fillStyle='#b58a5a';cx.fillRect(sx+2,sy+6,12,8);cx.fillStyle='#8a3a2a';cx.fillRect(sx+1,sy+2,14,5);cx.fillStyle='#2a1c12';cx.fillRect(sx+7,sy+9,3,5);
+  }else{
+    cx.fillStyle='#5b3d24';cx.fillRect(sx+7,sy+6,2,8);cx.fillStyle='#e0c070';cx.fillRect(sx+3,sy+2,10,6);cx.fillStyle='#8a5a30';cx.fillRect(sx+5,sy+4,6,1);
+  }
+}
+function person(x,y,col,isP,moving,now,headOnly){
+  const px=Math.round(x*TS+8-camX),py=Math.round(y*TS+14-camY);
+  const sw=moving&&Math.floor(now/140)%2;
+  if(!headOnly){
+    cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(px-3,py,7,2);
+    cx.fillStyle='#2b2118';cx.fillRect(px-3+(sw?1:0),py-3,2,3);cx.fillRect(px+1-(sw?1:0),py-3,2,3);
+    cx.fillStyle=col;cx.fillRect(px-3,py-9,6,7);
+  }
+  cx.fillStyle='#e8c39e';cx.fillRect(px-2,py-13,4,4);
+  cx.fillStyle='#2b2118';cx.fillRect(px-2,py-13,4,1);
+  if(isP){cx.fillStyle='#4fd1b5';cx.fillRect(px-1,py-18+(Math.floor(now/300)%2),2,3);if(!headOnly){cx.fillStyle='#fff';cx.fillRect(px-3,py-9,6,1)}}
+}
+function drawVeh(k,x,y,now,mv){
+  const px=Math.round(x*TS+8-camX),py=Math.round(y*TS+14-camY),sp=mv?Math.floor(now/90)%2:0;
+  if(k==='bike'){
+    cx.strokeStyle='#1c1c1c';cx.lineWidth=1;cx.beginPath();cx.arc(px-5,py-2,3,0,7);cx.stroke();cx.beginPath();cx.arc(px+5,py-2,3,0,7);cx.stroke();
+    cx.fillStyle='#d94a3a';cx.fillRect(px-5,py-5,10,1);cx.fillRect(px+3,py-8,1,4);
+  }else if(k==='scooter'){
+    cx.fillStyle='#e0b83a';cx.fillRect(px-6,py-5,12,3);cx.fillRect(px+4,py-9,2,5);
+    cx.fillStyle='#1c1c1c';cx.fillRect(px-6,py-2,3,3);cx.fillRect(px+3,py-2,3,3);
+  }else{
+    const c=k==='coupe'?['#d04030','#a02a20']:['#3a7ad0','#2a5aa0'];
+    cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(px-9,py,19,2);
+    cx.fillStyle=c[0];cx.fillRect(px-9,py-7,18,6);cx.fillStyle=c[1];cx.fillRect(px-5,py-11,10,5);
+    cx.fillStyle='#bfe3f0';cx.fillRect(px-4,py-10,8,3);
+    cx.fillStyle='#1c1c1c';cx.fillRect(px-7,py-2+sp*0,4,3);cx.fillRect(px+3,py-2,4,3);
+    if(k==='coupe'){cx.fillStyle='#ffe08a';cx.fillRect(px+8,py-6,2,2)}
+  }
+}
+function drawWorld(now){
+  const x0=Math.floor(camX/TS),y0=Math.floor(camY/TS);
+  for(let ty=y0;ty<=y0+Math.ceil(VH/TS);ty++)for(let tx=x0;tx<=x0+Math.ceil(VW/TS);tx++){
+    if(tx<0||ty<0||tx>=W||ty>=H)continue;
+    drawTile(tx,ty,now);
+    if(placing&&canBuild(tx,ty)){const sx=tx*TS-camX,sy=ty*TS-camY;cx.fillStyle='rgba(79,209,181,.28)';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='rgba(79,209,181,.9)';cx.fillRect(sx,sy,3,1);cx.fillRect(sx,sy,1,3);cx.fillRect(sx+TS-3,sy+TS-1,3,1);cx.fillRect(sx+TS-1,sy+TS-3,1,3)}
+  }
+  const n=night(),lit=n>.2;
+  blocks.forEach(b=>{
+    const sx=b.x*TS-camX,sy=b.y*TS-camY;
+    if(sx>VW||sy>VH||sx<-64||sy<-64)return;
+    drawBlock(b,lit,now);
+  });
+  STOPS.forEach(s=>{const sx=s.x*TS-camX,sy=s.y*TS-camY;if(sx>-16&&sx<VW&&sy>-16&&sy<VH)drawStop(s)});
+  const fx=23*TS-camX,fy=15*TS-camY;
+  cx.fillStyle='#8aa6b5';cx.beginPath();cx.arc(fx,fy,10,0,7);cx.fill();
+  cx.fillStyle='#4f86a6';cx.beginPath();cx.arc(fx,fy,7,0,7);cx.fill();
+  cx.fillStyle='#cfe3ee';cx.fillRect(fx-1,fy-3+Math.sin(now*.005),2,4);
+  if(G){
+    const ents=[];
+    G.structs.forEach(s=>ents.push({y:s.y-.5,f:()=>drawStruct(s,now)}));
+    NPCS.forEach(n=>{if(!n.indoors)ents.push({y:n.y,f:()=>person(n.x,n.y,n.col,false,n.path.length>0,now)})});
+    ents.push({y:G.p.y,f:()=>{
+      const a=G.veh.active,mv=G.p.path.length>0;
+      if(a==='sedan'||a==='coupe'){drawVeh(a,G.p.x,G.p.y,now,mv);person(G.p.x,G.p.y-.15,'#2f6fb3',true,mv,now,true)}
+      else{person(G.p.x,G.p.y,'#2f6fb3',true,mv,now);if(a!=='none')drawVeh(a,G.p.x,G.p.y,now,mv)}
+    }});
+    ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
+    if(dest&&G.p.path.length){
+      const dx=dest[0]*TS-camX,dy=dest[1]*TS-camY;
+      cx.strokeStyle='#4fd1b5';cx.lineWidth=1;cx.strokeRect(dx+1.5,dy+1.5,TS-3,TS-3);
+    }
+    if(G.mission){
+      const poi=POIS[G.mission.stops[G.mission.i]],mx=poi.ex*TS-camX+8,my=poi.ey*TS-camY+8;
+      const ax=clamp(mx,6,VW-6),ay=clamp(my,6,VH-6),pulse=2+Math.sin(now*.008)*1.5;
+      cx.fillStyle='#ffd88a';cx.beginPath();cx.arc(ax,ay,3+pulse*.4,0,7);cx.fill();
+      cx.strokeStyle='#ffd88a';cx.beginPath();cx.arc(ax,ay,6+pulse,0,7);cx.stroke();
+    }
+  }
+  if(G&&G.gps){
+    cx.fillStyle='#4fd1b5';
+    const off=Math.floor(now/180);
+    for(let i=0;i<gpsPath.length;i++){
+      if((i+off)%3)continue;
+      const gsx=gpsPath[i][0]*TS-camX+7,gsy=gpsPath[i][1]*TS-camY+7;
+      if(gsx<-3||gsy<-3||gsx>VW||gsy>VH)continue;
+      cx.fillRect(gsx,gsy,3,3);
+    }
+    const gx=G.gps.x*TS-camX+8,gy=G.gps.y*TS-camY+8;
+    if(gx<0||gy<0||gx>VW||gy>VH){cx.beginPath();cx.arc(clamp(gx,6,VW-6),clamp(gy,6,VH-6),4,0,7);cx.fill()}
+    else{cx.strokeStyle='#4fd1b5';cx.strokeRect(gx-7,gy-7,14,14)}
+  }
+  if(n>0){cx.fillStyle=`rgba(12,18,48,${n})`;cx.fillRect(0,0,VW,VH)}
+  if(G&&G.heat>=2&&NPC.reyes.chasing){const f=Math.floor(now/180)%2;cx.fillStyle=f?'rgba(220,40,40,.35)':'rgba(50,90,230,.35)';cx.fillRect(0,0,VW,3);cx.fillRect(0,VH-3,VW,3)}
+}
+let hudT=0,missT=0;
+function tick(dt){
+  if(alertQ.length){showAlert();return}
+  const p=G.p;
+  advance(dt*6,false,true);
+  const R=NPC.reyes;
+  if(G.veh.active!=='none'&&G.veh.stolen[G.veh.active]){G.heat=Math.max(G.heat,1.2);if(!R.indoors&&Math.hypot(R.x-p.x,R.y-p.y)<7)G.heat=Math.max(G.heat,3)}
+  if(G.heat>=2){
+    if(!R.chasing){R.chasing=true;if(R.indoors){R.indoors=false;R.x=POIS[R.home].ex;R.y=POIS[R.home].ey}notify('Wanted! Constable Reyes is after you. Outrun him and lay low.')}
+    R.rt-=dt;if(R.rt<=0){R.rt=.6;goto(R,[Math.round(p.x),Math.round(p.y)])}
+    moveEnt(R,dt,(G.heat>=4?4.6:3.6)+(G.mod.cops?.5:0));
+    if(Math.hypot(R.x-p.x,R.y-p.y)<1.2)return bust();
+  }else if(R.chasing){R.chasing=false;assign(R,true);notify('You lost them. Lay low.')}
+  NPCS.forEach(n=>{
+    if(n.indoors||(n===R&&R.chasing))return;
+    moveEnt(n,dt,2.6);
+    if(!n.path.length&&n.goHome&&n.act==='home')n.indoors=true;
+  });
+  const v=VEH[G.veh.active];
+  let sp=v.sp*G.mod.vspeed;
+  if(v.fuel&&(G.veh.fuel[G.veh.active]||0)<=0)sp=3;
+  if(G.energy<15||G.hunger<10)sp=Math.min(sp,2.6);
+  if(G.mod.flood.includes(district(Math.round(p.x),Math.round(p.y))))sp*=.55;
+  const bx=p.x,by=p.y,was=p.path.length>0;
+  moveEnt(p,dt,sp);
+  if(v.fuel&&was){const dd=Math.hypot(p.x-bx,p.y-by);G.veh.fuel[G.veh.active]=Math.max(0,(G.veh.fuel[G.veh.active]||0)-dd*.12);if(G.veh.fuel[G.veh.active]<=0&&!G.flags.fuelNote){G.flags.fuelNote=1;notify('Out of fuel. Refuel at Mack\'s Garage.')}if(G.veh.fuel[G.veh.active]>15)G.flags.fuelNote=0}
+  if(was&&!p.path.length&&p.onArrive){const f=p.onArrive;p.onArrive=null;f()}
+  missT+=dt;if(missT>.25){missT=0;missionTick();gpsTick()}
+  hudT+=dt;if(hudT>.3){hudT=0;hud()}
+  if(!modal&&(G.energy<=0||G.hunger<=0))collapse();
+}
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(G&&!modal)tick(dt);
+  if(G){
+    camX=Math.round(clamp(G.p.x*TS+8-VW/2,0,W*TS-VW));camY=Math.round(clamp(G.p.y*TS+8-VH/2,0,Math.max(0,H*TS-VH)));
+  }else{
+    camX=Math.round((Math.sin(now*.00008)*.5+.5)*(W*TS-VW));camY=Math.round((Math.sin(now*.00006+1)*.5+.5)*Math.max(0,H*TS-VH));
+  }
+  drawWorld(now);
+  requestAnimationFrame(frame);
+}
+title();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
