@@ -690,9 +690,42 @@ function start(k){
      p:{x:h.ex,y:h.ey,path:[],onArrive:null,face:1}};
   NPCS.forEach(n=>G.npcs[n.id]={m:0,chat:-1,cash:n.wage*2+10,hunger:70});
   makePool();initNPCs();recomputeMods();news('You arrive in Marrow Bay.',1);save();hud();
-  ui(`<h2>${esc(b.n)}</h2><p>${esc(b.desc)}</p><p>You live at <b>${esc(h.name)}</b>. Rent is ${money(RENT[b.home])} a month.</p>
-  <p class="muted">Tap the map to walk. Buildings marked FOR SALE can be bought from Lou's Realty. Tram stops and taxis are under Go.</p>`,
-  [{label:'Step outside',fn:()=>{worldPanel();notify('Tap the map to walk. Tap buildings, plots, stops, or people.')}}],true,false);
+  intro(0,k);
+}
+
+/* ================= INTRO + ONBOARDING (HARBOR, the city AI) ================= */
+const INTRO_BG={
+ farm:'HARBOR has your file. Origin: Greenbelt. Occupation: soil. HARBOR is told that the soil has been thinking of you fondly and that the city will not.',
+ dock:'HARBOR has your file. Origin: Dockside, third generation. The union sends its regards, and also an invoice. HARBOR has filed both under "family".',
+ banker:'HARBOR has your file. Former occupation: banker. Current occupation: cautionary tale. HARBOR admires how quickly the Highline stopped returning your calls.',
+ artist:'HARBOR has your file. Occupation: street artist. Fixed address: none until today. Congratulations on becoming a statistic with a postcode.'
+};
+function finishIntro(){G.flags.onboarded=true;save();worldPanel();notify('Tap the map to walk. Tap buildings, plots, stops, or people.')}
+function intro(i,k){
+  const b=BG[G.bg],h=POIS[b.home];
+  const next=n=>()=>intro(n,k);
+  if(i===0)return ui(`<h2>Welcome to Marrow Bay</h2><p>This is HARBOR, the Harbor Administration and Resident Benefits Office. I am delighted you chose to arrive. Statistically, most people do not.</p>
+    <p class="muted">Population: fluctuating. Tide: yes.</p>`,[{label:'Continue',fn:next(1)}],true,false);
+  if(i===1)return ui(`<h2>${esc(b.n)}</h2><p>${esc(INTRO_BG[k]||b.desc)}</p><p class="muted">${esc(b.desc)}</p>`,[{label:'Continue',fn:next(2)}],true,false);
+  ui(`<h2>Your accommodation</h2><p>You live at <b>${esc(h.name)}</b>. Rent is ${money(RENT[b.home])} a month. HARBOR has noted this. HARBOR notes everything.</p>
+    <p class="muted">Citizen onboarding takes about a minute. It is optional, like most of the things that keep you alive.</p>`,
+    [{label:'Begin onboarding',sub:'Recommended. Replay it any time from the Phone.',fn:()=>tutorial(0)},{label:'Skip, I will figure it out',cls:'quiet',fn:finishIntro}],true,false);
+}
+const TUT=[
+ {t:'Getting around',b:'Tap the map to walk there. Tap a building and you walk to its door and go in. Tap a person to talk. Tap a plot, stall, or tram stop to use it.',q:'Walking is free. So is regret.'},
+ {t:'Staying alive',b:'The Fed and Rested bars at the top drain as time passes. If either hits zero you collapse and wake at Bell Clinic, six hours later and a little poorer. Eat at Teo\'s Diner or cook at home. Sleep at home.',q:'Collapsing is technically a form of rest.'},
+ {t:'Money',b:'Earn it by working shifts (docks, diner, estate, foundry), fishing, farming the Greenbelt plots, or busking on the Plaza. Bills come every 30 days. Unpaid bills become debt, and people notice.',q:'Debt is just money that has not met you yet.'},
+ {t:'People',b:'Everyone reads your background and your actions, and they talk to each other. Open the Bag to see how people see you. Chat, give meals, and mind your reputation in each district. Some doors close for good.',q:'Everyone here is watching. HARBOR is simply the only one with a filing system.'},
+ {t:'Your toolbar',b:'Bag: items and standing. Build: place small structures. Biz: your properties. Phone: GPS, news, contacts, and this onboarding. Go: tram, taxi, and your ride.',q:'All five buttons are safe. Mostly.'},
+ {t:'The rest is up to you',b:'Run a farm, buy a building, open a cafe, or cut corners. Crimes raise your heat, and Constable Reyes does not give up easily. There is no required path.',q:'HARBOR does not judge. HARBOR files.'}
+];
+function tutorial(i,fromPhone){
+  const s=TUT[i],last=i===TUT.length-1;
+  const done=()=>fromPhone?phone():finishIntro();
+  ui(`<h2>${esc(s.t)}</h2><p class="muted small">Onboarding ${i+1} of ${TUT.length}</p><p>${esc(s.b)}</p><p class="amber">HARBOR: "${esc(s.q)}"</p>`,
+    [{label:last?(fromPhone?'Done':'Step outside'):'Next',fn:last?done:()=>tutorial(i+1,fromPhone)},
+     ...(i>0?[{label:'Back',cls:'quiet',fn:()=>tutorial(i-1,fromPhone)}]:[]),
+     ...(last?[]:[{label:'Skip onboarding',cls:'quiet',fn:done}])],true,false);
 }
 function save(){try{if(G){G.p.path=[];localStorage.setItem(SAVE,JSON.stringify(G))}}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SAVE);return s?JSON.parse(s):null}catch(e){return null}}
@@ -1341,6 +1374,7 @@ function phone(msg){
     {label:'News',sub:un?`${un} new`:'Today and earlier days',cls:'',fn:newsMenu},
     {label:'Contacts',sub:`${Object.keys(G.met).length} people`,cls:'',fn:contactsMenu},
     {label:'Town board',sub:'Conditions, rumors, projects',cls:'',fn:town},
+    {label:'Citizen onboarding',sub:'Replay the HARBOR orientation',cls:'quiet',fn:()=>tutorial(0,true)},
     leaveBtn]);
 }
 function gpsList(){
