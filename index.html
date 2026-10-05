@@ -1333,6 +1333,17 @@ function tryPlace(tx,ty){
   const nm=STRUCTS[placing].n;placing=null;advance(60);G.energy=clamp(G.energy-5,0,100);
   notify(`${nm} built in ${d} for ${money(cost)}.`);hud();save();
 }
+function stockMenu(st,k){
+  const have=G.inv[k];
+  if(have<=0)return structMenu(st);
+  const put=n=>{n=Math.max(0,Math.min(have,Math.floor(n)||0));if(!n)return stockMenu(st,k);st.stock[k]+=n;G.inv[k]-=n;advance(5);structMenu(st,`Stocked ${n} ${NAMES[k].toLowerCase()}.`)};
+  ui(`<h2>Stock ${esc(NAMES[k].toLowerCase())}</h2><p class="muted">You have ${have} in your bag and ${st.stock[k]} on the stall. Sells at ${money(FAIR[k]*MK[st.mk])} each. Keep the rest for yourself.</p>
+    <label class="small muted" for="stk">How many to put on the stall</label><input id="stk" class="txt" type="number" inputmode="numeric" min="1" max="${have}" value="${Math.min(have,Math.max(1,Math.floor(have/2)))}">`,
+  [{label:'Stock this many',cls:'primary',fn:()=>put(+$('#stk').value)},
+   ...[1,5].filter(n=>n<have).map(n=>({label:`Stock ${n}`,cls:'',fn:()=>put(n)})),
+   {label:`Stock all ${have}`,cls:'',fn:()=>put(have)},
+   {label:'Back',cls:'quiet',fn:()=>structMenu(st)}]);
+}
 function structMenu(st,msg){
   const nm=STRUCTS[st.type].n,rm={label:'Dismantle',sub:`Refund ${money(st.paid*.5)}`,cls:'quiet',fn:()=>ask('Dismantle the '+nm.toLowerCase()+'?',`You will get back ${money(st.paid*.5)} and lose it for good.`+(G.home==='S:'+st.id?' This is your home. You will move to the Bunkhouse.':''),'Yes, dismantle',()=>{G.cash+=Math.round(st.paid*.5);G.structs=G.structs.filter(s=>s!==st);if(G.home==='S:'+st.id)G.home='bunk';closeMenu();notify('Dismantled.')},()=>structMenu(st))};
   if(st.type==='house'){
@@ -1342,7 +1353,7 @@ function structMenu(st,msg){
   }
   if(st.type==='stall'){
     const lines=Object.keys(FAIR).map(k=>`<div><span>${NAMES[k]}</span><b>${st.stock[k]}</b></div>`).join('');
-    const stk=Object.keys(FAIR).filter(k=>G.inv[k]>0).map(k=>({label:`Stock all ${NAMES[k]} (${G.inv[k]})`,sub:`Sells at ${money(FAIR[k]*MK[st.mk])} each`,cls:'',fn:()=>{st.stock[k]+=G.inv[k];G.inv[k]=0;advance(5);structMenu(st,'Stocked.')}}));
+    const stk=Object.keys(FAIR).filter(k=>G.inv[k]>0).map(k=>({label:`Stock ${NAMES[k]} (${G.inv[k]} in bag)`,sub:`Sells at ${money(FAIR[k]*MK[st.mk])} each. Choose how many.`,cls:'',fn:()=>stockMenu(st,k)}));
     ui(`<h2>Your stall</h2><p class="muted">${district(st.x,st.y)}. Price: ${MKN[st.mk]}. Sold ${st.earned>0?money(st.earned):'nothing'} so far.${signNear(st)?' A sign draws extra shoppers.':''}</p>${msgP(msg)}<div class="kv">${lines}</div>
     <p class="muted small">Low prices beat the diner. High prices only sell to people who like you. Hostile locals never buy.</p>`,
       [{label:'Collect earnings',sub:money(st.stored),off:st.stored<=0,fn:()=>{G.cash+=st.stored;st.stored=0;structMenu(st,'Cash collected.')}},
