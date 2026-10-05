@@ -28,7 +28,7 @@ function gig(n,{hrs,base,mult=1,rep,label}){
 }
 function sellScreen(mult,title,back,msg){
   const base={crops:6,meals:14,fish:9,smoked:18,trinkets:26,scrap:4},ev=G.ev&&G.ev.id;
-  const pr=k=>{let v=base[k]*mult*G.mod.sell;if(k==='crops'){if(ev==='glut')v*=.6;v*=G.mod.crops}if(k==='fish')v*=fishMod()*(ev==='strike'?1.3:1);if(k==='smoked')v*=Math.min(1.5,fishMod());if(k==='scrap')v*=scrapMod();return Math.max(1,Math.round(v))};
+  const pr=k=>{let v=base[k]*mult*G.mod.sell*(G.companion==='mina'?1.04:1);if(k==='crops'){if(ev==='glut')v*=.6;v*=G.mod.crops}if(k==='fish')v*=fishMod()*(ev==='strike'?1.3:1);if(k==='smoked')v*=Math.min(1.5,fishMod());if(k==='scrap')v*=scrapMod();return Math.max(1,Math.round(v))};
   const items=Object.keys(base).filter(k=>G.inv[k]>0);
   ui(`<h2>${esc(title)}</h2>${msgP(msg)}${items.length?'':'<p>You have nothing to sell.</p>'}<p class="muted small">Prices move with harvests, strikes, and how much the city has fished or scavenged.</p>`,
     [...items.flatMap(k=>[{label:`Sell some ${NAMES[k]}`,sub:`${money(pr(k))} each. Choose how many.`,cls:'',fn:()=>qtyMenu({title:`Sell ${NAMES[k]}`,intro:'',price:pr(k),max:G.inv[k],mode:'sell',onConfirm:q=>{G.cash+=Math.round(pr(k)*q);G.inv[k]-=q;advance(10);return `Sold ${q} for ${money(Math.round(pr(k)*q))}.`},back:m=>sellScreen(mult,title,back,m)})},{label:`Sell all ${NAMES[k]} (${G.inv[k]})`,sub:`${money(pr(k))} each, ${money(pr(k)*G.inv[k])} total`,fn:()=>{

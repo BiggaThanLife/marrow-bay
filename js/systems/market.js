@@ -6,7 +6,7 @@ function marketInit(){
 }
 const sharePrice=id=>G.mkt.p[id];
 const portfolio=()=>SHARES.reduce((t,s)=>t+(G.mkt.hold[s.id]||0)*G.mkt.p[s.id],0);
-const tradeFee=()=>fact('market_reformed')?0:2;
+const tradeFee=()=>fact('market_reformed')||G.companion==='cordelia'?0:2;
 function bubbleDrift(){
   const A=G.arc;if(!A||A.id!=='bubble')return 0;
   const ph=ARCS.bubble.phases[A.i].name;

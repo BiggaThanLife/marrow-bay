@@ -38,7 +38,7 @@ function waterfront(msg){
       let n=ri(1,2)+rodLevel();n=Math.round(n*clamp(.4+G.fishStock/80,.4,1.2));
       G.inv.fish+=n;G.fishStock=clamp(G.fishStock-n*1.5,0,100);advance(120);G.energy=clamp(G.energy-5,0,100);waterfront(n?`The channel gives up ${n} fish.`:'The channel is bare.')}},
     {label:'Scavenge the mudflats',sub:tn==='low'?'90 minutes. Scrap is exposed.':'Only at low tide',off:tn!=='low',cls:'',fn:()=>{
-      let n=ri(1,3)+(has('strong')?1:0);n=Math.round(n*clamp(G.flats/60,.3,1.2));
+      let n=ri(1,3)+(has('strong')?1:0)+(G.companion==='pip'?1:0);n=Math.round(n*clamp(G.flats/60,.3,1.2));
       G.inv.scrap+=n;G.flats=clamp(G.flats-n*5,0,100);advance(90);G.energy=clamp(G.energy-6,0,100);waterfront(n?`You pulled ${n} pieces of scrap from the mud.`:'The flats have been picked clean.')}},
     leaveBtn]);
 }

@@ -23,6 +23,7 @@ function drawWorld(now){
     const ents=[];
     G.structs.forEach(s=>ents.push({y:s.y-.5,f:()=>drawStruct(s,now)}));
     NPCS.forEach(n=>{if(!n.indoors)ents.push({y:n.y,f:()=>person(n.x,n.y,n.col,false,n.path.length>0,now)})});
+    if(G.companion&&NPC[G.companion]){const cn=NPC[G.companion],ct=compTrail.length>=8?compTrail[0]:[G.p.x-.9,G.p.y+.1];ents.push({y:ct[1],f:()=>person(ct[0],ct[1],cn.col,false,compTrail.length>=8,now)})}
     ents.push({y:G.p.y,f:()=>{
       const a=G.veh.active,mv=G.p.path.length>0;
       if(mv){const dx=G.p.path[0][0]-G.p.x;if(Math.abs(dx)>.05)pFace=dx>0?1:-1}

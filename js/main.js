@@ -26,6 +26,7 @@ function tick(dt){
   if(G.mod.flood.includes(district(Math.round(p.x),Math.round(p.y))))sp*=.55;
   const bx=p.x,by=p.y,was=p.path.length>0;
   moveEnt(p,dt,sp);
+  if(G.companion&&(p.x!==bx||p.y!==by)){compTrail.push([p.x,p.y]);if(compTrail.length>22)compTrail.shift()}
   if(v.fuel&&was){const dd=Math.hypot(p.x-bx,p.y-by);G.veh.fuel[G.veh.active]=Math.max(0,(G.veh.fuel[G.veh.active]||0)-dd*.12*vehFuelUse(G.veh.active));if(G.veh.fuel[G.veh.active]<=0&&!G.flags.fuelNote){G.flags.fuelNote=1;notify('Out of fuel. Refuel at Mack\'s Garage.')}if(G.veh.fuel[G.veh.active]>15)G.flags.fuelNote=0}
   if(was&&!p.path.length&&p.onArrive){const f=p.onArrive;p.onArrive=null;f()}
   missT+=dt;if(missT>.25){missT=0;missionTick();gpsTick();if(G.cash>=1000)quip('rich');else if(G.cash<5)quip('broke')}

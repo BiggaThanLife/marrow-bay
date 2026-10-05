@@ -22,7 +22,7 @@ const payF=n=>[0,.85,1,1.15][tier(att(n))];
 const standing=v=>v<-30?'despised':v<-10?'distrusted':v<10?'unknown':v<30?'respected':'admired';
 const isOpen=id=>{if(G.mod&&G.mod.closed.includes(id))return false;if(id==='foundry'&&fact('foundry_closed'))return false;const o=OPEN[id];if(!o)return true;const h=hourOf();return(h>=o[0]&&h<o[1])||h<o[1]-24};
 const fmtHr=h=>{h%=24;return (h%12||12)+(h<12?' am':' pm')};
-const mealPrice=()=>Math.round(9*(1+Math.min(.6,G.demand*.05))*G.mod.meal);
+const mealPrice=()=>Math.round((G.companion==='teo'?.9:1)*9*(1+Math.min(.6,G.demand*.05))*G.mod.meal);
 const fishMod=()=>clamp(1+(50-G.fishStock)/80,.6,1.8)*G.mod.fish*(1+(50-G.meters.Dockside)/300);
 const scrapMod=()=>clamp(1+(60-G.flats)/60,.7,2)*(1+(G.meters['Foundry Row']-50)/300)*(fact('foundry_salvage')?1.15:1);
 const structAt=(x,y)=>G.structs.find(s=>s.x===x&&s.y===y);

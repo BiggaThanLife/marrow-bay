@@ -62,8 +62,10 @@ function arcHook(poi){
       ui(`<h2>${esc(who.name)}</h2><p>${esc(who.name)} glances at you, then away. "I will not talk about that until ${esc(ARCS[G.arc.id].title.replace(/^The /,'the '))} has concluded. Ask me after."</p>`,[{label:'Understood',fn:closeMenu}],true,false);
       return true;
     }
+    const vt=H.voices&&tagsNow().find(t=>H.voices[t]);
     ui(`<h2>${esc(who.name)}</h2><p>${esc(H.text.replace('{name}',G.name))}</p>`,[
       {label:H.yes,cls:'primary',fn:()=>{closeMenu();startArc(id)}},
+      ...(vt?[{label:H.voices[vt].label,cls:'',fn:()=>{closeMenu();startArc(id);H.voices[vt].fx(G.arc);popup(TAGN[vt]||vt,H.voices[vt].text)}}]:[]),
       {label:H.no,cls:'quiet',fn:()=>{G.hookCool[id]=day()+4;closeMenu()}}],true,false);
     return true;
   }

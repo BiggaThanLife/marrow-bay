@@ -5,6 +5,7 @@ function racketPay(r){
   let m=clamp(.7+G.meters['Neon Mile']/166,.7,1.3);
   if(flackBand()>=2)m*=.7;
   if(fact('mayor')==='reyes')m*=.8;
+  if(G.companion==='vex')m*=1.1;
   return Math.round(r.pay*m);
 }
 function neonDaily(){

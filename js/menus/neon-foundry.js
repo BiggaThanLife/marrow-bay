@@ -26,7 +26,7 @@ MENUS.garage=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} wipes his hands.</p>${msgP(msg)}`,[...btns.filter(b=>b.label==='Refuel'),...btns.filter(b=>!['Refuel','Refuel some','Custom paint','Street race'].includes(b.label)),...btns.filter(b=>['Refuel some','Custom paint','Street race'].includes(b.label)),leaveBtn]);
 };
 MENUS.foundry=(poi,n,msg)=>{
-  const mult=(has('strong')?1.3:1)*(has('working-class')?1.1:1);
+  const mult=(has('strong')?1.3:1)*(has('working-class')?1.1:1)*(G.companion==='ines'?1.1:1);
   const price=Math.round(60*buyF(n));
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the furnace line.</p>${msgP(msg)}`,[
     {label:'Foundry shift',sub:`5 hours, about ${money(48*mult*payF(n))}`,fn:()=>MENUS.foundry(poi,n,gig(n,{hrs:5,base:48,mult,rep:'Foundry Row',label:'at the furnace'}))},

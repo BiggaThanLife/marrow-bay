@@ -25,6 +25,8 @@ function recomputeMods(){
   if(fact('greenbelt_sold'))m.yield*=.85;
   if(fact('buyout_compromise'))m.yield*=.95;
   if(fact('coop_owned'))m.yield*=1.1;
+  if(G.companion==='wren')m.yield*=1.1;
+  if(G.companion==='bell')m.drain*=.9;
   if(fact('foundry_coverup'))m.yield*=.95;
   G.mod=m;applyBridge(m.bridge);
 }

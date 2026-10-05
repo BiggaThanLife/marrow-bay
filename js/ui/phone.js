@@ -10,6 +10,8 @@ function phone(msg){
     {label:'Threads',sub:G.threads.active.some(t=>t.pending)?'New message':`${G.threads.active.length} active`,cls:G.threads.active.some(t=>t.pending)?'primary':'',fn:()=>threadsMenu()},
     {label:'City',sub:'Districts and factions',cls:'',fn:cityMenu},
     {label:'FLACK',sub:`${FLACK_BANDS[flackBand()].n} coverage`,cls:'',fn:()=>flackMenu()},
+    {label:'Career',sub:`${G.titles.length} title${G.titles.length===1?'':'s'}. Net worth ${money(netWorth())}`,cls:'',fn:()=>careerMenu()},
+    ...(G.companion?[{label:NPC[G.companion].name,sub:'Your companion',cls:'',fn:()=>companionMenu()}]:[]),
     ...(G.arc?[{label:ARCS[G.arc.id].title,sub:ARCS[G.arc.id].phases[G.arc.i].name+'. Tap to act.',cls:'primary',fn:()=>arcMenu()}]:[]),
     {label:'Town board',sub:'Conditions, rumors, projects',cls:'',fn:town},
     {label:'Citizen onboarding',sub:'Replay the HARBOR orientation',cls:'quiet',fn:()=>tutorial(0,true)},
@@ -63,6 +65,7 @@ function contactsMenu(){
     [...ids.map(id=>{const n=NPC[id],tr=tier(att(n));return{label:n.name,sub:`${n.role}, ${LAB[tr]}`,cls:'',fn:()=>callMenu(n)}}),{label:'Back',cls:'quiet',fn:()=>phone()}]);
 }
 function whereIs(n){
+  if(G.companion===n.id)return{text:'with you',x:Math.round(G.p.x),y:Math.round(G.p.y)};
   if(n.indoors)return{text:'at home',x:POIS[n.home].ex,y:POIS[n.home].ey};
   let best=null,bd=1e9;
   Object.values(POIS).forEach(p=>{const d=Math.hypot(p.ex-n.x,p.ey-n.y);if(d<bd){bd=d;best=p}});

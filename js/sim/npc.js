@@ -9,6 +9,7 @@ function actFor(n){
 }
 function goto(n,s){n.path=bfs(Math.round(n.x),Math.round(n.y),s[0],s[1])||[]}
 function assign(n,instant){
+  if(G.companion===n.id){n.indoors=true;n.path=[];return}
   const a=actFor(n);n.act=a;
   const homeP=POIS[n.home];
   if(a==='home'){

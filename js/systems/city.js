@@ -25,6 +25,7 @@ function cityInit(){
   if(!G.mkt)marketInit();
   if(typeof G.seed!=='number')G.seed=0;
   G.veh.mods=G.veh.mods||{};G.inv.parts=G.inv.parts||0;G.inv.jammers=G.inv.jammers||0;
+  G.titles=G.titles||[];G.decor=G.decor||{};if(G.companion===undefined)G.companion=null;
   G.engage=G.engage||{};G.hookCool=G.hookCool||{};G.hookBusy=G.hookBusy||{};
   G.favs=G.favs||[];if(G.veh)G.veh.paint=G.veh.paint||{};
   G.turf=G.turf||{door:'vex',pawn:'vex',casino:'vex',loft:'vex'};
@@ -35,7 +36,7 @@ const facAdd=(f,n)=>{if(G.fac[f]!=null)G.fac[f]=clamp(G.fac[f]+n,-100,100)};
 const setFact=(k,v=true)=>{G.facts[k]=v};
 const fact=k=>G.facts[k];
 const flackBand=()=>G.flack>75?3:G.flack>50?2:G.flack>25?1:0;
-const flackHeatMul=()=>(1-.18*flackBand())*(fact('mayor')==='reyes'?.85:1)*(fact('harbor_free')?1.2:1);
+const flackHeatMul=()=>(1-.18*flackBand())*(fact('mayor')==='reyes'?.85:1)*(fact('harbor_free')?1.2:1)*(G.companion==='gus'?1.25:G.companion==='reyes'?1.3:1);
 function flackAdd(n){
   const b=flackBand();G.flack=clamp(G.flack+n,0,fact('flack_removed')?30:100);const nb=flackBand();
   if(nb>b)alertNews(['','News: FLACK cameras go live on the main roads. HARBOR says it is "excited to see more of you."','News: FLACK now logs faces and plates citywide. A spokesperson calls this "a convenience."','News: FLACK coverage is complete. The city has no blind spots, officially.'][nb],3);
@@ -48,6 +49,7 @@ function cityDaily(){
   if(G.flack<30&&Math.random()<.2)flackAdd(1);
   dockDaily();
   seasonsDaily();
+  careerDaily();
   marketDaily();
   neonDaily();
   councilDaily();

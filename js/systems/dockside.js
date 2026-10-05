@@ -10,6 +10,7 @@ const dockPay=()=>{
   if(fact('dock_union_contract'))m*=1.1;
   if(fact('dock_automated'))m*=.8;
   if(fact('union_broken'))m*=.9;
+  if(G.companion==='duarte')m*=1.08;
   return m;
 };
 /* Empty seas and idle piers drag the Dockside meter down, a healthy catch lifts it. */

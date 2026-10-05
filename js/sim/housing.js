@@ -8,6 +8,10 @@ function homePoi(){
   return POIS[POIS[h]?h:'barn'];
 }
 function homeBill(){
+  const cut=G.companion==='halloran'?.9:G.companion==='lou'?.95:1;
+  return Math.round(homeBillBase()*cut);
+}
+function homeBillBase(){
   const h=G.home;
   if(h.startsWith('S:'))return 35;
   if(h.startsWith('B:'))return 60;
