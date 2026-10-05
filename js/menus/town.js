@@ -19,13 +19,6 @@ MENUS.diner=(poi,n,msg)=>{
     {label:'Work a kitchen shift',sub:`4 hours, about ${money(22*payF(n))}`,cls:'',fn:()=>MENUS.diner(poi,n,gig(n,{hrs:4,base:22,rep:'Grid',label:'the grill'}))},
     leaveBtn]);
 };
-MENUS.dock=(poi,n,msg)=>{
-  const strike=G.ev&&G.ev.id==='strike';
-  const mult=(has('strong')?1.4:1)*(has('union')?1.2:1)*(G.fx.crane?1.25:1);
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the hiring line.</p>${strike?'<p class="bad">The dock strike has shut the piers.</p>':''}${msgP(msg)}`,[
-    {label:'Haul cargo',sub:`4 hours, about ${money(26*mult*payF(n))}`,off:strike,fn:()=>MENUS.dock(poi,n,gig(n,{hrs:4,base:26,mult,rep:'Dockside',label:'hauling cargo'}))},
-    leaveBtn]);
-};
 MENUS.estate=(poi,n,msg)=>{
   if(has('known-thief'))return ui(`<h2>${esc(poi.name)}</h2><p>The steward turns you away. Word of the theft reached the terraces.</p>`,[leaveBtn]);
   const gala=G.ev&&G.ev.id==='gala';
@@ -45,6 +38,7 @@ MENUS.gull=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} polishes a glass.</p>${msgP(msg)}`,[
     {label:'Listen for rumors',sub:'1 hour, free',fn:()=>{advance(60);MENUS.gull(poi,n,pick(worldLines()))}},
     {label:'Buy a round for the bar',sub:'$15. Dockside will remember.',cls:'',off:G.cash<15,fn:()=>{G.cash-=15;G.rep.Dockside=clamp(G.rep.Dockside+4,-100,100);npcS(n).m+=5;advance(60);MENUS.gull(poi,n,'Glasses are raised. Dockside thinks better of you.')}},
+    {label:'Union table',sub:'Dues, leaflets, and who is short-weighing whom',cls:'',fn:()=>unionTable(poi,n)},
     leaveBtn]);
 };
 MENUS.club=(poi,n,msg)=>{

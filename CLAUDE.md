@@ -96,7 +96,7 @@ Goal: no single file that has to be reworked. Plain scripts in folders, **no bui
 - [x] Bike/scooter ride animation fix (seated rider, flips with direction, wheels spin)
 - [x] 1. Foundation: `G.meters` (6 district meters), `G.fac` (faction rep), `G.facts`, `G.flack` coverage, NPC `fac`, `cityInit()` defaults (start + migrate), `cityDaily()`, helpers `meterAdd/facAdd/setFact/fact/flackAdd/flackBand`; FLACK band slows heat decay; phone City tab
 - [x] 2. FLACK made visible: `FLACK_SITES` camera poles at intersections (count scales with coverage), `flackSeen()` extra heat when a camera sees a crime (pickpocket), fence price drops by band, phone FLACK tab (your file, Talk to HARBOR x7 escalating lines, Submit a tip, Paint over a lens), scarf/glasses at the pawn shop, `redact()` HARBOR lines at bands 2-3. State: `G.stance`, `G.blind`, `G.fx.mask`. (Foundry jammers come with item 9.)
-- [ ] 3. Dockside: fishing upgrades, cargo manifest job, union/shipping factions
+- [x] 3. Dockside: rods (3 levels) + rowboat at the Dock Office, offshore trip and low-tide channel at the waterfront, cargo manifest job (5 crates, load/skim/FLACK-7 crate), Union table at the Rusty Gull, `dockPay()` from the Dockside meter and union/freight cards (files: data/dockside.js, systems/dockside.js, menus/dock.js). Dockside meter now moves fish price and dock pay, and is moved by fish stock, hauling, manifests, leaflets
 - [ ] 4. Dockside strike arc end to end (3 phases, 4 outcomes, facts, permanent changes, linked thread)
 - [ ] 5. Arc engine generalized (trigger, rotation, phases, resolution) and facts-conflict test script
 - [ ] 6. The Grid: weekly council votes (incl. FLACK expansion), then the mayoral election with run-for-mayor path

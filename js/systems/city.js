@@ -37,6 +37,7 @@ function cityDaily(){
   if(G.meters['Foundry Row']>60)meterAdd('Greenbelt',-1);
   if(flackBand()>=2){meterAdd('Grid',1);meterAdd('Neon Mile',-1)}
   if(G.flack<30&&Math.random()<.2)flackAdd(1);
+  dockDaily();
 }
 const meterWord=v=>v<20?'collapsing':v<40?'low':v<60?'steady':v<80?'high':'booming';
 function cityMenu(){
