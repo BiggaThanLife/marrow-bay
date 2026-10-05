@@ -1947,6 +1947,36 @@ function drawVeh(k,x,y,now,mv){
     if(k==='coupe'){cx.fillStyle='#ffe08a';cx.fillRect(px+8,py-6,2,2)}
   }
 }
+let pFace=1;
+function drawRide(k,x,y,now,mv){
+  const px=Math.round(x*TS+8-camX),py=Math.round(y*TS+14-camY),bike=k==='bike';
+  const ph=mv?now/110:0,L=G.look,oc=L?outfitOf(L.outfit).c:'#2f6fb3',sk=L?(SKIN[L.skin]||SKIN[1]):'#e8c39e';
+  cx.save();cx.translate(px,py);cx.scale(pFace,1);
+  cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(-8,0,17,2);
+  const wheel=(wx,r)=>{
+    cx.lineWidth=2;cx.strokeStyle='#f2f2f2';cx.beginPath();cx.arc(wx,-3,r,0,7);cx.stroke();
+    cx.lineWidth=1;cx.strokeStyle='#1c1c1c';cx.beginPath();cx.arc(wx,-3,r+.7,0,7);cx.stroke();
+    cx.beginPath();cx.moveTo(wx+Math.cos(ph)*r,-3+Math.sin(ph)*r);cx.lineTo(wx-Math.cos(ph)*r,-3-Math.sin(ph)*r);cx.stroke();
+  };
+  if(bike){
+    wheel(-5,3);wheel(5,3);
+    cx.lineWidth=1.5;cx.strokeStyle='#e0402f';cx.beginPath();cx.moveTo(-5,-3);cx.lineTo(-2,-8);cx.lineTo(4,-8);cx.lineTo(5,-3);cx.moveTo(-2,-8);cx.lineTo(0,-3);cx.lineTo(4,-8);cx.moveTo(4,-8);cx.lineTo(4,-11);cx.stroke();
+    cx.fillStyle='#1c1c1c';cx.fillRect(-4,-9,4,1);cx.fillRect(3,-12,3,1);
+    const fx=Math.cos(ph)*2,fy=Math.sin(ph)*2;
+    cx.strokeStyle='#2b2118';cx.lineWidth=2;cx.beginPath();cx.moveTo(-2,-8);cx.lineTo(0+fx,-3+fy);cx.stroke();
+    cx.fillStyle=oc;cx.fillRect(-3,-14,5,6);
+    cx.fillStyle=sk;cx.fillRect(2,-12,3,2);
+    if(L)drawPlayer(cx,1,-6,L,0,true,0);else{cx.fillStyle=sk;cx.fillRect(0,-19,4,4)}
+  }else{
+    wheel(-5,2);wheel(5,2);
+    cx.fillStyle='#e0b83a';cx.fillRect(-6,-5,12,2);cx.fillRect(4,-14,2,10);cx.fillStyle='#1c1c1c';cx.fillRect(3,-15,4,1);
+    cx.fillStyle='#2b2118';cx.fillRect(-2,-6,4,2);
+    cx.fillStyle=oc;cx.fillRect(-3,-10,6,5);
+    cx.fillStyle=sk;cx.fillRect(3,-10,2,2);
+    if(L)drawPlayer(cx,0,-1,L,0,true,0);else{cx.fillStyle=sk;cx.fillRect(-2,-19,4,4)}
+  }
+  cx.restore();
+}
 function drawWorld(now){
   const x0=Math.floor(camX/TS),y0=Math.floor(camY/TS);
   for(let ty=y0;ty<=y0+Math.ceil(VH/TS);ty++)for(let tx=x0;tx<=x0+Math.ceil(VW/TS);tx++){
@@ -1971,8 +2001,13 @@ function drawWorld(now){
     NPCS.forEach(n=>{if(!n.indoors)ents.push({y:n.y,f:()=>person(n.x,n.y,n.col,false,n.path.length>0,now)})});
     ents.push({y:G.p.y,f:()=>{
       const a=G.veh.active,mv=G.p.path.length>0;
-      if(a==='sedan'||a==='coupe'){drawVeh(a,G.p.x,G.p.y,now,mv);person(G.p.x,G.p.y-.15,'#2f6fb3',true,mv,now,true)}
-      else{person(G.p.x,G.p.y,'#2f6fb3',true,mv,now);if(a!=='none')drawVeh(a,G.p.x,G.p.y,now,mv)}
+      if(mv){const dx=G.p.path[0][0]-G.p.x;if(Math.abs(dx)>.05)pFace=dx>0?1:-1}
+      if(a==='bike'||a==='scooter')drawRide(a,G.p.x,G.p.y,now,mv);
+      else if(a==='sedan'||a==='coupe'){
+        const mx=Math.round(G.p.x*TS+8-camX);
+        cx.save();cx.translate(mx,0);cx.scale(pFace,1);cx.translate(-mx,0);
+        drawVeh(a,G.p.x,G.p.y,now,mv);person(G.p.x,G.p.y-.15,'#2f6fb3',true,mv,now,true);cx.restore();
+      }else person(G.p.x,G.p.y,'#2f6fb3',true,mv,now);
     }});
     ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
     if(dest&&G.p.path.length){
