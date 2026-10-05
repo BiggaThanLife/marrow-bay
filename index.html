@@ -667,7 +667,7 @@ $('#b-build').addEventListener('click',()=>{
 
 /* ================= TITLE / START ================= */
 function title(){
-  G=null;hud();placing=null;applyBridge(false);
+  G=null;hud();placing=null;dest=null;alertQ=[];gpsPath=[];applyBridge(false);
   const saved=loadSave();
   ui(`<h1>Marrow Bay</h1><p>A tidal city of six districts, from the Greenbelt farms to the Neon Mile and the Foundry. Work, build a business, buy property, get wheels, or cut corners.</p>
   <p class="muted">Nobody is scripted. People react to who you are, what you own, and what you do.</p>`,
@@ -974,7 +974,9 @@ function resMenu(id,msg){
     {label:'Back',cls:'quiet',fn:resList}]);
 }
 function buildingList(){
-  const v=blocks.filter(b=>!b.poi&&!bizOf(b.key)).map(b=>({b,d:district(b.x+1,b.y+1),p:PRICE[district(b.x+1,b.y+1)]})).sort((a,b)=>a.p-b.p);
+  const seen={};
+  const v=blocks.filter(b=>!b.poi&&!bizOf(b.key)).map(b=>({b,d:district(b.x+1,b.y+1),p:PRICE[district(b.x+1,b.y+1)]})).sort((a,b)=>a.p-b.p)
+    .filter(x=>(seen[x.d]=(seen[x.d]||0)+1)<=2);
   ui(`<h2>Buildings for sale</h2><p class="muted">Each lists with the district and price. You can also tap a FOR SALE sign on the map.</p>`,
     [...v.slice(0,10).map(x=>({label:`${x.d}, ${money(x.p)}`,sub:`Block at ${x.b.x},${x.b.y}`,cls:'',fn:()=>vacantMenu(x.b)})),{label:'Back',cls:'quiet',fn:()=>MENUS.realty(POIS.realty,NPC.lou)}]);
 }
@@ -1137,7 +1139,7 @@ function bust(){
 function plotMenu(pl,msg){
   if(tier(att(NPC.wren))===0)return ui(`<h2>Greenbelt plot</h2><p>Old Wren shoos you off the field. "Not you."</p><p class="muted">Build standing in the Greenbelt first.</p>`,[leaveBtn]);
   if(pl.s===0)ui(`<h2>Empty plot</h2>${msgP(msg)}`,[
-    {label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${G.fx.irrig?2:3} days.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;pl.s=1;pl.d=(G.fx.irrig?2:3)+G.mod.growth;advance(20);plotMenu(pl,'You planted a seed.')}},leaveBtn]);
+    {label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${G.fx.irrig?2:3} days.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;pl.s=1;pl.d=Math.max(1,(G.fx.irrig?2:3)+G.mod.growth);advance(20);plotMenu(pl,'You planted a seed.')}},leaveBtn]);
   else if(pl.s===1)ui(`<h2>Growing</h2><p>${pl.d} day${pl.d>1?'s':''} until harvest.</p>`,[leaveBtn]);
   else ui(`<h2>Ready to harvest</h2>`,[{label:'Harvest',fn:()=>{
     const n=Math.round(ri(3,4)*(has('rural')?1.5:1)*G.mod.yield);G.inv.crops+=n;pl.s=0;G.rep.Greenbelt=clamp(G.rep.Greenbelt+1,-100,100);G.energy=clamp(G.energy-4,0,100);advance(30);
@@ -1213,7 +1215,7 @@ function structMenu(st,msg){
        leaveBtn,rm]);
   }else if(st.type==='planter'){
     const grow=G.fx.irrig?1:2;
-    if(st.s===0)ui(`<h2>${nm}</h2>${msgP(msg)}`,[{label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${grow} day${grow>1?'s':''}.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;st.s=1;st.d=grow+G.mod.growth;advance(20);structMenu(st,'Planted.')}},leaveBtn,rm]);
+    if(st.s===0)ui(`<h2>${nm}</h2>${msgP(msg)}`,[{label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${grow} day${grow>1?'s':''}.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;st.s=1;st.d=Math.max(1,grow+G.mod.growth);advance(20);structMenu(st,'Planted.')}},leaveBtn,rm]);
     else if(st.s===1)ui(`<h2>${nm}</h2><p>${st.d} day${st.d>1?'s':''} until harvest.</p>`,[leaveBtn,rm]);
     else ui(`<h2>${nm}</h2><p class="good">Ready to harvest.</p>`,[{label:'Harvest',fn:()=>{const n=Math.round(4*(has('rural')?1.5:1)*G.mod.yield);G.inv.crops+=n;st.s=0;advance(20);structMenu(st,`You harvested ${n} crops.`)}},leaveBtn,rm]);
   }else if(st.type==='smoker'){
@@ -1397,7 +1399,7 @@ function callMenu(n,msg){
   if(n.id==='teo'){const cost=Math.round(mealPrice()*buyF(n))+3;sp.push({label:'Order delivery',sub:`${money(cost)}. A meal arrives in 30 minutes.`,off:G.cash<cost||!isOpen('diner'),cls:'',fn:()=>{G.cash-=cost;G.hunger=clamp(G.hunger+45,0,100);G.demand+=1;advance(30);callMenu(n,'A hot meal arrives at your door.')}})}
   if(n.id==='bell'){const free=tr>=2&&(has('broke')||G.cash<20);sp.push({label:'Phone consult',sub:free?'Free for you':'$10. Restores a little energy.',off:!free&&G.cash<10,cls:'',fn:()=>{if(!free)G.cash-=10;G.energy=clamp(G.energy+15,0,100);advance(20);callMenu(n,'Good advice and a firm order to rest.')}})}
   if(n.id==='lou')sp.push({label:'Ask for new listings',cls:'',fn:buildingList});
-  if(n.id==='vex')sp.push({label:'Ask for work',sub:tr>=2?'Jobs from the fixer':'Vex does not trust you yet',off:tr<2,cls:'',fn:()=>MENUS.velvet(POIS.velvet,NPC.vex)});
+  if(n.id==='vex')sp.push({label:'Ask for work',sub:tr>=2?'Jobs from the fixer':'Vex does not trust you yet',off:tr<2,cls:'',fn:()=>openPOI(POIS.velvet)});
   if(n.id==='cordelia')sp.push({label:'Repay debt by phone',sub:G.debt>0?`You owe ${money(G.debt)}`:'You owe nothing',off:G.debt<=0||G.cash<1,cls:'',fn:()=>{const p=Math.min(G.cash,G.debt);G.cash-=p;G.debt-=p;if(G.debt<=0)G.flags.defRum=0;callMenu(n,`You pay ${money(p)}.`)}});
   if(n.id==='duarte')sp.push({label:'Ask about dock work',cls:'',fn:()=>callMenu(n,(G.mod.closed.includes('dock')||(G.ev&&G.ev.id==='strike'))?'"Piers are shut. Check back later."':'"The hauling line is open. Come down."')});
   ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}. Attitude: ${LAB[tr]}.</p>${msgP(msg)}`,[
@@ -1687,14 +1689,14 @@ function tick(dt){
 }
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
-  if(G&&!modal)tick(dt);
+  requestAnimationFrame(frame);
+  try{if(G&&!modal)tick(dt)}catch(e){console.error(e)}
   if(G){
     camX=Math.round(clamp(G.p.x*TS+8-VW/2,0,W*TS-VW));camY=Math.round(clamp(G.p.y*TS+8-VH/2,0,Math.max(0,H*TS-VH)));
   }else{
     camX=Math.round((Math.sin(now*.00008)*.5+.5)*(W*TS-VW));camY=Math.round((Math.sin(now*.00006+1)*.5+.5)*Math.max(0,H*TS-VH));
   }
-  drawWorld(now);
-  requestAnimationFrame(frame);
+  try{drawWorld(now)}catch(e){console.error(e)}
 }
 title();
 requestAnimationFrame(frame);
