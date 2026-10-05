@@ -27,7 +27,7 @@ function endThread(th,key,interactive){
   const T=THREADS[th.tid],E=T.endings[key];
   const extra=(E.fx&&E.fx(th))||'';
   G.threads.active=G.threads.active.filter(x=>x!==th);
-  G.threads.done.unshift({tid:th.tid,title:T.title,end:E.name,text:fmt(th,E.text),extra,harbor:E.harbor||'',day:day(),log:th.log});
+  G.threads.done.unshift({tid:th.tid,title:T.title,end:E.name,text:fmt(th,E.text),extra,harbor:fmt(th,E.harbor||''),day:day(),log:th.log});
   news(`Story ended: ${T.title}. ${E.name}.`,2);
   if(interactive)threadEnding(G.threads.done[0]);
   else notify(`${T.title} ended without you: ${E.name}.`);
@@ -38,7 +38,7 @@ function threadEnding(d){
 }
 function threadBeat(th){
   const T=THREADS[th.tid],B=T.beats[th.beat];
-  const btns=B.choices.map(c=>({label:c.label,sub:typeof c.sub==='function'?c.sub():c.sub,off:c.need?!c.need():false,cls:'',fn:()=>{
+  const btns=B.choices.map(c=>({label:fmt(th,c.label),sub:typeof c.sub==='function'?c.sub():c.sub,off:c.need?!c.need():false,cls:'',fn:()=>{
     if(c.fx)c.fx(th);th.log.push(c.label);advanceThread(th,c.next,true)}}));
   ui(`<h2>${esc(T.title)}</h2><p class="muted small">${esc(T.from)}</p><p>${esc(fmt(th,B.text))}</p><p class="muted small">Leave it ${B.timeout||3} days and it resolves without you.</p>`,[...btns,{label:'Back',cls:'quiet',fn:()=>threadsMenu()}]);
 }

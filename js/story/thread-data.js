@@ -13,14 +13,19 @@ const THREADS={
    b2b:{wait:1,ignore:'b2a',text:'Vex Calloway gets to the point in the Velvet Room. "I bought your paper. I can be reasonable. I can also be useful."',choices:[
      {label:'Pay with 20% interest',sub:()=>money(G.debt*1.2),need:()=>G.cash>=Math.round(G.debt*1.2),fx:()=>{G.cash-=Math.round(G.debt*1.2);G.debt=0},next:'END:costly'},
      {label:'Work it off',next:'b3'}]},
-   b3:{wait:1,ignore:'END:ruined',text:'Two jobs for Vex. The first goes fine. The second smells like a setup, and a constable is two streets away.',choices:[
-     {label:'Do the job',fx:()=>{heatAdd(2);advance(120);memAdd('vex',8);G.debt=0},next:'END:ally'},
-     {label:'Tip off Reyes',fx:()=>{memAdd('reyes',10);memAdd('vex',-20);addRumor('informant',['vex','pip']);G.debt=0},next:'END:informant'}]}},
+   b3:{wait:1,ignore:'END:ruined',text:'Vex has two jobs for you. The first is a delivery, nothing more. Do it before the deadline or this gets expensive.',choices:[
+     {label:'Run the first job',sub:'A real delivery. Check your phone for the route.',fx:th=>{vexJob(th,'courier','b4','END:ruined')},next:'b3w'},
+     {label:'Tip off Reyes',fx:()=>{memAdd('reyes',10);memAdd('vex',-20);addRumor('informant',['vex','pip']);G.debt=0},next:'END:informant'}]},
+   b3w:{wait:9999,ignore:'END:ruined',text:'You are on the clock for Vex.',choices:[{label:'Wait',next:'b3w'}]},
+   b4:{wait:0,ignore:'END:ruined',text:'The first job went fine. The second smells like a setup, and a constable is two streets away.',choices:[
+     {label:'Do the second job',sub:'A shakedown. Raises heat.',fx:th=>{vexJob(th,'collect','END:ally','END:ruined')},next:'b4w'},
+     {label:'Tip off Reyes',fx:()=>{memAdd('reyes',10);memAdd('vex',-20);addRumor('informant',['vex','pip']);G.debt=0},next:'END:informant'}]},
+   b4w:{wait:9999,ignore:'END:ruined',text:'You are on the clock for Vex.',choices:[{label:'Wait',next:'b4w'}]}},
   endings:{
    cleared:{name:'Cleared',text:'The debt is gone and so is the stranger. Cordelia nods at you in the street. It is almost warm.',fx:()=>repAdd('Highline',3),harbor:'HARBOR commends your proactive relationship with money.'},
    costly:{name:'Costly',text:'You paid it all, plus the cost of being difficult. Your wallet files a complaint.',harbor:'HARBOR has marked the transaction "character building".'},
    ruined:{name:'Ruined',text:'Debt collection was not a request. Your name is on the wrong list now.',fx:()=>{G.debt=0;return seizeProperty()},harbor:'HARBOR regrets to inform you that regret is not refundable.'},
-   ally:{name:'Vex ally',text:'The job goes sideways in just the right way. Vex tears up your paper and looks at you like an asset.',fx:()=>{G.cash+=60;return 'Vex pays you $60.'},harbor:'HARBOR was not present. HARBOR does not have an alibi, either.'},
+   ally:{name:'Vex ally',text:'The job goes sideways in just the right way. Vex tears up your paper and looks at you like an asset.',fx:()=>{G.debt=0;memAdd('vex',8);G.cash+=60;return 'Vex pays you $60.'},harbor:'HARBOR was not present. HARBOR does not have an alibi, either.'},
    informant:{name:'Informant',text:'Reyes gets her collar. Vex gets a reason to remember your face.',harbor:'HARBOR salutes your civic spirit and your new enemies.'}}},
  rival:{title:'The Rival',from:'Staff gossip',
   hook:()=>bizPlain().length>0&&day()>=8,

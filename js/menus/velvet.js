@@ -24,13 +24,13 @@ MENUS.velvet=(poi,n,msg)=>{
 };
 function missionTick(){
   const m=G.mission;if(!m)return;
-  if(G.t>m.deadline){G.mission=null;notify(`Job failed: ${m.title}. Out of time.`);G.rep['Neon Mile']=clamp(G.rep['Neon Mile']-3,-100,100);return}
+  if(G.t>m.deadline){G.mission=null;notify(`Job failed: ${m.title}. Out of time.`);G.rep['Neon Mile']=clamp(G.rep['Neon Mile']-3,-100,100);threadMissionEnd(m,false);return}
   const poi=POIS[m.stops[m.i]];
   if(Math.hypot(G.p.x-poi.ex,G.p.y-poi.ey)>1.3)return;
   if(m.night&&!isNight())return;
   m.i++;
   if(m.i<m.stops.length){notify(`Package picked up. Deliver it to ${POIS[m.stops[m.i]].name}.`);return}
-  G.mission=null;const vex=npcS(NPC.vex);
+  G.mission=null;const vex=npcS(NPC.vex);threadMissionEnd(m,true);
   if(m.type==='courier'){G.cash+=m.reward;vex.m+=5;G.rep['Neon Mile']=clamp(G.rep['Neon Mile']+3,-100,100);notify(`Delivered. You earn ${money(m.reward)}.`);quip('job')}
   else if(m.type==='collect'){
     if(Math.random()<.7){G.cash+=m.reward;G.heat=Math.min(5,G.heat+1);vex.m+=6;G.rep[poi.d]=clamp(G.rep[poi.d]-6,-100,100);const o=OWNER[poi.id]&&NPC[OWNER[poi.id]];if(o)npcS(o).m-=15;{news(`Shakedown reported at ${poi.name}.`,2);notify(`They pay up. You earn ${money(m.reward)}, and made an enemy.`)}}
