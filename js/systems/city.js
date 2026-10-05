@@ -20,6 +20,8 @@ function cityInit(){
   G.facts=G.facts||{};if(typeof G.flack!=='number')G.flack=10;
   G.stance=G.stance||{};for(const k of ['coop','evade','sab','harbor'])if(typeof G.stance[k]!=='number')G.stance[k]=0;
   G.blind=G.blind||{};G.fx=G.fx||{};
+  if(G.facts.mayor===undefined)G.facts.mayor='voss';
+  G.council=G.council||{cur:null,hist:[],last:0,vetoDay:-99};
   G.arc=G.arc||null;G.arcsDone=G.arcsDone||[];G.arcLast=G.arcLast||0;
 }
 const meterAdd=(d,n)=>{if(G.meters[d]!=null)G.meters[d]=clamp(G.meters[d]+n,0,100)};
@@ -27,7 +29,7 @@ const facAdd=(f,n)=>{if(G.fac[f]!=null)G.fac[f]=clamp(G.fac[f]+n,-100,100)};
 const setFact=(k,v=true)=>{G.facts[k]=v};
 const fact=k=>G.facts[k];
 const flackBand=()=>G.flack>75?3:G.flack>50?2:G.flack>25?1:0;
-const flackHeatMul=()=>1-.18*flackBand();
+const flackHeatMul=()=>(1-.18*flackBand())*(fact('mayor')==='reyes'?.85:1);
 function flackAdd(n){
   const b=flackBand();G.flack=clamp(G.flack+n,0,100);const nb=flackBand();
   if(nb>b)alertNews(['','News: FLACK cameras go live on the main roads. HARBOR says it is "excited to see more of you."','News: FLACK now logs faces and plates citywide. A spokesperson calls this "a convenience."','News: FLACK coverage is complete. The city has no blind spots, officially.'][nb],3);
@@ -39,6 +41,7 @@ function cityDaily(){
   if(flackBand()>=2){meterAdd('Grid',1);meterAdd('Neon Mile',-1)}
   if(G.flack<30&&Math.random()<.2)flackAdd(1);
   dockDaily();
+  councilDaily();
   arcsDaily();
   if(G.arc&&G.arc.waitThread)arcThread(G.arc.waitThread);
 }
@@ -50,6 +53,7 @@ function cityMenu(){
   ui(`<h2>City</h2><p class="muted">How each district is doing, and who thinks what of you.</p>
     <h2>Districts</h2><div class="kv">${rows}</div>
     <h2>Factions</h2><div class="kv">${fr}</div>
+    <h2>City Hall</h2><p>Mayor: <b>${esc(mayorName())}</b>.</p>
     <h2>FLACK cameras</h2><p><b>${fb.n}</b> (${Math.round(G.flack)}/100). ${fb.t}</p>${arcSummaryHtml()}`,
     [{label:'Back',cls:'quiet',fn:()=>phone()},leaveBtn]);
 }

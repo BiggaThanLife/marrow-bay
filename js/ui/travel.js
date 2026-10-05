@@ -28,7 +28,7 @@ function taxiMenu(){
 }
 function stopMenu(s){
   if(G.mod.tram)return ui(`<h2>${esc(s.name)}</h2><p>The trams are not running.</p>`,[leaveBtn]);
-  const pass=G.passUntil>day();
+  const pass=G.passUntil>day()||G.freeTramUntil>day();
   ui(`<h2>${esc(s.name)}</h2><p class="muted">Trams run all day.${pass?` Your pass is valid for ${G.passUntil-day()} more days.`:''}</p>`,[
     ...STOPS.filter(t=>t.id!==s.id).map(t=>{const d=man(s.x,s.y,t.x,t.y);return{label:`To ${t.name}`,sub:`${pass?'Free':'$2'}, about ${Math.round(10+d*.35)} min`,off:!pass&&G.cash<2,cls:'',fn:()=>{if(!pass)G.cash-=2;teleport(t.x,t.y,Math.round(10+d*.35),`You step off at ${t.name}.`)}}}),
     {label:'Buy a 30-day pass',sub:'$40. Unlimited rides.',off:G.cash<40||pass,cls:'quiet',fn:()=>{G.cash-=40;G.passUntil=day()+30;stopMenu(s)}},

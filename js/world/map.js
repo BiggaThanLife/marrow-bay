@@ -29,7 +29,7 @@ function addPOI(id,name,kind,bx,by){
 const SPEC={
  '1,0':['estate','Ashgrove Estate'],'2,0':['bank','Marrow Bank'],'3,1':['club','The Gilded Tide'],'0,1':['flats','Terrace Flats'],
  '0,2':['realty',"Lou's Realty"],'1,2':['market','Market Hall'],'2,2':['plaza'],'3,2':['diner',"Teo's Diner"],'4,2':['studio','Studio Row'],
- '0,3':['workshop','Tinker Works'],'1,3':['lot'],'2,3':['clinic','Bell Clinic'],'4,3':['lot'],
+ '0,3':['workshop','Tinker Works'],'1,3':['cityhall','City Hall'],'2,3':['clinic','Bell Clinic'],'4,3':['lot'],
  '4,4':['dock','Dock Office'],'5,4':['bunk','Bunkhouse'],'3,5':['gull','The Rusty Gull'],'1,5':['lot'],'4,5':['lot'],
  '7,0':['casino','Lucky Tide Casino'],'8,1':['velvet','The Velvet Room'],'9,0':['pawn','Pawn and Loan'],'7,2':['loft','Neon Lofts'],
  '7,4':['garage',"Mack's Garage"],'8,4':['foundry','Iron Works'],

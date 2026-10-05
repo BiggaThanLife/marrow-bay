@@ -14,7 +14,7 @@ function arcsDaily(){
     return;
   }
   if(day()<10||day()-(G.arcLast||0)<8)return;
-  const c=Object.keys(ARCS).filter(id=>!G.arcsDone.some(a=>a.id===id)&&ARCS[id].can());
+  const c=Object.keys(ARCS).filter(id=>!G.arcsDone.some(a=>a.id===id&&!(ARCS[id].repeatAfter&&day()-a.day>=ARCS[id].repeatAfter))&&ARCS[id].can());
   if(c.length&&Math.random()<.3)startArc(pick(c));
 }
 function startArc(id){
