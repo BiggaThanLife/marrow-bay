@@ -517,7 +517,7 @@ function newDay(d){
   makePool();
   if(G.debt>0&&day()-G.loanDay>(G.loanTerm||10)&&!G.flags.defRum){G.flags.defRum=1;addRumor('defaulter',['cordelia'])}
   G.rumors.forEach(r=>r.str-=4);G.rumors=G.rumors.filter(r=>r.str>=12);
-  threadsDaily();
+  cityDaily();threadsDaily();
   G.projects.forEach(p=>{
     if(p.done)return;const d=PROJECTS.find(x=>x.id===p.id);
     NPCS.filter(n=>n.d===d.d).forEach(n=>{
@@ -566,7 +566,7 @@ function hourly(h){
   G.demand=Math.max(0,G.demand-.6);
   const R=NPC.reyes,rn=Math.hypot(R.x-G.p.x,R.y-G.p.y)<9&&!R.indoors;
   const atHome=Math.hypot(homePoi().ex-G.p.x,homePoi().ey-G.p.y)<2.5;
-  G.heat=Math.max(0,G.heat-(atHome?.7:rn?0:.2)*(G.mod.cops?.4:1));
+  G.heat=Math.max(0,G.heat-(atHome?.7:rn?0:.2)*(G.mod.cops?.4:1)*flackHeatMul());
   const out=NPCS.filter(n=>!n.indoors);
   for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++){
     const a=out[i],b=out[j];if(Math.hypot(a.x-b.x,a.y-b.y)>3.5)continue;
@@ -713,6 +713,7 @@ function start(k){
      veh:{owned:{},stolen:{},fuel:{},active:'none'},
      p:{x:h.ex,y:h.ey,path:[],onArrive:null,face:1}};
   NPCS.forEach(n=>G.npcs[n.id]={m:0,chat:-1,cash:n.wage*2+10,hunger:70});
+  cityInit();
   makePool();initNPCs();recomputeMods();news('You arrive in Marrow Bay.',1);save();hud();
   customize(k);
 }
@@ -1409,6 +1410,7 @@ function quip(key){
 }
 const timeStr=()=>{const h=hourOf(),m=Math.floor(G.t%60);return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`};
 function migrate(){
+  cityInit();
   if(!G.look){G.flags=G.flags||{};G.flags.customDone=false}
   G.name=G.name||'Stranger';G.quirk=G.quirk||null;
   G.threads=G.threads||{active:[],done:[],lastStart:0};
@@ -1524,6 +1526,7 @@ function phone(msg){
     {label:'News',sub:un?`${un} new`:'Today and earlier days',cls:'',fn:newsMenu},
     {label:'Contacts',sub:`${Object.keys(G.met).length} people`,cls:'',fn:contactsMenu},
     {label:'Threads',sub:G.threads.active.some(t=>t.pending)?'New message':`${G.threads.active.length} active`,cls:G.threads.active.some(t=>t.pending)?'primary':'',fn:()=>threadsMenu()},
+    {label:'City',sub:'Districts, factions, FLACK',cls:'',fn:cityMenu},
     {label:'Town board',sub:'Conditions, rumors, projects',cls:'',fn:town},
     {label:'Citizen onboarding',sub:'Replay the HARBOR orientation',cls:'quiet',fn:()=>tutorial(0,true)},
     leaveBtn]);
@@ -1592,6 +1595,54 @@ function callMenu(n,msg){
     {label:'Find them on GPS',sub:`They are ${w.text}`,cls:'',fn:()=>{G.gps={x:w.x,y:w.y,name:n.name};gpsTick();phone(`GPS route set to ${n.name}.`)}},
     {label:'Ask for news',sub:tr>=2?'Rumors and tips':'They will not share that yet',off:tr<2,cls:'',fn:()=>{advance(5);callMenu(n,`"${pick(worldLines())}"`)}},
     ...sp,{label:'Back',cls:'quiet',fn:contactsMenu}]);
+}
+
+/* ================= CITY STATE: meters, factions, facts, FLACK ================= */
+const METERS={Greenbelt:'Harvest',Highline:'Market',Grid:'Order',Dockside:'Catch and cargo','Neon Mile':'Underworld','Foundry Row':'Output'};
+const FACTIONS={
+  coop:{n:"Growers' Co-op",d:'Greenbelt'},trust:{n:'Marrow Bay Trust',d:'Highline'},hall:{n:'City Hall',d:'Grid'},
+  union:{n:"Dockworkers' Union",d:'Dockside'},shipping:{n:'Harbor Freight Co.',d:'Dockside'},
+  crew:{n:"Vex's crew",d:'Neon Mile'},guild:{n:'Foundry Guild',d:'Foundry Row'}};
+const NPC_FAC={cordelia:'trust',halloran:'trust',lou:'trust',mina:'hall',teo:'hall',pip:'hall',reyes:'hall',ashgrove:'hall',bell:'hall',
+  wren:'coop',duarte:'shipping',gus:'union',vex:'crew',mack:'guild',ines:'guild'};
+NPCS.forEach(n=>{n.fac=NPC_FAC[n.id]||null});
+const FLACK_BANDS=[
+  {n:'Sleepy',t:'A few cameras, mostly pointed at the wrong things.'},
+  {n:'Main roads',t:'Cameras on the main roads. Crimes that get seen get remembered.'},
+  {n:'Logged',t:'Faces and plates are logged. Heat lingers and fences get nervous.'},
+  {n:'Saturated',t:'Every corner has an eye. HARBOR has started editing itself.'}];
+function cityInit(){
+  G.meters=G.meters||{};for(const d in METERS)if(typeof G.meters[d]!=='number')G.meters[d]=50;
+  G.fac=G.fac||{};for(const f in FACTIONS)if(typeof G.fac[f]!=='number')G.fac[f]=0;
+  G.facts=G.facts||{};if(typeof G.flack!=='number')G.flack=10;
+}
+const meterAdd=(d,n)=>{if(G.meters[d]!=null)G.meters[d]=clamp(G.meters[d]+n,0,100)};
+const facAdd=(f,n)=>{if(G.fac[f]!=null)G.fac[f]=clamp(G.fac[f]+n,-100,100)};
+const setFact=(k,v=true)=>{G.facts[k]=v};
+const fact=k=>G.facts[k];
+const flackBand=()=>G.flack>75?3:G.flack>50?2:G.flack>25?1:0;
+const flackHeatMul=()=>1-.18*flackBand();
+function flackAdd(n){
+  const b=flackBand();G.flack=clamp(G.flack+n,0,100);const nb=flackBand();
+  if(nb>b)alertNews(['','News: FLACK cameras go live on the main roads. HARBOR says it is "excited to see more of you."','News: FLACK now logs faces and plates citywide. A spokesperson calls this "a convenience."','News: FLACK coverage is complete. The city has no blind spots, officially.'][nb],3);
+  else if(nb<b)alertNews('News: Cameras are being pulled down around the city. HARBOR declines to comment.',2);
+}
+function cityDaily(){
+  for(const d in METERS){const m=G.meters[d];G.meters[d]=clamp(m+(50-m)*.06,0,100)}
+  if(G.meters['Foundry Row']>60)meterAdd('Greenbelt',-1);
+  if(flackBand()>=2){meterAdd('Grid',1);meterAdd('Neon Mile',-1)}
+  if(G.flack<30&&Math.random()<.2)flackAdd(1);
+}
+const meterWord=v=>v<20?'collapsing':v<40?'low':v<60?'steady':v<80?'high':'booming';
+function cityMenu(){
+  const rows=Object.keys(METERS).map(d=>`<div><span>${d}: ${METERS[d]}</span><b>${meterWord(G.meters[d])} (${Math.round(G.meters[d])})</b></div>`).join('');
+  const fr=Object.keys(FACTIONS).map(f=>`<div><span>${FACTIONS[f].n}</span><b>${standing(G.fac[f])}</b></div>`).join('');
+  const fb=FLACK_BANDS[flackBand()];
+  ui(`<h2>City</h2><p class="muted">How each district is doing, and who thinks what of you.</p>
+    <h2>Districts</h2><div class="kv">${rows}</div>
+    <h2>Factions</h2><div class="kv">${fr}</div>
+    <h2>FLACK cameras</h2><p><b>${fb.n}</b> (${Math.round(G.flack)}/100). ${fb.t}</p>`,
+    [{label:'Back',cls:'quiet',fn:()=>phone()},leaveBtn]);
 }
 
 /* ================= PERSONAL STORY THREADS ================= */

@@ -58,8 +58,8 @@ Decisions (user, final): run length is ENDLESS (no forced end; epilogues are mil
 
 ### F. Build order / checklist (tick `[x]` when done and pushed)
 - [x] Bike/scooter ride animation fix (seated rider, flips with direction, wheels spin)
-- [ ] 1. Foundation: `G.meters` (6 district meters), `G.fac` (faction rep), `G.facts`, `G.flack` coverage, NPC home district/faction, migrate defaults
-- [ ] 2. City tab on phone + FLACK tab + visible FLACK cameras on the map; HARBOR "redacted" lines scale with coverage
+- [x] 1. Foundation: `G.meters` (6 district meters), `G.fac` (faction rep), `G.facts`, `G.flack` coverage, NPC `fac`, `cityInit()` defaults (start + migrate), `cityDaily()`, helpers `meterAdd/facAdd/setFact/fact/flackAdd/flackBand`; FLACK band slows heat decay; phone City tab
+- [ ] 2. (City tab done in item 1) Visible FLACK cameras on the map; FLACK stances (cooperate/evade/sabotage); HARBOR "redacted" lines scale with coverage; more FLACK band effects (pickpocket/fence odds)
 - [ ] 3. Dockside: fishing upgrades, cargo manifest job, union/shipping factions
 - [ ] 4. Dockside strike arc end to end (3 phases, 4 outcomes, facts, permanent changes, linked thread)
 - [ ] 5. Arc engine generalized (trigger, rotation, phases, resolution) and facts-conflict test script
