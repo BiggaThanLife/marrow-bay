@@ -7,8 +7,8 @@ const mayorName=()=>fact('mayor')==='player'?`Mayor ${G.name}`:(MAYOR_NAMES[fact
 /* A council decision that lasts a while: it joins the active events so prices and traffic react. */
 function councilMod(name,desc,mod,days){G.evs.push({id:'council_'+name.replace(/\W/g,''),sev:1,name,desc,mod,until:day()+days});recomputeMods()}
 const PROPOSALS=[
- {id:'flack_expand',title:'Put FLACK cameras on every Highline and Grid road',votes:{ashgrove:1,halloran:1,bell:-1,reyes:1,mina:-1},can:()=>G.flack<85,
-  yes:()=>{flackAdd(8);meterAdd('Grid',3);return 'Cameras go up overnight. HARBOR says it has never seen so much of the city.'},
+ {id:'flack_expand',gap:80,title:'Put FLACK cameras on every Highline and Grid road',votes:{ashgrove:1,halloran:1,bell:-1,reyes:1,mina:-1},can:()=>G.flack<85,
+  yes:()=>{flackAdd(6);meterAdd('Grid',3);return 'Cameras go up overnight. HARBOR says it has never seen so much of the city.'},
   no:()=>{flackAdd(-2);return 'The motion fails. A few cameras quietly lose their funding.'}},
  {id:'flack_audit',title:'Require a public audit of FLACK records',votes:{ashgrove:-1,halloran:-1,bell:1,reyes:-1,mina:1},can:()=>G.flack>=30,
   yes:()=>{flackAdd(-5);return 'FLACK must publish what it holds. The first report is mostly redactions.'},

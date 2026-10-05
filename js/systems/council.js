@@ -8,7 +8,7 @@ function councilDaily(){
 }
 function tableProposal(){
   const C=G.council;
-  const pool=PROPOSALS.filter(p=>p.can()&&!C.hist.some(h=>h.id===p.id&&day()-h.day<35));
+  const pool=PROPOSALS.filter(p=>p.can()&&!C.hist.some(h=>h.id===p.id&&day()-h.day<(p.gap||35)));
   if(!pool.length)return;
   const p=pick(pool);
   C.cur={id:p.id,vote:day()+6,sway:{},lobbied:0,forced:null};

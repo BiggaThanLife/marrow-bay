@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay arc fuzz test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Arc and thread branch walk</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script src="arcs.js?v=4"></script>
+<script>
+const f = document.getElementById('game');
+const runs = +(new URLSearchParams(location.search).get('runs') || 40);
+f.addEventListener('load', () => {
+  const win = f.contentWindow;
+  const api = win.eval(`({get G(){return G},BG,ARCS,THREADS,NPC,POIS,start,closeMenu,popClear,advance,startArc,arcMenu,threadBeat,advanceThread,threadsHourly,missionTick,day,npcS,recomputeMods,alertQ,setFact:(k,v)=>{G.facts[k]=v===undefined?true:v}})`);
+  const res = runArcs(api, win, runs);
+  const v = document.getElementById('verdict');
+  const unreached = [];
+  Object.entries(res.report.arcs).forEach(([k, r]) => r.unreached.length && unreached.push('arc ' + k + ': ' + r.unreached.join(', ')));
+  Object.entries(res.report.threads).forEach(([k, r]) => r.unreached.length && unreached.push('thread ' + k + ': ' + r.unreached.join(', ')));
+  v.className = res.ok ? 'ok' : 'bad';
+  v.textContent = (res.ok ? 'No errors across all arcs and threads.' : res.errorCount + ' errors.') + (unreached.length ? ' Not reached by random play: ' + unreached.length + ' (see below).' : ' Every outcome and ending was reached.');
+  document.getElementById('out').textContent = JSON.stringify(res, null, 1) + '\n\nUNREACHED BY RANDOM PLAY\n' + unreached.join('\n');
+  window.__done = { ok: res.ok, errorCount: res.errorCount, unreached };
+});
+</script>

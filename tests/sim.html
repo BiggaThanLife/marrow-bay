@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay balance simulation</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>A year in Marrow Bay (idle bot)</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script src="sim.js?v=1"></script>
+<script>
+const f = document.getElementById('game'), q = new URLSearchParams(location.search);
+const games = +(q.get('games') || 4), days = +(q.get('days') || 365);
+f.addEventListener('load', () => {
+  const win = f.contentWindow;
+  const api = win.eval(`({get G(){return G},BG,METERS,NPCS,SHARES,start,closeMenu,popClear,advance,mealPrice,npcS,alertQ})`);
+  const res = runSim(api, win, games, days);
+  const v = document.getElementById('verdict');
+  v.className = res.flags.length ? 'bad' : 'ok';
+  v.textContent = res.flags.length ? res.flags.length + ' balance flags' : 'No runaway loops found.';
+  document.getElementById('out').textContent = res.flags.join('\n') + '\n\n' + JSON.stringify(res.out, null, 1);
+  window.__done = res;
+});
+</script>

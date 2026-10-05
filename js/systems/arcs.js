@@ -33,7 +33,9 @@ function resolveArc(){
   G.arcsDone.unshift({id:A.id,title:D.title,out:key,name:out.name,text:out.text,day:day()});
   G.arcLast=day();G.arc=null;
   news(`${D.title}: ${out.name}. ${out.text}`,3);
-  alertQ.push({sev:3,name:`${D.title}: ${out.name}`,desc:out.text,extra:[extra,out.harbor].filter(Boolean).join(' ')});
+  const involved=A.stance||A.run||A.endorse||A.side||A.choice||(A.did&&Object.keys(A.did).length);
+  const recap=involved?'':'HARBOR digest: you were not involved in this one. Here is what changed: '+(extra||out.text);
+  alertQ.push({sev:3,name:`${D.title}: ${out.name}`,desc:out.text,extra:[extra,out.harbor,recap].filter(Boolean).join(' ')});
 }
 function arcSummaryHtml(){
   let h='';
@@ -54,7 +56,7 @@ function arcHook(poi){
   if(poi.id===G.home)return false;
   for(const id of Object.keys(ARCS)){
     const D=ARCS[id],H=D.hook;
-    if(!H||D.district!==poi.d||day()<H.min||(G.engage[D.district]||0)<H.need||arcDone(id)||(G.hookCool[id]||0)>day()||!D.can())continue;
+    if(!H||D.district!==poi.d||day()<H.min||day()-(G.arcLast||0)<6||(G.engage[D.district]||0)<H.need||arcDone(id)||(G.hookCool[id]||0)>day()||!D.can())continue;
     const who=NPC[H.who];
     if(G.arc){
       if(G.hookBusy[id]===day())return false;

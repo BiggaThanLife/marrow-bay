@@ -3,7 +3,7 @@
 function hourly(h){
   const hr=h%24,t=h*60,high=tideV(t)>.45,low=tideV(t)<-.45;
   G.fishStock=clamp(G.fishStock+(high?2.5:1.2),0,100);
-  G.flats=clamp(G.flats+(high?1.5:.3),0,100);
+  G.flats=clamp(G.flats+(high?2.2:.5),0,100);
   G.demand=Math.max(0,G.demand-.6);
   const R=NPC.reyes,rn=Math.hypot(R.x-G.p.x,R.y-G.p.y)<9&&!R.indoors;
   const atHome=Math.hypot(homePoi().ex-G.p.x,homePoi().ey-G.p.y)<2.5;
@@ -18,9 +18,10 @@ function hourly(h){
     const s=npcS(n);
     if(hr>=22||hr<7)s.hunger=Math.min(100,s.hunger+2);else s.hunger=Math.max(0,s.hunger-4.5);
     if(hr===17&&n.act!=='home'&&!(strike&&n.d==='Dockside'&&n.id!=='duarte'))s.cash+=n.wage;
+    if(hr===22)s.cash=Math.max(0,s.cash-Math.round(n.wage*.7+s.cash*.02));
     if(n.indoors)return;
     if(n.d==='Dockside'&&n.act==='hang'&&high&&G.fishStock>5){G.fishStock-=4;s.cash+=4}
-    if(n.id==='pip'&&low&&G.flats>8){G.flats-=6;s.cash+=5}
+    if(n.id==='pip'&&low&&G.flats>8){G.flats-=4;s.cash+=5}
     if(s.hunger<45)npcEat(n,s);
     if(n.wants==='trinkets'&&s.cash>60&&Math.random()<.05)npcBuyTrinket(n,s);
   });
