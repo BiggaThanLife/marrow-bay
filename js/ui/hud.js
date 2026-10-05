@@ -52,10 +52,10 @@ const leaveBtn={label:'Leave',cls:'quiet',fn:closeMenu};
 $('#xbtn').addEventListener('click',()=>{if(dismissable)closeMenu()});
 const msgP=m=>m?`<p class="amber">${esc(m)}</p>`:'';
 
-$('#b-bag').addEventListener('click',()=>{if(G){placing=null;notify('');bag()}});
-$('#b-phone').addEventListener('click',()=>{if(G){placing=null;notify('');phone()}});
-$('#b-biz').addEventListener('click',()=>{if(G){placing=null;notify('');bizOverview()}});
-$('#b-go').addEventListener('click',()=>{if(G){placing=null;notify('');goMenu()}});
+$('#b-bag').addEventListener('click',()=>{if(G){placing=null;bag()}});
+$('#b-phone').addEventListener('click',()=>{if(G){placing=null;phone()}});
+$('#b-biz').addEventListener('click',()=>{if(G){placing=null;bizOverview()}});
+$('#b-go').addEventListener('click',()=>{if(G){placing=null;goMenu()}});
 $('#b-build').addEventListener('click',()=>{
   if(!G)return;
   if(placing){placing=null;notify('');hud();return}

@@ -91,6 +91,11 @@ Decisions (user, final): run length is ENDLESS (no forced end; epilogues are mil
 ### H. Code structure plan (step 0 of the checklist)
 Goal: no single file that has to be reworked. Plain scripts in folders, **no build step** (GitHub Pages serves them directly; `index.html` stays the entry point). See the checklist item 0 for status.
 
+### I. Arc triggering rules (set after playtest feedback)
+- Arcs with a `hook` start from a **story hook**, not a daily roll: `G.engage[district]` rises when you enter a building there (+1), do a gig there (+2) or own a business there (+0.5 a day). When it reaches `hook.need` and the day is past `hook.min`, entering any building in that district makes `hook.who` offer the arc (accept or "not now", asked again after 4 days). The mayor election is the only arc that still starts on a schedule (day 25, then every 60 days).
+- If another arc is active, the NPC says they will not talk about it until that arc has concluded (once a day per arc).
+- Alerts: major alerts use `popup()` (centered card, pauses the game, covers the toolbar) so they can never be cleared by tapping something else. `alertNews(m,sev)` pops up at severity 3 or more, otherwise uses the small note. Phase changes and arc starts use `popup()`.
+
 ### F. Build order / checklist (tick `[x]` when done and pushed)
 - [x] 0. Restructure into folders (done: 62 script files under js/, css/style.css, tests/smoke.html matches the pre-split baseline exactly). Later optional step: convert files to ES modules one folder at a time
 - [x] Bike/scooter ride animation fix (seated rider, flips with direction, wheels spin)

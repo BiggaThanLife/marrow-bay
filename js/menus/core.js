@@ -12,11 +12,14 @@ function openPOI(poi){
   if(poi.id!==G.home&&G.mod.closed.includes(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>Closed: ${esc(G.mod.names[poi.id])}.</p>`,[leaveBtn]);
   if(poi.id!==G.home&&!isOpen(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>Closed. Opens at ${fmtHr(OPEN[poi.id][0])}.</p>`,[leaveBtn]);
   if(n&&poi.id!==G.home&&tier(att(n))===0)return refuse(poi,n);
+  engageAdd(poi.d,1);
+  if(arcHook(poi))return;
   (MENUS[poi.id]||info)(poi,n);
 }
 function info(poi){ui(`<h2>${esc(poi.name)}</h2><p>Residents live here. Nobody answers the door.</p>`,[leaveBtn])}
 function gig(n,{hrs,base,mult=1,rep,label}){
   if(G.energy<hrs*7)return `You are too tired for ${hrs} hours of work.`;
+  engageAdd(rep,2);
   const pay=Math.round(base*mult*(n?payF(n):1)*(G.quirk==='iron-stomach'?.95:1));
   G.cash+=pay;advance(hrs*60);G.energy=clamp(G.energy-hrs*4,0,100);
   G.rep[rep]=clamp(G.rep[rep]+1,-100,100);

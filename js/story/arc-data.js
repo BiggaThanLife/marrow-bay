@@ -10,7 +10,8 @@ const STRIKE_RUMBLES=[
 const ARCS={
  dockstrike:{
   title:'The Dock Dispute',district:'Dockside',
-  can:()=>G.meters.Dockside<=45||fact('flack_shipment_seen')||G.fac.union>=8,
+  hook:{min:8,need:6,who:'gus',yes:'Hear what Gus knows',no:'Not my fight',text:'Gus wipes the same glass for the third time. "You have been around the piers a lot lately, {name}. Cameras on the cranes, shorter shifts, a foreman who stopped making eye contact. Something is coming to a head. I can tell you what I know, if you want in."'},
+  can:()=>true,
   status:A=>`Union strength ${Math.round(A.power)}/100.${A.stance?` You stand with ${A.stance==='union'?'the union':'Harbor Freight'}.`:' You have not picked a side.'}`,
   phases:[
    {name:'Rumbles',days:5,blurb:'Nothing has happened yet. Everyone is saying so loudly.',

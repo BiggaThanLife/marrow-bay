@@ -6,12 +6,12 @@
 <p id="verdict">Running...</p>
 <pre id="out"></pre>
 <iframe id="game" src="../index.html"></iframe>
-<script src="smoke.js"></script>
+<script src="smoke.js?v=3"></script>
 <script>
 const f = document.getElementById('game');
 f.addEventListener('load', async () => {
   const win = f.contentWindow;
-  const api = win.eval(`({get G(){return G},NPCS,start,closeMenu,day,advance,tick,phone,cityMenu,flackMenu,bag,town,threadsMenu,POIS,openPOI,setCam:(x,y)=>{camX=x;camY=y},drawWorld,save,setG:v=>{G=v},migrate,title})`);
+  const api = win.eval(`({get G(){return G},NPCS,start,closeMenu,day,advance,tick,phone,cityMenu,flackMenu,bag,town,threadsMenu,POIS,openPOI,setCam:(x,y)=>{camX=x;camY=y},drawWorld,save,setG:v=>{G=v},migrate,title,popClear})`);
   const res = runSmoke(api, win);
   let base = null;
   try { base = await fetch('baseline.json').then(r => r.json()); } catch (e) {}

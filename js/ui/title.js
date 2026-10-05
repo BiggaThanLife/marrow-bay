@@ -2,7 +2,7 @@
 /* Title screen and new game start. */
 /* ================= TITLE / START ================= */
 function title(){
-  G=null;hud();placing=null;dest=null;alertQ=[];gpsPath=[];applyBridge(false);
+  G=null;hud();placing=null;dest=null;alertQ=[];popClear();gpsPath=[];applyBridge(false);
   const saved=loadSave();
   ui(`<h1>Marrow Bay</h1><p>A tidal city of six districts, from the Greenbelt farms to the Neon Mile and the Foundry. Work, build a business, buy property, get wheels, or cut corners.</p>
   <p class="muted">Nobody is scripted. People react to who you are, what you own, and what you do.</p>`,

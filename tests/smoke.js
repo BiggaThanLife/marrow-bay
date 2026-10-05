@@ -21,7 +21,7 @@ function runSmoke(api, win) {
       flack: round(G().flack), meters: Object.values(G().meters).map(round), news: G().news.length, threads: G().threads.active.length, rumors: G().rumors.length, npc: ph() };
   });
 
-  step('walk ticks', () => { G().t = Math.floor(G().t / 1440) * 1440 + 16 * 60 + 30; for (let i = 0; i < 400; i++) api.tick(0.05); snap.ticks = { npc: ph(), t: G().t, moved: ph() !== snap.day30.npc }; });
+  step('walk ticks', () => { api.popClear && api.popClear(); G().t = Math.floor(G().t / 1440) * 1440 + 16 * 60 + 30; for (let i = 0; i < 400; i++) { api.tick(0.05); api.popClear && api.popClear(); } snap.ticks = { npc: ph(), t: G().t, moved: ph() !== snap.day30.npc }; });
 
   const menus = { phone: () => api.phone(), city: () => api.cityMenu(), flack: () => api.flackMenu(), bag: () => api.bag(), town: () => api.town(), threads: () => api.threadsMenu() };
   Object.keys(menus).forEach(k => step('menu ' + k, () => { menus[k](); if (!text()) throw new Error('empty sheet'); snap['m_' + k] = text().length; }));

@@ -23,6 +23,7 @@ function cityInit(){
   if(G.facts.mayor===undefined)G.facts.mayor='voss';
   G.council=G.council||{cur:null,hist:[],last:0,vetoDay:-99};
   if(!G.mkt)marketInit();
+  G.engage=G.engage||{};G.hookCool=G.hookCool||{};G.hookBusy=G.hookBusy||{};
   G.favs=G.favs||[];if(G.veh)G.veh.paint=G.veh.paint||{};
   G.turf=G.turf||{door:'vex',pawn:'vex',casino:'vex',loft:'vex'};
   G.arc=G.arc||null;G.arcsDone=G.arcsDone||[];G.arcLast=G.arcLast||0;

@@ -3,7 +3,8 @@
 const TURF_EVT={id:'turf_evt',sev:3,dur:[3,3],mk:()=>({name:'Turf war',desc:'Shutters come down along the Neon Mile. The casino and the Velvet Room are shut and patrols are everywhere.',mod:{closed:['casino','velvet'],cops:true,traffic:{'Neon Mile':.4}}})};
 ARCS.turfwar={
   title:'The Salt War',district:'Neon Mile',
-  can:()=>day()>=22&&(G.meters['Neon Mile']>=45||playerRackets().length>=1),
+  hook:{min:18,need:6,who:'vex',yes:'Listen to Vex',no:'Not tonight',text:'Vex taps the table. "You have been spending time in my part of town, {name}. People in white jackets keep asking about you. Let me tell you who they are before they tell you themselves."'},
+  can:()=>true,
   status:A=>`Vex's side ${Math.round(A.power)}/100.${A.stance?` You are with ${A.stance==='vex'?'Vex':'the Salt Kings'}.`:' You are with nobody. It is lonely, and safe.'}${A.tips?` You have tipped off Reyes ${A.tips}x.`:''}`,
   phases:[
    {name:'Rumbles',days:5,blurb:'Strangers in salt-white jackets keep asking where the money goes.',

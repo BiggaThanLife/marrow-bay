@@ -67,3 +67,10 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 #bar button{min-height:44px;font:700 .72rem "Silkscreen","Courier New",monospace;color:var(--text);background:var(--panel);border:2px solid var(--line);cursor:pointer;padding:0 2px}
 #bar button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+#pop{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,10,14,.66);z-index:50;padding:16px}
+#pop[hidden]{display:none}
+.popbox{width:100%;max-width:420px;max-height:80vh;overflow-y:auto;background:var(--panel);border:3px solid var(--accent);padding:16px 16px 14px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.popbox h3{margin:0 0 8px;font:700 1.05rem "Silkscreen",monospace;color:var(--text)}
+.popbox p{margin:0 0 10px;font-size:1rem;line-height:1.4;color:var(--text)}
+.popbox p.amber{color:var(--amber)}

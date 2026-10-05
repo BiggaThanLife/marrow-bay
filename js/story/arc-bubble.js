@@ -3,7 +3,8 @@
 const BUBBLE_CRASH={id:'crash',sev:3,dur:[3,3]};
 ARCS.bubble={
   title:'The Highline Bubble',district:'Highline',
-  can:()=>day()>=18&&(G.meters.Highline>=55||portfolio()>=300||fact('flack_contract')),
+  hook:{min:14,need:6,who:'cordelia',yes:'Sit down with her',no:'Maybe later',text:'Cordelia Vance closes her ledger. "{name}. You keep turning up in my bank. Between us, the market is running hotter than it should, and people who ought to know better are borrowing against it. If you would like the real picture, sit down."'},
+  can:()=>true,
   status:A=>`Market ${meterWord(G.meters.Highline)}. Rescue fund ${A.fund||0}/3, warnings ${A.warn||0}/3.${A.tip?' You have a tip from Cordelia.':''}`,
   phases:[
    {name:'Boom',days:6,blurb:'Everyone is rich on paper. The paper is doing very well.',

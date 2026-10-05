@@ -63,5 +63,5 @@ function ambientNews(){
 }
 function showAlert(){
   const a=alertQ.shift();
-  ui(`<h2>${esc(SEVN[a.sev])}: ${esc(a.name)}</h2><p>${esc(a.desc)}</p>${a.extra?`<p class="amber">${esc(a.extra)}</p>`:''}`,[{label:'Understood',fn:closeMenu}],true,false);
+  popup(`${SEVN[a.sev]}: ${a.name}`,a.desc,a.extra);
 }
