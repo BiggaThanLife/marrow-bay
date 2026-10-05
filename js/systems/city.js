@@ -24,6 +24,7 @@ function cityInit(){
   G.council=G.council||{cur:null,hist:[],last:0,vetoDay:-99};
   if(!G.mkt)marketInit();
   if(typeof G.seed!=='number')G.seed=0;
+  G.veh.mods=G.veh.mods||{};G.inv.parts=G.inv.parts||0;G.inv.jammers=G.inv.jammers||0;
   G.engage=G.engage||{};G.hookCool=G.hookCool||{};G.hookBusy=G.hookBusy||{};
   G.favs=G.favs||[];if(G.veh)G.veh.paint=G.veh.paint||{};
   G.turf=G.turf||{door:'vex',pawn:'vex',casino:'vex',loft:'vex'};

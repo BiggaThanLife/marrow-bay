@@ -6,7 +6,7 @@ const camCount=()=>Math.round(G.flack/100*FLACK_SITES.length*.9);
 const camBlind=i=>(G.blind[i]||0)>day();
 function camNear(r){const n=camCount();for(let i=0;i<n;i++){const s=FLACK_SITES[i];if(!camBlind(i)&&Math.hypot(s.x-G.p.x,s.y-G.p.y)<=r)return true}return false}
 function camNearest(r){const n=camCount();let best=-1,bd=r+1;for(let i=0;i<n;i++){const s=FLACK_SITES[i],d=Math.hypot(s.x-G.p.x,s.y-G.p.y);if(!camBlind(i)&&d<bd){bd=d;best=i}}return best}
-function flackSeen(n){if(flackBand()>=1&&!G.fx.mask&&camNear(5)){G.heat=Math.min(5,G.heat+n);return true}return false}
+function flackSeen(n){if(jamActive())return false;if(flackBand()>=1&&!G.fx.mask&&camNear(5)){G.heat=Math.min(5,G.heat+n);return true}return false}
 const fencePrice=()=>Math.round(35*(1-.1*Math.max(0,flackBand()-1))*(fact('law_pawn_audit')==='yes'?.9:1)*(1+(G.meters['Neon Mile']-50)/400));
 function redact(t,b=flackBand(),rnd=Math.random){
   if(b<2)return t;
@@ -48,6 +48,7 @@ function flackFile(){
   if(G.stance.coop>0)l.push('Cooperating witness. Useful. Not liked.');
   if((G.mkt.hold.flack||0)>0)l.push('Shareholder in FLACK Systems. Conflict of interest noted by nobody.');
   if(fact('flack_contract_player'))l.push('Registered FLACK installer. Your neighbors have noticed the ladders.');
+  if(jamActive())l.push('Signal gaps in your area. HARBOR notes them without comment.');
   if(G.fx.mask)l.push('Face covered in most recent frames. Logged as "unidentified, stylish."');
   if(b>=2)l.push('Tags on file: '+tagsNow().join(', ')+'.');
   if(!l.length)l.push(b===0?'A few blurry frames of you buying lunch.':'Nothing yet. HARBOR says this is "a bit suspicious."');
@@ -67,5 +68,7 @@ function flackMenu(msg){
       const R=NPC.reyes,watched=Math.hypot(R.x-G.p.x,R.y-G.p.y)<9&&!R.indoors;
       if(Math.random()<(watched?.35:.7)){G.blind[near]=day()+3;flackAdd(-2);facAdd('hall',-2);facAdd('crew',2);flackMenu('The lens is now a lovely pink. FLACK loses a little of its eyesight.')}
       else{G.heat=Math.min(5,G.heat+1);facAdd('hall',-3);flackMenu('A camera caught you mid-brushstroke. Police will want a word.')}}},
+    {label:'Switch on a jammer',sub:G.inv.jammers>0?(jamActive()?'Already running':'Cameras cannot log you for 12 hours'):'You have no jammer. Build one at a crafting bench.',off:G.inv.jammers<1||jamActive(),cls:'',fn:()=>{G.inv.jammers--;G.fx.jamUntil=G.t+720;G.stance.sab++;flackMenu('The jammer clicks on. Every camera nearby stutters and looks away.')}},
+    {label:'Fit a jammer to a pole',sub:near>=0&&G.inv.jammers>0?'Blinds the nearest camera for 14 days':G.inv.jammers<1?'You have no jammer':'Stand within 3 tiles of a camera first',off:near<0||G.inv.jammers<1,cls:'',fn:()=>{G.inv.jammers--;advance(20);G.blind[near]=day()+14;flackAdd(-2);G.stance.sab++;facAdd('hall',-2);facAdd('crew',2);flackMenu('A small box on a pole. A small blink. Nobody notices for days.')}},
     {label:'Back',cls:'quiet',fn:()=>phone()},leaveBtn]);
 }

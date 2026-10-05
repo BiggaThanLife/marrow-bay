@@ -20,13 +20,13 @@ function tick(dt){
     if(!n.path.length&&n.goHome&&n.act==='home')n.indoors=true;
   });
   const v=VEH[G.veh.active];
-  let sp=v.sp*G.mod.vspeed;
+  let sp=vehSpeed(G.veh.active)*G.mod.vspeed;
   if(v.fuel&&(G.veh.fuel[G.veh.active]||0)<=0)sp=3;
   if(G.energy<15||G.hunger<10)sp=Math.min(sp,2.6);
   if(G.mod.flood.includes(district(Math.round(p.x),Math.round(p.y))))sp*=.55;
   const bx=p.x,by=p.y,was=p.path.length>0;
   moveEnt(p,dt,sp);
-  if(v.fuel&&was){const dd=Math.hypot(p.x-bx,p.y-by);G.veh.fuel[G.veh.active]=Math.max(0,(G.veh.fuel[G.veh.active]||0)-dd*.12);if(G.veh.fuel[G.veh.active]<=0&&!G.flags.fuelNote){G.flags.fuelNote=1;notify('Out of fuel. Refuel at Mack\'s Garage.')}if(G.veh.fuel[G.veh.active]>15)G.flags.fuelNote=0}
+  if(v.fuel&&was){const dd=Math.hypot(p.x-bx,p.y-by);G.veh.fuel[G.veh.active]=Math.max(0,(G.veh.fuel[G.veh.active]||0)-dd*.12*vehFuelUse(G.veh.active));if(G.veh.fuel[G.veh.active]<=0&&!G.flags.fuelNote){G.flags.fuelNote=1;notify('Out of fuel. Refuel at Mack\'s Garage.')}if(G.veh.fuel[G.veh.active]>15)G.flags.fuelNote=0}
   if(was&&!p.path.length&&p.onArrive){const f=p.onArrive;p.onArrive=null;f()}
   missT+=dt;if(missT>.25){missT=0;missionTick();gpsTick();if(G.cash>=1000)quip('rich');else if(G.cash<5)quip('broke')}
   hudT+=dt;if(hudT>.3){hudT=0;hud()}

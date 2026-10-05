@@ -10,6 +10,7 @@ function openPOI(poi){
   const n=OWNER[poi.id]?NPC[OWNER[poi.id]]:null;
   if(n&&!G.met[n.id])G.met[n.id]=day();
   if(poi.id!==G.home&&G.mod.closed.includes(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>Closed: ${esc(G.mod.names[poi.id])}.</p>`,[leaveBtn]);
+  if(poi.id==='foundry'&&fact('foundry_closed'))return ui(`<h2>${esc(poi.name)}</h2><p>Boarded up. A sign says CLOSED PENDING INQUIRY. Someone has added a second sign that says FOREVER.</p>`,[leaveBtn]);
   if(poi.id!==G.home&&!isOpen(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>Closed. Opens at ${fmtHr(OPEN[poi.id][0])}.</p>`,[leaveBtn]);
   if(n&&poi.id!==G.home&&tier(att(n))===0)return refuse(poi,n);
   engageAdd(poi.d,1);

@@ -33,6 +33,7 @@ MENUS.workshop=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">Benches, tools, and the smell of solder.</p>${msgP(msg)}`,[
     {label:'Craft a trinket',sub:`Uses 3 scrap, 2 hours. You have ${G.inv.scrap}.`,off:G.inv.scrap<3,fn:()=>{craftTrinket();MENUS.workshop(poi,n,'You made a trinket.')}},
     {label:'Repair shift',sub:'3 hours, about $18',cls:'',fn:()=>MENUS.workshop(poi,n,gig(null,{hrs:3,base:18,mult:has('creative')?1.2:1,rep:'Grid',label:'repairs'}))},
+    {label:'Crafting bench',sub:'Parts, jammers, and vehicle upgrades',cls:'',fn:()=>craftMenu(()=>MENUS.workshop(poi,n))},
     leaveBtn]);
 };
 MENUS.gull=(poi,n,msg)=>{

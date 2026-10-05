@@ -31,12 +31,13 @@ MENUS.foundry=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the furnace line.</p>${msgP(msg)}`,[
     {label:'Foundry shift',sub:`5 hours, about ${money(48*mult*payF(n))}`,fn:()=>MENUS.foundry(poi,n,gig(n,{hrs:5,base:48,mult,rep:'Foundry Row',label:'at the furnace'}))},
     {label:'Buy 10 scrap',sub:`${money(price)}. Feeds workshops and projects.`,off:G.cash<price,cls:'',fn:()=>{G.cash-=price;G.inv.scrap+=10;advance(15);MENUS.foundry(poi,n,'Ten pieces loaded.')}},
+    {label:'Crafting bench',sub:'Parts, jammers, and vehicle upgrades',cls:'',fn:()=>craftMenu(()=>MENUS.foundry(poi,n))},
     leaveBtn]);
 };
 MENUS.loft=(poi)=>poi.id===G.home?homeMenu(poi):info(poi);
 
 function streetRace(poi,n){
-  const a=G.veh.active,sp=VEH[a].sp;
+  const a=G.veh.active,sp=vehSpeed(a);
   G.cash-=30;advance(60);
   const win=Math.random()<clamp(.1+sp*.03,.15,.7);
   const seen=flackSeen(.7);
