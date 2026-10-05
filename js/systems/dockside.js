@@ -7,6 +7,9 @@ const dockPay=()=>{
   let m=clamp(.7+G.meters.Dockside/100*.6,.7,1.3);
   if(G.fac.shipping>=15)m*=1.15;
   if(G.fac.union>=15)m*=1.1;
+  if(fact('dock_union_contract'))m*=1.1;
+  if(fact('dock_automated'))m*=.8;
+  if(fact('union_broken'))m*=.9;
   return m;
 };
 /* Empty seas and idle piers drag the Dockside meter down, a healthy catch lifts it. */

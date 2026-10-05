@@ -5,7 +5,7 @@ MENUS.dock=(poi,n,msg)=>{
   const mult=(has('strong')?1.4:1)*(has('union')?1.2:1)*(G.fx.crane?1.25:1)*dockPay();
   const done=G.flags.manifestDay===day();
   const nr=RODS[rodLevel()+1];
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the hiring line. Cargo is ${meterWord(G.meters.Dockside)}. ${G.fac.shipping>=15?'Harbor Freight knows your face.':''}</p>${strike?'<p class="bad">The dock strike has shut the piers.</p>':''}${msgP(msg)}`,[
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the hiring line. Cargo is ${meterWord(G.meters.Dockside)}. ${G.fac.shipping>=15?'Harbor Freight knows your face.':''}</p>${strike||(G.mod.closed.includes('dock'))?'<p class="bad">The piers are shut.</p>':''}${dockFactsHtml()}${msgP(msg)}`,[
     {label:'Haul cargo',sub:`4 hours, about ${money(26*mult*payF(n))}`,off:strike,fn:()=>{
       const r=gig(n,{hrs:4,base:26,mult,rep:'Dockside',label:'hauling cargo'});
       if(r.startsWith('You worked')){facAdd('shipping',1);meterAdd('Dockside',1)}
@@ -58,4 +58,13 @@ function unionTable(poi,n,msg){
     {label:'Pay union dues',sub:'$10. Union standing up.',off:G.cash<10,cls:'',fn:()=>{G.cash-=10;facAdd('union',3);unionTable(poi,n,'Gus stamps your card. It is a very official-looking napkin.')}},
     {label:'Hand out leaflets',sub:'1 hour. Union up, freight down.',cls:'',fn:()=>{advance(60);facAdd('union',3);facAdd('shipping',-2);meterAdd('Dockside',-1);unionTable(poi,n,'You hand out two hundred leaflets. Three are read.')}},
     {label:'Back',cls:'quiet',fn:()=>MENUS.gull(poi,n)}]);
+}
+
+function dockFactsHtml(){
+  const l=[];
+  if(fact('dock_union_contract'))l.push('A union contract hangs by the door. Hauling pays better.');
+  if(fact('dock_automated'))l.push('The cranes run on a schedule now. FLACK-7 units watch every lift.');
+  if(fact('dock_compromise'))l.push('Shifts are fair. The cameras point slightly away from the lunch tables.');
+  if(fact('union_broken'))l.push('The union hall is padlocked. Hauling pays less.');
+  return l.map(x=>`<p class="muted small">${esc(x)}</p>`).join('');
 }

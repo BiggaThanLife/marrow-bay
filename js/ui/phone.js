@@ -10,6 +10,7 @@ function phone(msg){
     {label:'Threads',sub:G.threads.active.some(t=>t.pending)?'New message':`${G.threads.active.length} active`,cls:G.threads.active.some(t=>t.pending)?'primary':'',fn:()=>threadsMenu()},
     {label:'City',sub:'Districts and factions',cls:'',fn:cityMenu},
     {label:'FLACK',sub:`${FLACK_BANDS[flackBand()].n} coverage`,cls:'',fn:()=>flackMenu()},
+    ...(G.arc?[{label:ARCS[G.arc.id].title,sub:ARCS[G.arc.id].phases[G.arc.i].name+'. Tap to act.',cls:'primary',fn:()=>arcMenu()}]:[]),
     {label:'Town board',sub:'Conditions, rumors, projects',cls:'',fn:town},
     {label:'Citizen onboarding',sub:'Replay the HARBOR orientation',cls:'quiet',fn:()=>tutorial(0,true)},
     leaveBtn]);

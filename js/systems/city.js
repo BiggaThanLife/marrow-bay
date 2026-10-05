@@ -20,6 +20,7 @@ function cityInit(){
   G.facts=G.facts||{};if(typeof G.flack!=='number')G.flack=10;
   G.stance=G.stance||{};for(const k of ['coop','evade','sab','harbor'])if(typeof G.stance[k]!=='number')G.stance[k]=0;
   G.blind=G.blind||{};G.fx=G.fx||{};
+  G.arc=G.arc||null;G.arcsDone=G.arcsDone||[];G.arcLast=G.arcLast||0;
 }
 const meterAdd=(d,n)=>{if(G.meters[d]!=null)G.meters[d]=clamp(G.meters[d]+n,0,100)};
 const facAdd=(f,n)=>{if(G.fac[f]!=null)G.fac[f]=clamp(G.fac[f]+n,-100,100)};
@@ -38,6 +39,8 @@ function cityDaily(){
   if(flackBand()>=2){meterAdd('Grid',1);meterAdd('Neon Mile',-1)}
   if(G.flack<30&&Math.random()<.2)flackAdd(1);
   dockDaily();
+  arcsDaily();
+  if(G.arc&&G.arc.waitThread)arcThread(G.arc.waitThread);
 }
 const meterWord=v=>v<20?'collapsing':v<40?'low':v<60?'steady':v<80?'high':'booming';
 function cityMenu(){
@@ -47,6 +50,6 @@ function cityMenu(){
   ui(`<h2>City</h2><p class="muted">How each district is doing, and who thinks what of you.</p>
     <h2>Districts</h2><div class="kv">${rows}</div>
     <h2>Factions</h2><div class="kv">${fr}</div>
-    <h2>FLACK cameras</h2><p><b>${fb.n}</b> (${Math.round(G.flack)}/100). ${fb.t}</p>`,
+    <h2>FLACK cameras</h2><p><b>${fb.n}</b> (${Math.round(G.flack)}/100). ${fb.t}</p>${arcSummaryHtml()}`,
     [{label:'Back',cls:'quiet',fn:()=>phone()},leaveBtn]);
 }

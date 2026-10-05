@@ -10,6 +10,7 @@ function worldLines(){
   if(G.demand>=6)r.push('The diner is slammed. Meals cost more.');
   const open=G.projects.filter(p=>!p.done);
   if(open.length){const p=pick(open),d=PROJECTS.find(x=>x.id===p.id);r.push(`${d.name} is ${projPct(p)}% funded.`)}
+  if(G.arc&&ARCS[G.arc.id].phases[G.arc.i].name!=='Rumbles')r.push(`${ARCS[G.arc.id].title}: ${ARCS[G.arc.id].status(G.arc)}`);
   r.push(pick(TIPS));
   return r;
 }
