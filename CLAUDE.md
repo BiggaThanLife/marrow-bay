@@ -96,6 +96,11 @@ Goal: no single file that has to be reworked. Plain scripts in folders, **no bui
 - If another arc is active, the NPC says they will not talk about it until that arc has concluded (once a day per arc).
 - Alerts: major alerts use `popup()` (centered card, pauses the game, covers the toolbar) so they can never be cleared by tapping something else. `alertNews(m,sev)` pops up at severity 3 or more, otherwise uses the small note. Phase changes and arc starts use `popup()`.
 
+### J. Procedural city layout
+- `buildWorld(seed)` in `js/world/map.js` builds the buildings. **Seed 0 is the classic layout** (old saves keep it). A new game picks a random seed (`G.seed`), and inside each district (Highline, Grid, Dockside, Neon Mile, Foundry Row) the buildings, lots, parks and for-sale blocks are shuffled between that district's blocks. Roads, district borders, tram stops, the bridge, the plaza, the barn and the farm stay fixed, so district rules, events and pathing stay valid. Continue calls `buildWorld(saved.seed||0)` before anything uses the map. The City tab shows the layout number.
+- Verified over 200 seeds: every building still exists, every entrance is reachable from the plaza, and every building stays in its own district.
+- Possible later upgrades (not built): moving district borders, shifting the tram stops, randomizing the farm and the barn.
+
 ### F. Build order / checklist (tick `[x]` when done and pushed)
 - [x] 0. Restructure into folders (done: 62 script files under js/, css/style.css, tests/smoke.html matches the pre-split baseline exactly). Later optional step: convert files to ES modules one folder at a time
 - [x] Bike/scooter ride animation fix (seated rider, flips with direction, wheels spin)

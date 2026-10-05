@@ -23,6 +23,7 @@ function cityInit(){
   if(G.facts.mayor===undefined)G.facts.mayor='voss';
   G.council=G.council||{cur:null,hist:[],last:0,vetoDay:-99};
   if(!G.mkt)marketInit();
+  if(typeof G.seed!=='number')G.seed=0;
   G.engage=G.engage||{};G.hookCool=G.hookCool||{};G.hookBusy=G.hookBusy||{};
   G.favs=G.favs||[];if(G.veh)G.veh.paint=G.veh.paint||{};
   G.turf=G.turf||{door:'vex',pawn:'vex',casino:'vex',loft:'vex'};
@@ -60,6 +61,7 @@ function cityMenu(){
     <h2>Districts</h2><div class="kv">${rows}</div>
     <h2>Factions</h2><div class="kv">${fr}</div>
     <h2>City Hall</h2><p>Mayor: <b>${esc(mayorName())}</b>.</p>
+    <p class="muted small">City layout: ${G.seed?'#'+G.seed:'classic'}.</p>
     <h2>FLACK cameras</h2><p><b>${fb.n}</b> (${Math.round(G.flack)}/100). ${fb.t}</p>${arcSummaryHtml()}`,
     [{label:'Back',cls:'quiet',fn:()=>phone()},leaveBtn]);
 }
