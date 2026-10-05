@@ -56,7 +56,26 @@ Decisions (user, final): run length is ENDLESS (no forced end; epilogues are mil
 - Inner voices (Disco Elysium style): quirk and background interrupt dialogue with extra options.
 - Map storytelling: shuttered shops in a crash, picket lines in a strike, smog by the Foundry, FLACK cameras multiplying.
 
+### G. Systemic design principles (from external review, adopted)
+- Connect the machine, do not widen it: **district state -> NPC goals -> world effects -> visible feedback.**
+- Every district meter must influence at least two other systems; 0 or 100 is never simply "good" (each extreme favors a different kind of player).
+- Three kinds of state: **Resources** (fluctuate: fishStock, cash), **Conditions** (temporary: strike, storm, crash), **Facts** (permanent, written to `G.facts`, also created by ordinary sandbox actions, e.g. `oldPierCollapsed`, `casinoClosed`, `communityGardenBuilt`).
+- One **effects pipeline** (`applyEffect({type,...,reason})`) for meter/fact/rumor/heat changes: clamps, news, feedback and a debug log in one place.
+- **Seedable RNG** for simulation randomness (reproducible bugs, headless tests). UI-only juice may keep Math.random.
+- Headless **simulation harness** (N days, seed, idle player) measuring NPC cash, starvation, fish stock, business failures, meter ranges, prices. Must exist before adding many more economy systems.
+- Render-time **environment feedback** from existing state (idle dockers when fish low, queue at busy diner, boarded windows after a robbery, strike pickets), plus a small `feedback.emit(event,data)` bus for particles/sound/camera nudge.
+- Rumor transmission visible to the player (small speech bubble between the two NPCs).
+- Tide changes walkability of 10-20 flats tiles (needs a `worldRevision` counter so path caches invalidate).
+- NPC utility scorer (work/eat/shop/socialize/rest/avoidDanger) and NPC memory as observed events (`{type,actor,place,day,strength}`) instead of one attitude number.
+- No ECS. Data-driven registries (business types, items, events, vehicles, jobs) instead of `if(type===...)` chains.
+- Fix `advance()` big time-skips: detailed simulation for the first day, aggregated for the remainder.
+- Do NOT add indexes/A*/navmesh until the code is modular and population actually grows.
+
+### H. Code structure plan (step 0 of the checklist)
+Goal: no single file that has to be reworked. Native ES modules, **no build step** (GitHub Pages serves them directly; `index.html` stays the entry point). See the checklist item 0 for status.
+
 ### F. Build order / checklist (tick `[x]` when done and pushed)
+- [ ] 0. Restructure into folders (data/, world/, sim/, systems/, ui/, render/, save/) with smoke test before and after; agree layout first
 - [x] Bike/scooter ride animation fix (seated rider, flips with direction, wheels spin)
 - [x] 1. Foundation: `G.meters` (6 district meters), `G.fac` (faction rep), `G.facts`, `G.flack` coverage, NPC `fac`, `cityInit()` defaults (start + migrate), `cityDaily()`, helpers `meterAdd/facAdd/setFact/fact/flackAdd/flackBand`; FLACK band slows heat decay; phone City tab
 - [x] 2. FLACK made visible: `FLACK_SITES` camera poles at intersections (count scales with coverage), `flackSeen()` extra heat when a camera sees a crime (pickpocket), fence price drops by band, phone FLACK tab (your file, Talk to HARBOR x7 escalating lines, Submit a tip, Paint over a lens), scarf/glasses at the pawn shop, `redact()` HARBOR lines at bands 2-3. State: `G.stance`, `G.blind`, `G.fx.mask`. (Foundry jammers come with item 9.)
