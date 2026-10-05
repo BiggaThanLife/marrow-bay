@@ -20,6 +20,12 @@ function recomputeMods(){
       else if(x[k]===true)m[k]=true;
     }
   });
+  const sI=seasonIdx();
+  if(sI===1)m.yield*=1.1;else if(sI===3){m.yield*=.75;m.drain*=1.1;m.fish*=1.1}
+  if(fact('greenbelt_sold'))m.yield*=.85;
+  if(fact('buyout_compromise'))m.yield*=.95;
+  if(fact('coop_owned'))m.yield*=1.1;
+  if(fact('foundry_coverup'))m.yield*=.95;
   G.mod=m;applyBridge(m.bridge);
 }
 function startEvent(t){

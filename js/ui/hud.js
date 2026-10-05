@@ -12,7 +12,7 @@ function hud(){
   if(!G){el.hidden=true;$('#bar').hidden=true;$('#mission').hidden=true;return}
   el.hidden=false;$('#bar').hidden=false;
   const h=hourOf(),m=Math.floor(G.t%60);
-  $('#h-day').textContent='Day '+day();
+  $('#h-day').textContent='Day '+day()+' · '+season().slice(0,3);
   $('#h-time').textContent=`${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`;
   const dayTime=h>=6&&h<19;
   if(el.dataset.ico!==(dayTime?'s':'m')){el.dataset.ico=dayTime?'s':'m';

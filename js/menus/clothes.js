@@ -1,7 +1,7 @@
 "use strict";
 /* Tailor and barber. */
 MENUS.tailor=(poi,n,msg)=>{
-  const buy=(kind,key,list)=>list.filter(x=>x.price>0&&!G.wardrobe[kind][x.id]).map(x=>({label:`${x.n}, ${money(x.price)}`,sub:'You wear it right away.',off:G.cash<x.price,cls:'',fn:()=>{G.cash-=x.price;G.wardrobe[kind][x.id]=1;G.look[key]=x.id;advance(20);MENUS.tailor(poi,n,`You buy the ${x.n.toLowerCase()}. The previous owner will not be needing it.`)}}));
+  const buy=(kind,key,list)=>list.filter(x=>x.price>0&&!G.wardrobe[kind][x.id]&&(!x.season||x.season===season())).map(x=>({label:`${x.n}, ${money(x.price)}`,sub:'You wear it right away.',off:G.cash<x.price,cls:'',fn:()=>{G.cash-=x.price;G.wardrobe[kind][x.id]=1;G.look[key]=x.id;advance(20);MENUS.tailor(poi,n,`You buy the ${x.n.toLowerCase()}. The previous owner will not be needing it.`)}}));
   const stock=[...buy('outfits','outfit',OUTFITS),...buy('hats','hat',HATS)];
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">Previously owned by people who no longer need them. Fully laundered.</p>${msgP(msg)}${stock.length?'':'<p>You own everything in the shop. HARBOR is concerned.</p>'}`,
     [...stock,{label:'Change clothes',sub:'Wear something you already own',cls:'',fn:()=>wardrobeMenu(()=>MENUS.tailor(poi,n))},leaveBtn]);

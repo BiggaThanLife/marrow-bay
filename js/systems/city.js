@@ -47,6 +47,7 @@ function cityDaily(){
   if(flackBand()>=2){meterAdd('Grid',1);meterAdd('Neon Mile',-1)}
   if(G.flack<30&&Math.random()<.2)flackAdd(1);
   dockDaily();
+  seasonsDaily();
   marketDaily();
   neonDaily();
   councilDaily();

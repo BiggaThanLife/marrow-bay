@@ -2,6 +2,7 @@
 /* Plots, plaza busking, waterfront fishing. */
 /* ================= TILE INTERACTIONS ================= */
 function plotMenu(pl,msg){
+  if(!msg){engageAdd('Greenbelt',1);if(arcHook({id:'plot',d:'Greenbelt'}))return}
   if(tier(att(NPC.wren))===0)return ui(`<h2>Greenbelt plot</h2><p>Old Wren shoos you off the field. "Not you."</p><p class="muted">Build standing in the Greenbelt first.</p>`,[leaveBtn]);
   if(pl.s===0)ui(`<h2>Empty plot</h2>${msgP(msg)}`,[
     {label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${G.fx.irrig?2:3} days.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;pl.s=1;pl.d=Math.max(1,(G.fx.irrig?2:3)+G.mod.growth);advance(20);plotMenu(pl,'You planted a seed.')}},leaveBtn]);
