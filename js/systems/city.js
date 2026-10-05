@@ -35,14 +35,14 @@ const facAdd=(f,n)=>{if(G.fac[f]!=null)G.fac[f]=clamp(G.fac[f]+n,-100,100)};
 const setFact=(k,v=true)=>{G.facts[k]=v};
 const fact=k=>G.facts[k];
 const flackBand=()=>G.flack>75?3:G.flack>50?2:G.flack>25?1:0;
-const flackHeatMul=()=>(1-.18*flackBand())*(fact('mayor')==='reyes'?.85:1);
+const flackHeatMul=()=>(1-.18*flackBand())*(fact('mayor')==='reyes'?.85:1)*(fact('harbor_free')?1.2:1);
 function flackAdd(n){
-  const b=flackBand();G.flack=clamp(G.flack+n,0,100);const nb=flackBand();
+  const b=flackBand();G.flack=clamp(G.flack+n,0,fact('flack_removed')?30:100);const nb=flackBand();
   if(nb>b)alertNews(['','News: FLACK cameras go live on the main roads. HARBOR says it is "excited to see more of you."','News: FLACK now logs faces and plates citywide. A spokesperson calls this "a convenience."','News: FLACK coverage is complete. The city has no blind spots, officially.'][nb],3);
   else if(nb<b)alertNews('News: Cameras are being pulled down around the city. HARBOR declines to comment.',2);
 }
 function cityDaily(){
-  for(const d in METERS){const m=G.meters[d];G.meters[d]=clamp(m+(50-m)*.06,0,100)}
+  for(const d in METERS){const m=G.meters[d],tg=fact('harbor_merged')?60:50;G.meters[d]=clamp(m+(tg-m)*(fact('harbor_free')?.09:.06),0,100)}
   if(G.meters['Foundry Row']>60)meterAdd('Greenbelt',-1);
   if(flackBand()>=2){meterAdd('Grid',1);meterAdd('Neon Mile',-1)}
   if(G.flack<30&&Math.random()<.2)flackAdd(1);

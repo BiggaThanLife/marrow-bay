@@ -6,9 +6,11 @@ const camCount=()=>Math.round(G.flack/100*FLACK_SITES.length*.9);
 const camBlind=i=>(G.blind[i]||0)>day();
 function camNear(r){const n=camCount();for(let i=0;i<n;i++){const s=FLACK_SITES[i];if(!camBlind(i)&&Math.hypot(s.x-G.p.x,s.y-G.p.y)<=r)return true}return false}
 function camNearest(r){const n=camCount();let best=-1,bd=r+1;for(let i=0;i<n;i++){const s=FLACK_SITES[i],d=Math.hypot(s.x-G.p.x,s.y-G.p.y);if(!camBlind(i)&&d<bd){bd=d;best=i}}return best}
-function flackSeen(n){if(jamActive())return false;if(flackBand()>=1&&!G.fx.mask&&camNear(5)){G.heat=Math.min(5,G.heat+n);return true}return false}
+function flackSeen(n){if(jamActive()||fact('harbor_ghost'))return false;if(flackBand()>=1&&!G.fx.mask&&camNear(5)){G.heat=Math.min(5,G.heat+n);return true}return false}
 const fencePrice=()=>Math.round(35*(1-.1*Math.max(0,flackBand()-1))*(fact('law_pawn_audit')==='yes'?.9:1)*(1+(G.meters['Neon Mile']-50)/400));
 function redact(t,b=flackBand(),rnd=Math.random){
+  if(fact('harbor_ghost'))return t;
+  if(fact('harbor_obedient'))b=3;
   if(b<2)return t;
   const w=t.split(' '),ix=w.map((x,i)=>x.replace(/\W/g,'').length>=5?i:-1).filter(i=>i>=0);
   for(let k=0;k<b-1&&ix.length;k++){const j=Math.floor(rnd()*ix.length),i=ix.splice(j,1)[0];w[i]=w[i].replace(/[A-Za-z']+/,'[redacted]')}

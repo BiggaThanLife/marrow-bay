@@ -21,7 +21,7 @@ function lobbyMenu(poi,n,m){
     {label:'Back',cls:'quiet',fn:()=>MENUS.cityhall(poi,n)}]);
 }
 function mayorPowers(poi,n,P){
-  const ready=day()-G.council.vetoDay>=14,passing=councilYes(P)>=3,C=G.council;
-  return [{label:passing?'Veto this motion':'Sign it by decree',sub:ready?'Once every 14 days':`Ready in ${14-(day()-C.vetoDay)} days`,off:!ready||C.cur.forced!==null,cls:'',fn:()=>{
+  const gap=fact('harbor_merged')?7:14,ready=day()-G.council.vetoDay>=gap,passing=councilYes(P)>=3,C=G.council;
+  return [{label:passing?'Veto this motion':'Sign it by decree',sub:ready?`Once every ${gap} days`:`Ready in ${gap-(day()-C.vetoDay)} days`,off:!ready||C.cur.forced!==null,cls:'',fn:()=>{
     C.cur.forced=!passing;C.vetoDay=day();MENUS.cityhall(poi,n,passing?'You veto it. Councillors pretend to be surprised.':'You sign it. Councillors pretend to be shocked.')}}];
 }
