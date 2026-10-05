@@ -5,7 +5,7 @@ const METERS={Greenbelt:'Harvest',Highline:'Market',Grid:'Order',Dockside:'Catch
 const FACTIONS={
   coop:{n:"Growers' Co-op",d:'Greenbelt'},trust:{n:'Marrow Bay Trust',d:'Highline'},hall:{n:'City Hall',d:'Grid'},
   union:{n:"Dockworkers' Union",d:'Dockside'},shipping:{n:'Harbor Freight Co.',d:'Dockside'},
-  crew:{n:"Vex's crew",d:'Neon Mile'},guild:{n:'Foundry Guild',d:'Foundry Row'}};
+  crew:{n:"Vex's crew",d:'Neon Mile'},salt:{n:'The Salt Kings',d:'Neon Mile'},guild:{n:'Foundry Guild',d:'Foundry Row'}};
 const NPC_FAC={cordelia:'trust',halloran:'trust',lou:'trust',mina:'hall',teo:'hall',pip:'hall',reyes:'hall',ashgrove:'hall',bell:'hall',
   wren:'coop',duarte:'shipping',gus:'union',vex:'crew',mack:'guild',ines:'guild'};
 NPCS.forEach(n=>{n.fac=NPC_FAC[n.id]||null});
@@ -23,6 +23,7 @@ function cityInit(){
   if(G.facts.mayor===undefined)G.facts.mayor='voss';
   G.council=G.council||{cur:null,hist:[],last:0,vetoDay:-99};
   if(!G.mkt)marketInit();
+  G.turf=G.turf||{door:'vex',pawn:'vex',casino:'vex',loft:'vex'};
   G.arc=G.arc||null;G.arcsDone=G.arcsDone||[];G.arcLast=G.arcLast||0;
 }
 const meterAdd=(d,n)=>{if(G.meters[d]!=null)G.meters[d]=clamp(G.meters[d]+n,0,100)};
@@ -43,6 +44,7 @@ function cityDaily(){
   if(G.flack<30&&Math.random()<.2)flackAdd(1);
   dockDaily();
   marketDaily();
+  neonDaily();
   councilDaily();
   arcsDaily();
   if(G.arc&&G.arc.waitThread)arcThread(G.arc.waitThread);

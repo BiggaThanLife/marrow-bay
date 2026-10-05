@@ -1,18 +1,6 @@
 "use strict";
 /* Casino, pawn shop, garage, foundry, lofts. */
 /* ----- Neon Mile and Foundry ----- */
-MENUS.casino=(poi,n,msg)=>{
-  const bet=(amt)=>{
-    if(G.cash<amt)return MENUS.casino(poi,n,'You cannot cover that bet.');
-    advance(30);
-    if(Math.random()<.47){G.cash+=amt;MENUS.casino(poi,n,`You win ${money(amt)}.`)}
-    else{G.cash-=amt;MENUS.casino(poi,n,`You lose ${money(amt)}.`)}
-  };
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Lights, chips, and exits that are hard to find.</p>${msgP(msg)}`,[
-    {label:'Bet $20',sub:'Win double or lose it',off:G.cash<20,fn:()=>bet(20)},
-    {label:'Bet $100',sub:'Win double or lose it',off:G.cash<100,cls:'',fn:()=>bet(100)},
-    {label:'High roller, $500',sub:'Win double or lose it',off:G.cash<500,cls:'',fn:()=>ask('Bet $500?','You can lose all of it.','Place the bet',()=>bet(500),()=>MENUS.casino(poi,n))},leaveBtn]);
-};
 MENUS.pawn=(poi,n,msg)=>{
   const cold=G.heat>=2;
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">No questions, no receipts.</p>${msgP(msg)}${cold?'<p class="bad">The owner will not deal with you while police are on your tail.</p>':''}`,[
@@ -32,7 +20,8 @@ MENUS.garage=(poi,n,msg)=>{
   });
   const a=G.veh.active,tank=VEH[a].fuel?Math.round(G.veh.fuel[a]||0):100,fuelCost=Math.round((100-tank)*.3);
   btns.push({label:'Refuel',sub:VEH[a].fuel?`${tank}% now, ${money(fuelCost)} to fill`:'Your ride does not need fuel',off:!VEH[a].fuel||tank>=100||G.cash<fuelCost,cls:'primary',fn:()=>{G.cash-=fuelCost;G.veh.fuel[a]=100;advance(10);MENUS.garage(poi,n,'Tank full.')}});
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} wipes his hands.</p>${msgP(msg)}`,[...btns.slice(-1),...btns.slice(0,-1),leaveBtn]);
+  btns.push({label:'Street race',sub:G.veh.active==='none'?'You need a ride':isNight()?'$30 entry, $110 to win. Nights only.':'Nights only',off:G.veh.active==='none'||!isNight()||G.cash<30,cls:'warn',fn:()=>streetRace(poi,n)});
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} wipes his hands.</p>${msgP(msg)}`,[...btns.slice(-2,-1),...btns.slice(0,-2),btns[btns.length-1],leaveBtn]);
 };
 MENUS.foundry=(poi,n,msg)=>{
   const mult=(has('strong')?1.3:1)*(has('working-class')?1.1:1);
@@ -43,3 +32,14 @@ MENUS.foundry=(poi,n,msg)=>{
     leaveBtn]);
 };
 MENUS.loft=(poi)=>poi.id===G.home?homeMenu(poi):info(poi);
+
+function streetRace(poi,n){
+  const a=G.veh.active,sp=VEH[a].sp;
+  G.cash-=30;advance(60);
+  const win=Math.random()<clamp(.1+sp*.03,.15,.7);
+  const seen=flackSeen(.7);
+  meterAdd('Neon Mile',1);
+  if(win){G.cash+=110;return MENUS.garage(poi,n,`You win by half a wheel. $110.${seen?' A FLACK camera logged the plate.':''}`)}
+  if(VEH[a].fuel&&Math.random()<.2){G.cash=Math.max(0,G.cash-60);return MENUS.garage(poi,n,`You lose, and clip a bollard. Repairs cost $60.${seen?' A FLACK camera logged the plate.':''}`)}
+  MENUS.garage(poi,n,`You lose. The crowd is not unkind about it.${seen?' A FLACK camera logged the plate.':''}`);
+}

@@ -14,11 +14,12 @@ MENUS.velvet=(poi,n,msg)=>{
   const heistT=pick(['bank','estate','club','casino']);
   const boostT=pick(['garage','foundry','dock']);
   const tools=G.fx.kit?.18:0;
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} slides a note across the table.</p>${msgP(msg)}`,[
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${fact('vex_jailed')?'Dagny Salt has taken the corner table. Vex is not here.':esc(n.name)+' slides a note across the table.'}</p>${msgP(msg)}`,[
     {label:'Courier run',sub:`${POIS[j.a].name} to ${POIS[j.b].name}. ${money(50+j.d*.8)}, ${Math.round(j.d*.9+25)} min. A bike helps.`,fn:()=>startMission({type:'courier',title:'Courier run',stops:[j.a,j.b],i:0,deadline:G.t+j.d*.9+25,reward:Math.round(50+j.d*.8)})},
     {label:'Collect a debt',sub:`Lean on ${POIS[target].name}. ${money(110)}. Raises heat.`,cls:'',fn:()=>startMission({type:'collect',title:'Debt collection',stops:[target],i:0,deadline:G.t+420,reward:110})},
     {label:'Smash and grab',sub:`${POIS[heistT].name}, after dark. Big payout, big heat.`,cls:'',fn:()=>startMission({type:'heist',title:'Smash and grab',stops:[heistT],i:0,deadline:G.t+1200,reward:260,night:true,odds:.4+tools+(has('smooth')?.05:0)+(has('creative')?.05:0)+G.mod.heist})},
     {label:'Boost a car',sub:`Take a sedan from ${POIS[boostT].name}. A free ride, but hot.`,cls:'',fn:()=>startMission({type:'boost',title:'Boost a car',stops:[boostT],i:0,deadline:G.t+480,reward:0,odds:.55+tools})},
+    {label:'Territory',sub:'Who runs the Neon Mile, and how to take it',cls:'',fn:()=>territoryMenu(poi,n)},
     leaveBtn]);
 };
 function missionTick(){
