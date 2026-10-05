@@ -4,7 +4,7 @@ MENUS.market=(poi,n,msg)=>{
   const f=buyF(n),seed=Math.round(4*f);
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the counter.</p>${msgP(msg)}`,[
     {label:'Sell goods',fn:()=>sellScreen(sellF(n),poi.name,()=>MENUS.market(poi,n))},
-    {label:'Buy a seed packet',sub:`${money(seed)} each. Plant it in a plot or Greenhouse.`,cls:'',off:G.cash<seed,fn:()=>{G.cash-=seed;G.inv.seeds++;advance(5);MENUS.market(poi,n,'You bought a seed.')}},
+    {label:'Buy seed packets',sub:`${money(seed)} each. Choose how many.`,cls:'',off:G.cash<seed,fn:()=>qtyMenu({title:'Seed packets',intro:'Plant them in a plot or Greenhouse.',price:seed,max:99,mode:'buy',onConfirm:q=>{G.cash-=Math.round(seed*q);G.inv.seeds+=q;advance(5);return `You bought ${q} seed packet${q>1?'s':''}.`},back:m=>MENUS.market(poi,n,m)})},
     {label:'Pocket something and run',sub:'Free, but the whole Grid may hear about it',cls:'quiet',fn:()=>{
       let c=.4;if(G.quirk==='light-fingered')c-=.1;if(has('smooth'))c-=.12;if(has('creative'))c-=.08;if(has('known-thief'))c+=.15;
       advance(10);
@@ -16,6 +16,7 @@ MENUS.diner=(poi,n,msg)=>{
   const price=Math.round(mealPrice()*buyF(n));
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} is behind the grill.</p>${msgP(msg)}`,[
     {label:'Order a meal',sub:`${money(price)}. Restores 45 fullness.`,off:G.cash<price,fn:()=>{G.cash-=price;G.hunger=clamp(G.hunger+45,0,100);G.demand+=1;advance(30);MENUS.diner(poi,n,'You eat a hot meal.')}},
+    {label:'Takeaway meals',sub:`${money(price)} each. Choose how many for your bag.`,off:G.cash<price,cls:'',fn:()=>qtyMenu({title:'Takeaway meals',intro:'Packed in paper. Eat them later.',price,max:30,mode:'buy',onConfirm:q=>{G.cash-=Math.round(price*q);G.inv.meals+=q;G.demand+=q*.5;advance(10);return `You take ${q} meal${q>1?'s':''} away.`},back:m=>MENUS.diner(poi,n,m)})},
     {label:'Work a kitchen shift',sub:`4 hours, about ${money(22*payF(n))}`,cls:'',fn:()=>MENUS.diner(poi,n,gig(n,{hrs:4,base:22,rep:'Grid',label:'the grill'}))},
     leaveBtn]);
 };

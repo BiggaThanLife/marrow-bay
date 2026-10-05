@@ -20,8 +20,10 @@ MENUS.garage=(poi,n,msg)=>{
   });
   const a=G.veh.active,tank=VEH[a].fuel?Math.round(G.veh.fuel[a]||0):100,fuelCost=Math.round((100-tank)*.3);
   btns.push({label:'Refuel',sub:VEH[a].fuel?`${tank}% now, ${money(fuelCost)} to fill`:'Your ride does not need fuel',off:!VEH[a].fuel||tank>=100||G.cash<fuelCost,cls:'primary',fn:()=>{G.cash-=fuelCost;G.veh.fuel[a]=100;advance(10);MENUS.garage(poi,n,'Tank full.')}});
+  btns.push({label:'Refuel some',sub:VEH[a].fuel?`${tank}% now. Choose how much, about 30 cents per percent.`:'Your ride does not need fuel',off:!VEH[a].fuel||tank>=100||G.cash<1,cls:'',fn:()=>qtyMenu({title:'Refuel',intro:'Percent of a tank.',price:.3,max:100-tank,mode:'buy',onConfirm:q=>{G.cash-=Math.round(.3*q);G.veh.fuel[a]=Math.min(100,tank+q);advance(10);return `Added ${q}% fuel.`},back:m=>MENUS.garage(poi,n,m)})});
+  btns.push({label:'Custom paint',sub:'Pick a ride and a color. Fee depends on the ride.',cls:'',fn:()=>paintMenu(poi,n)});
   btns.push({label:'Street race',sub:G.veh.active==='none'?'You need a ride':isNight()?'$30 entry, $110 to win. Nights only.':'Nights only',off:G.veh.active==='none'||!isNight()||G.cash<30,cls:'warn',fn:()=>streetRace(poi,n)});
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} wipes his hands.</p>${msgP(msg)}`,[...btns.slice(-2,-1),...btns.slice(0,-2),btns[btns.length-1],leaveBtn]);
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} wipes his hands.</p>${msgP(msg)}`,[...btns.filter(b=>b.label==='Refuel'),...btns.filter(b=>!['Refuel','Refuel some','Custom paint','Street race'].includes(b.label)),...btns.filter(b=>['Refuel some','Custom paint','Street race'].includes(b.label)),leaveBtn]);
 };
 MENUS.foundry=(poi,n,msg)=>{
   const mult=(has('strong')?1.3:1)*(has('working-class')?1.1:1);
@@ -42,4 +44,18 @@ function streetRace(poi,n){
   if(win){G.cash+=110;return MENUS.garage(poi,n,`You win by half a wheel. $110.${seen?' A FLACK camera logged the plate.':''}`)}
   if(VEH[a].fuel&&Math.random()<.2){G.cash=Math.max(0,G.cash-60);return MENUS.garage(poi,n,`You lose, and clip a bollard. Repairs cost $60.${seen?' A FLACK camera logged the plate.':''}`)}
   MENUS.garage(poi,n,`You lose. The crowd is not unkind about it.${seen?' A FLACK camera logged the plate.':''}`);
+}
+
+function paintFee(k){return Math.round(VEH[k].price*.05)+15}
+function paintMenu(poi,n,k,msg){
+  if(!k){
+    const own=Object.keys(VEH).filter(x=>x!=='none'&&G.veh.owned[x]);
+    return ui(`<h2>Custom paint</h2><p class="muted">Mack swears the fumes are good for you.</p>${msgP(msg)}${own.length?'':'<p>You own nothing to paint. Buy a ride first.</p>'}`,[
+      ...own.map(x=>({label:`${VEH[x].n}${G.veh.paint[x]?' (painted)':''}`,sub:`Fee ${money(paintFee(x))}`,cls:'',fn:()=>paintMenu(poi,n,x)})),
+      {label:'Back',cls:'quiet',fn:()=>MENUS.garage(poi,n)}]);
+  }
+  ui(`<h2>Paint the ${esc(VEH[k].n.toLowerCase())}</h2><p class="muted">Fee ${money(paintFee(k))} each time.</p>${msgP(msg)}`,[
+    ...PAINTS.map(p=>({label:`${p.n}`,sub:G.veh.paint[k]===p.c?'Current color':money(paintFee(k)),off:G.cash<paintFee(k)||G.veh.paint[k]===p.c,cls:'',fn:()=>{G.cash-=paintFee(k);G.veh.paint[k]=p.c;advance(60);paintMenu(poi,n,k,`Fresh ${p.n.toLowerCase()} paint. It dries by tomorrow.`)}})),
+    {label:'Original color',sub:G.veh.paint[k]?money(paintFee(k)):'Already original',off:!G.veh.paint[k]||G.cash<paintFee(k),cls:'quiet',fn:()=>{G.cash-=paintFee(k);delete G.veh.paint[k];advance(60);paintMenu(poi,n,k,'Back to the factory color.')}},
+    {label:'Back',cls:'quiet',fn:()=>paintMenu(poi,n)}]);
 }

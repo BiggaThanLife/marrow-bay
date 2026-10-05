@@ -11,3 +11,4 @@ const VEH={
  sedan:{n:'Sedan',sp:15,price:1900,ins:25,fuel:true},
  coupe:{n:'Sports coupe',sp:20,price:5200,ins:55,fuel:true}
 };
+const PAINTS=[{n:'Cherry',c:'#e0402f'},{n:'Sky',c:'#3a86d6'},{n:'Lemon',c:'#e0b83a'},{n:'Mint',c:'#4fd1b5'},{n:'Plum',c:'#8a5ab5'},{n:'Tangerine',c:'#e8872a'},{n:'Pearl',c:'#eeeeee'},{n:'Midnight',c:'#2a2f45'}];

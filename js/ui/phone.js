@@ -26,17 +26,21 @@ function gpsList(){
   return list.map(d=>({...d,dist:man(Math.round(p.x),Math.round(p.y),d.x,d.y)})).sort((a,b)=>a.dist-b.dist);
 }
 function gpsMenu(){
-  const list=gpsList();
-  ui(`<h2>GPS</h2><p class="muted">${G.gps?`Route to ${esc(G.gps.name)} is active.`:'Pick a destination. Nearest first.'}</p>`,[
+  const all=gpsList(),favs=G.favs||[];
+  const home=all.filter(d=>d.name==='Home'),fav=all.filter(d=>d.name!=='Home'&&favs.includes(d.name)),rest=all.filter(d=>d.name!=='Home'&&!favs.includes(d.name));
+  const row=(d,star)=>({label:`${star?'\u2605 ':''}${d.name}`,sub:`${d.dist} tiles away`,cls:'',fn:()=>gpsDetail(d)});
+  ui(`<h2>GPS</h2><p class="muted">${G.gps?`Route to ${esc(G.gps.name)} is active.`:'Home first, then your favorites, then nearest first.'}</p>`,[
     ...(G.gps?[{label:'Clear route',cls:'warn',fn:()=>{G.gps=null;gpsPath=[];gpsMenu()}}]:[]),
-    ...list.map(d=>({label:d.name,sub:`${d.dist} tiles away`,cls:'',fn:()=>gpsDetail(d)})),
+    ...home.map(d=>row(d,false)),...fav.map(d=>row(d,true)),...rest.map(d=>row(d,false)),
     {label:'Back',cls:'quiet',fn:()=>phone()}]);
 }
 function gpsDetail(d){
   const v=VEH[G.veh.active],sp=v.sp*G.mod.vspeed,min=Math.round(d.dist/sp*6),walk=Math.round(d.dist/4.8*6);
+  const isFav=(G.favs||[]).includes(d.name);
   ui(`<h2>${esc(d.name)}</h2><p>${d.dist} tiles away. About ${min} minutes with your ${v.n.toLowerCase()}${G.veh.active==='none'?'':`, or ${walk} minutes on foot`}.</p>`,[
     {label:'Guide me on the map',sub:'Shows a dotted route. You walk it yourself.',fn:()=>{G.gps={x:d.x,y:d.y,name:d.name};gpsTick();closeMenu();notify('GPS route set.')}},
     {label:'Auto-walk there',sub:'Your character follows the route',cls:'',fn:()=>{G.gps={x:d.x,y:d.y,name:d.name};closeMenu();walkTo(d.x,d.y)}},
+    ...(d.name==='Home'?[]:[{label:isFav?'Remove from favorites':'Add to favorites',sub:isFav?'It goes back in the nearest-first list':'It moves to the top, under Home',cls:'',fn:()=>{G.favs=G.favs||[];if(isFav)G.favs=G.favs.filter(x=>x!==d.name);else G.favs.push(d.name);gpsDetail(d)}}]),
     {label:'Back',cls:'quiet',fn:gpsMenu}]);
 }
 function gpsTick(){

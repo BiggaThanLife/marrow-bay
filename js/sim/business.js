@@ -7,8 +7,7 @@ function payOut(b,amt){
   const fromCash=Math.min(G.cash,rest);G.cash-=fromCash;rest-=fromCash;
   return rest<=0;
 }
-function runBiz(b){
-  const t=BT[b.type];if(!t)return;
+function bizAppeal(b){
   const dist=b.d,rep=G.rep[dist];
   let appeal=clamp(1+rep/100,.4,1.5)*(1+.25*(b.level-1));
   if(known('thief')>=3)appeal*=.8;
@@ -17,6 +16,19 @@ function runBiz(b){
   if(G.ev&&G.ev.id==='gala'&&dist==='Highline')appeal*=1.3;
   if(G.ev&&G.ev.id==='strike'&&dist==='Dockside')appeal*=.75;
   appeal*=(G.mod.traffic[dist]||1);
+  return appeal;
+}
+/* Typical customers per day (demand) and how many the staff can serve (capacity). */
+function bizTraffic(b){
+  const t=BT[b.type];
+  if(!t||b.type==='home'||b.type==='rental'||b.type==='farm')return null;
+  const wcap=b.workers.reduce((s,w)=>s+(4+w.skill*3)*(w.trait==='quick'?1.3:1),0);
+  return{dem:Math.round(TR[b.d]*t.per*bizAppeal(b)*[1.3,1,.65][b.mk]),cap:Math.round((3+wcap)*(t.cap/7))};
+}
+function runBiz(b){
+  const t=BT[b.type];if(!t)return;
+  const dist=b.d,rep=G.rep[dist];
+  const appeal=bizAppeal(b);
   const r={units:0,rev:0,cost:0,wages:0,theft:0,note:''};
   const wcap=b.workers.reduce((s,w)=>s+(4+w.skill*3)*(w.trait==='quick'?1.3:1),0);
   if(b.type==='rental'){

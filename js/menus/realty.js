@@ -62,9 +62,12 @@ function bizMenu(biz,msg){
   if(biz.type!=='rental')btns.push({label:`Staff (${biz.workers.length}/${1+biz.level})`,sub:'Hire and fire',cls:'',fn:()=>staffMenu(biz)});
   if(biz.type==='cafe'||biz.type==='bar'||biz.type==='workshop')btns.push({label:`Price: ${MKN[biz.mk]}`,sub:'Low sells more, High sells less',cls:'',fn:()=>{biz.mk=(biz.mk+1)%3;bizMenu(biz)}});
   if(biz.level<3)btns.push({label:`Upgrade to level ${biz.level+1}`,sub:`${money(700*biz.level)}. More demand and room for staff.`,off:G.cash<700*biz.level,cls:'',fn:()=>ask(`Upgrade to level ${biz.level+1}?`,`It costs ${money(700*biz.level)}.`,'Yes, upgrade',()=>{G.cash-=700*biz.level;biz.paid=(biz.paid||biz.price)+700*biz.level;biz.level++;bizMenu(biz,'Upgraded.')},()=>bizMenu(biz))});
+  if(biz.level>1){const back=Math.round(350*(biz.level-1)),over=biz.workers.length>biz.level;btns.push({label:`Downsize to level ${biz.level-1}`,sub:over?`Let staff go first (room for ${biz.level} at level ${biz.level-1})`:`Refund ${money(back)}. Demand and staff room shrink.`,off:over,cls:'quiet',fn:()=>ask(`Downsize to level ${biz.level-1}?`,`You get ${money(back)} back and lose some demand and staff room.`,'Yes, downsize',()=>{G.cash+=back;biz.paid=Math.max(0,(biz.paid||biz.price)-700*(biz.level-1));biz.level--;advance(60);bizMenu(biz,`Downsized. ${money(back)} refunded.`)},()=>bizMenu(biz))});}
+  btns.push({label:'Change business type',sub:'Refit this building without selling it. Pay the new fit-out.',cls:'quiet',fn:()=>convertMenu(biz)});
   btns.push({label:'Sell the building',sub:`Get ${money((biz.paid||biz.price)*.7)}`,cls:'quiet',fn:()=>sellBiz(biz)},leaveBtn);
   ui(`<h2>${t.n}, level ${biz.level}</h2><p class="muted">${biz.d}. ${t.d}</p>${msgP(msg)}
   <div class="kv"><div><span>Till</span><b>${money(biz.till)}</b></div><div><span>Supplies</span><b>${biz.supplies}</b></div><div><span>Staff</span><b>${biz.workers.length}</b></div>
+  ${bizTraffic(biz)?`<div><span>Foot traffic</span><b>${bizTraffic(biz).dem} a day</b></div><div><span>Can serve</span><b>${bizTraffic(biz).cap} a day</b></div>`:''}
   ${L?`<div><span>Last day</span><b>${L.profit>=0?'+':''}${money(L.profit)}</b></div><div><span>Sold</span><b>${L.units}</b></div><div><span>Wages</span><b>${money(L.wages)}</b></div>`:''}</div>${L&&L.theft?`<p class="bad small">Staff skimmed ${money(L.theft)}.</p>`:''}${L&&L.note?`<p class="bad small">${esc(L.note)}</p>`:''}`,btns);
 }
 function sellBiz(biz){ask('Sell this building?',`You get about ${money((biz.paid||biz.price)*.7+biz.till)}. Staff and stock go with it.`,'Yes, sell',()=>doSellBiz(biz),()=>bizMenu(biz))}
@@ -74,7 +77,7 @@ function doSellBiz(biz){
 }
 function depositMenu(biz,msg){
   const t=BT[biz.type];
-  const btns=Object.keys(t.dep).filter(k=>G.inv[k]>0).map(k=>({label:`Add all ${NAMES[k]} (${G.inv[k]})`,sub:`+${t.dep[k]} supply each`,fn:()=>{biz.supplies+=G.inv[k]*t.dep[k];G.inv[k]=0;depositMenu(biz,'Stocked.')}}));
+  const btns=Object.keys(t.dep).filter(k=>G.inv[k]>0).flatMap(k=>[{label:`Add some ${NAMES[k]}`,sub:`+${t.dep[k]} supply each. Choose how many.`,cls:'',fn:()=>qtyMenu({title:`Add ${NAMES[k]}`,intro:`Each gives ${t.dep[k]} supply.`,price:0,max:G.inv[k],mode:'sell',onConfirm:q=>{biz.supplies+=q*t.dep[k];G.inv[k]-=q;return `Added ${q} ${NAMES[k]}.`},back:m=>depositMenu(biz,m)})},{label:`Add all ${NAMES[k]} (${G.inv[k]})`,sub:`+${t.dep[k]} supply each`,fn:()=>{biz.supplies+=G.inv[k]*t.dep[k];G.inv[k]=0;depositMenu(biz,'Stocked.')}}]);
   ui(`<h2>Supplies</h2><p class="muted">In stock: ${biz.supplies}. Missing supplies are bought wholesale at ${money(t.cost)} each.</p>${msgP(msg)}${btns.length?'':'<p>You have nothing this business can use.</p>'}`,[...btns,{label:'Back',cls:'quiet',fn:()=>bizMenu(biz)}]);
 }
 function staffMenu(biz,msg){
@@ -82,5 +85,12 @@ function staffMenu(biz,msg){
   ui(`<h2>Staff</h2><p class="muted">Each worker adds capacity. Wages are paid daily from the till, then from your cash.</p>${msgP(msg)}`,[
     ...biz.workers.map(w=>({label:`Fire ${w.name}`,sub:`Skill ${w.skill}, ${money(w.wage)}/day, ${TRAITN[w.trait]}`,cls:'quiet',fn:()=>ask(`Fire ${w.name}?`,'They will leave right away.','Yes, fire',()=>{biz.workers=biz.workers.filter(x=>x!==w);staffMenu(biz,`${w.name} is gone.`)},()=>staffMenu(biz))})),
     ...G.pool.map((w,i)=>({label:`Hire ${w.name}`,sub:`Skill ${w.skill}, ${money(w.wage)}/day, ${TRAITN[w.trait]}`,off:full,cls:i?'':'primary',fn:()=>{biz.workers.push(w);G.pool=G.pool.filter(x=>x!==w);quip('hire');staffMenu(biz,`${w.name} joins the team.`)}})),
+    {label:'Back',cls:'quiet',fn:()=>bizMenu(biz)}]);
+}
+
+function convertMenu(biz,msg){
+  const cur=BT[biz.type];
+  ui(`<h2>Change business type</h2><p class="muted">The ${cur.n.toLowerCase()} closes for a day. Staff and level stay. Supplies are lost. You pay the new fit-out.</p>${msgP(msg)}`,[
+    ...Object.entries(BT).filter(([k])=>k!==biz.type&&k!=='home'&&(k!=='farm'||biz.d==='Greenbelt')).map(([k,t])=>({label:`${t.n}, fit-out ${money(t.fit)}`,sub:t.d,cls:'',off:G.cash<t.fit,fn:()=>ask(`Turn this into a ${t.n.toLowerCase()}?`,`The fit-out costs ${money(t.fit)}. Supplies are lost.`,'Yes, refit',()=>{G.cash-=t.fit;biz.paid=(biz.paid||biz.price)+t.fit;biz.type=k;biz.supplies=0;if(k==='farm'){biz.store=biz.store||0;biz.auto=!!biz.auto}advance(120);news(`A ${cur.n.toLowerCase()} in ${biz.d} becomes a ${t.n.toLowerCase()}.`,1);bizMenu(biz,`Now a ${t.n.toLowerCase()}.`)},()=>convertMenu(biz))})),
     {label:'Back',cls:'quiet',fn:()=>bizMenu(biz)}]);
 }

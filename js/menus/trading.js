@@ -15,6 +15,7 @@ function shareMenu(poi,n,id,msg){
     {label:'Buy 1',sub:money(p+tradeFee()),off:G.cash<p+tradeFee(),cls:'',fn:act(buyShare,1)},
     {label:'Buy 5',sub:money(p*5+tradeFee()),off:G.cash<p*5+tradeFee(),cls:'',fn:act(buyShare,5)},
     {label:'Buy 20',sub:money(p*20+tradeFee()),off:G.cash<p*20+tradeFee(),cls:'',fn:act(buyShare,20)},
+    {label:'Buy a custom amount',sub:'Choose how many and see the total',cls:'',fn:()=>qtyMenu({title:`Buy ${s.n}`,intro:'',price:p,fee:tradeFee(),max:500,mode:'buy',onConfirm:q=>buyShare(id,q),back:m=>shareMenu(poi,n,id,m)})},
     {label:'Sell 1',off:h<1,cls:'',fn:act(sellShare,1)},
     {label:`Sell all ${h}`,sub:h?money(h*p-tradeFee()):'',off:h<1,cls:'',fn:act(sellShare,h)},
     {label:'Back',cls:'quiet',fn:()=>tradingMenu(poi,n)}]);
