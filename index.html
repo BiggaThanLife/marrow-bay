@@ -37,7 +37,11 @@ p{margin:0 0 8px}
 #hud{flex:none;padding:5px 6px 4px}
 .stats{display:grid;grid-template-columns:1.35fr .8fr 1fr .8fr;gap:4px;margin:0 0 4px}
 .stats div{background:var(--panel);border:2px solid var(--line);padding:2px 5px;min-width:0}
-.stats dt{font-size:.66rem;color:var(--muted);line-height:1.1}
+.stats dt{font-size:.66rem;color:var(--muted);line-height:1.1;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.stats dt svg{display:block;flex:none}
+#xbtn{position:sticky;top:0;display:block;margin:-4px -4px -36px auto;width:40px;height:40px;z-index:3;font:700 1.6rem/1 "DM Sans",system-ui,sans-serif;color:var(--text);background:var(--panel);border:2px solid var(--line);cursor:pointer;padding:0}
+#xbtn[hidden]{display:none}
+#text h2{padding-right:40px}
 .stats dd{margin:1px 0 0;font:700 .64rem/1.2 "Silkscreen","Courier New",monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bars{display:grid;grid-template-columns:1fr 1fr .8fr;gap:4px}
 .bar{position:relative;height:16px;background:var(--panel);border:2px solid var(--line);overflow:hidden}
@@ -77,7 +81,7 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 <div id="app">
   <header id="hud" hidden>
     <dl class="stats">
-      <div><dt>Time</dt><dd id="h-time"></dd></div>
+      <div><dt><span id="h-ico"></span><span id="h-day">Day 1</span></dt><dd id="h-time"></dd></div>
       <div><dt>Cash</dt><dd id="h-cash"></dd></div>
       <div><dt>District</dt><dd id="h-dist"></dd></div>
       <div><dt>Tide</dt><dd id="h-tide"></dd></div>
@@ -92,7 +96,7 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
     <canvas id="scene" width="176" height="200" aria-label="Map of Marrow Bay"></canvas>
     <div id="note" aria-live="polite"></div>
     <div id="mission" hidden></div>
-    <section id="sheet" hidden aria-live="polite"><div id="text"></div><div id="actions"></div></section>
+    <section id="sheet" hidden aria-live="polite"><button type="button" id="xbtn" aria-label="Close">&times;</button><div id="text"></div><div id="actions"></div></section>
   </div>
   <nav id="bar" hidden>
     <button type="button" id="b-bag">Bag</button>
@@ -513,6 +517,7 @@ function newDay(d){
   makePool();
   if(G.debt>0&&day()-G.loanDay>(G.loanTerm||10)&&!G.flags.defRum){G.flags.defRum=1;addRumor('defaulter',['cordelia'])}
   G.rumors.forEach(r=>r.str-=4);G.rumors=G.rumors.filter(r=>r.str>=12);
+  threadsDaily();
   G.projects.forEach(p=>{
     if(p.done)return;const d=PROJECTS.find(x=>x.id===p.id);
     NPCS.filter(n=>n.d===d.d).forEach(n=>{
@@ -584,6 +589,7 @@ function hourly(h){
   if(G.flats>45)G.flags.flatNews=0;
   if(G.demand>=8&&!G.flags.rushNews){G.flags.rushNews=1;alertNews('News: The diner is slammed. Meals cost more.')}
   if(G.demand<3)G.flags.rushNews=0;
+  threadsHourly();
 }
 
 /* ================= NPC MOVEMENT ================= */
@@ -632,7 +638,11 @@ function hud(){
   if(!G){el.hidden=true;$('#bar').hidden=true;$('#mission').hidden=true;return}
   el.hidden=false;$('#bar').hidden=false;
   const h=hourOf(),m=Math.floor(G.t%60);
-  $('#h-time').textContent=`Day ${day()}, ${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`;
+  $('#h-day').textContent='Day '+day();
+  $('#h-time').textContent=`${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`;
+  const dayTime=h>=6&&h<19;
+  if(el.dataset.ico!==(dayTime?'s':'m')){el.dataset.ico=dayTime?'s':'m';
+    $('#h-ico').innerHTML=dayTime?'<svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="3" fill="#f2b84b"/><path d="M6 0v2M6 10v2M0 6h2M10 6h2M2 2l1.4 1.4M8.6 8.6L10 10M2 10l1.4-1.4M8.6 3.4L10 2" stroke="#f2b84b" stroke-width="1.2"/></svg>':'<svg width="11" height="11" viewBox="0 0 12 12"><path d="M9.5 8A5 5 0 1 1 4 2.5 4 4 0 0 0 9.5 8z" fill="#c9d6ff"/></svg>'}
   $('#h-cash').textContent=money(G.cash);
   $('#h-dist').textContent=district(Math.round(G.p.x),Math.round(G.p.y));
   $('#h-tide').textContent=tideName();
@@ -643,12 +653,14 @@ function hud(){
   $('#b-heat').style.width=(G.heat/5*100)+'%';
   $('#t-heat').textContent=G.heat>=.5?'\u2605'.repeat(Math.min(5,Math.ceil(G.heat))):'Clear';
   $('#b-build').classList.toggle('on',!!placing);
-  $('#b-phone').textContent=G.news.some(x=>x.id>G.newsRead)?'Phone \u25CF':'Phone';
+  $('#b-phone').textContent=(G.news.some(x=>x.id>G.newsRead)||G.threads.active.some(t=>t.pending))?'Phone \u25CF':'Phone';
   const ms=$('#mission');ms.hidden=!G.mission;if(G.mission)ms.textContent=missionText();
 }
 function ui(html,btns=[],isModal=true,dismiss=true){
   modal=isModal;dismissable=dismiss;
   if(!isModal){sheet.hidden=true;return}
+  if(dismiss)btns=btns.filter(b=>b.fn!==closeMenu||b.keep);
+  $('#xbtn').hidden=!dismiss;
   $('#text').innerHTML=html;
   const a=$('#actions');a.replaceChildren();
   btns.forEach((b,i)=>{
@@ -663,6 +675,7 @@ function ui(html,btns=[],isModal=true,dismiss=true){
 function worldPanel(){ui('',[],false);if(G)hud()}
 const closeMenu=()=>{save();worldPanel()};
 const leaveBtn={label:'Leave',cls:'quiet',fn:closeMenu};
+$('#xbtn').addEventListener('click',()=>{if(dismissable)closeMenu()});
 const msgP=m=>m?`<p class="amber">${esc(m)}</p>`:'';
 
 $('#b-bag').addEventListener('click',()=>{if(G){placing=null;notify('');bag()}});
@@ -696,7 +709,7 @@ function start(k){
      home:b.home,owned:{},debt:0,arrears:0,loanDay:0,loanTerm:10,structs:[],biz:[],pool:[],plots:FARM_TILES.map(([x,y])=>({x,y,s:0,d:0})),
      gifts:0,flags:{customDone:false},ev:null,npcs:{},rumors:[],projects:PROJECTS.map(p=>({id:p.id,have:{},done:false})),fx:{},
      fishStock:70,flats:70,demand:0,heat:0,mission:null,lastBills:0,news:[],newsSeq:0,newsRead:0,met:{},evs:[],queue:[],gps:null,
-     name:'Stranger',look:{skin:1,hair:0,style:0,outfit:'blue',hat:'none'},wardrobe:{outfits:{blue:1},hats:{none:1}},quirk:null,
+     threads:{active:[],done:[],lastStart:0},name:'Stranger',look:{skin:1,hair:0,style:0,outfit:'blue',hat:'none'},wardrobe:{outfits:{blue:1},hats:{none:1}},quirk:null,
      veh:{owned:{},stolen:{},fuel:{},active:'none'},
      p:{x:h.ex,y:h.ey,path:[],onArrive:null,face:1}};
   NPCS.forEach(n=>G.npcs[n.id]={m:0,chat:-1,cash:n.wage*2+10,hunger:70});
@@ -1349,7 +1362,7 @@ function structMenu(st,msg){
 
 /* ================= CONFIRM / NEWS / EVENTS / PHONE ================= */
 function ask(title,text,label,fn,back){
-  ui(`<h2>${esc(title)}</h2><p>${esc(text)}</p>`,[{label:'Cancel',fn:back||closeMenu},{label,cls:'warn',fn}]);
+  ui(`<h2>${esc(title)}</h2><p>${esc(text)}</p>`,[{label:'Cancel',fn:back||closeMenu,keep:true},{label,cls:'warn',fn}]);
 }
 const SEVN=['','Minor','Local','Major','Chaos','Catastrophe'];
 let alertQ=[],bridgeOn=false,gpsPath=[];
@@ -1398,6 +1411,7 @@ const timeStr=()=>{const h=hourOf(),m=Math.floor(G.t%60);return `${h%12||12}:${S
 function migrate(){
   if(!G.look){G.flags=G.flags||{};G.flags.customDone=false}
   G.name=G.name||'Stranger';G.quirk=G.quirk||null;
+  G.threads=G.threads||{active:[],done:[],lastStart:0};
   G.look=G.look||{skin:1,hair:0,style:0,outfit:'blue',hat:'none'};
   G.wardrobe=G.wardrobe||{outfits:{blue:1},hats:{none:1}};
   ['31,8','36,13'].forEach(key=>{const b=bizOf(key);if(!b)return;
@@ -1509,6 +1523,7 @@ function phone(msg){
     {label:'GPS',sub:'Pick a destination. Get a route or auto-walk.',fn:gpsMenu},
     {label:'News',sub:un?`${un} new`:'Today and earlier days',cls:'',fn:newsMenu},
     {label:'Contacts',sub:`${Object.keys(G.met).length} people`,cls:'',fn:contactsMenu},
+    {label:'Threads',sub:G.threads.active.some(t=>t.pending)?'New message':`${G.threads.active.length} active`,cls:G.threads.active.some(t=>t.pending)?'primary':'',fn:()=>threadsMenu()},
     {label:'Town board',sub:'Conditions, rumors, projects',cls:'',fn:town},
     {label:'Citizen onboarding',sub:'Replay the HARBOR orientation',cls:'quiet',fn:()=>tutorial(0,true)},
     leaveBtn]);
@@ -1577,6 +1592,164 @@ function callMenu(n,msg){
     {label:'Find them on GPS',sub:`They are ${w.text}`,cls:'',fn:()=>{G.gps={x:w.x,y:w.y,name:n.name};gpsTick();phone(`GPS route set to ${n.name}.`)}},
     {label:'Ask for news',sub:tr>=2?'Rumors and tips':'They will not share that yet',off:tr<2,cls:'',fn:()=>{advance(5);callMenu(n,`"${pick(worldLines())}"`)}},
     ...sp,{label:'Back',cls:'quiet',fn:contactsMenu}]);
+}
+
+/* ================= PERSONAL STORY THREADS ================= */
+const repAdd=(d,n)=>{G.rep[d]=clamp(G.rep[d]+n,-100,100)};
+const memAdd=(id,n)=>{npcS(NPC[id]).m+=n};
+const heatAdd=n=>{G.heat=Math.min(5,G.heat+n)};
+const bizPlain=()=>G.biz.filter(b=>b.type&&b.type!=='home'&&b.type!=='rental'&&b.type!=='farm');
+function seizeProperty(){
+  if(G.biz.length){const b=G.biz.slice().sort((a,c)=>a.price-c.price)[0];G.biz=G.biz.filter(x=>x!==b);if(G.home==='B:'+b.key)G.home='bunk';return `The bank seizes your ${b.type?BT[b.type].n.toLowerCase():'building'} in the ${b.d}.`}
+  const s=G.structs.find(x=>x.type!=='house')||G.structs[0];
+  if(s){G.structs=G.structs.filter(x=>x!==s);if(G.home==='S:'+s.id)G.home='bunk';return `They take your ${STRUCTS[s.type].n.toLowerCase()}.`}
+  const lost=Math.round(G.cash*.4);G.cash-=lost;return `They take ${money(lost)} from you instead.`;
+}
+RUM.informant={d:-18,t:'They say you talk to the Constable.'};
+const fmt=(th,s)=>s.replace(/\{(\w+)\}/g,(m,k)=>k==='name'?G.name:(th.roles[k]||m));
+const THREADS={
+ collector:{title:'The Collector',from:'Unknown number',
+  hook:()=>G.debt>0&&day()-G.loanDay>=3,
+  beats:{
+   b1:{wait:0,ignore:'b2a',text:'"Your debt was sold. They would like a word."',choices:[
+     {label:'Pay in full now',sub:()=>money(G.debt),need:()=>G.cash>=G.debt,fx:()=>{G.cash-=G.debt;G.debt=0;memAdd('cordelia',8)},next:'END:cleared'},
+     {label:'Ignore it',next:'b2a'},{label:'Call back',next:'b2b'}]},
+   b2a:{wait:2,ignore:'END:ruined',text:'Two days later a collector in a very clean coat is waiting outside your door. "{name}. We should settle this."',choices:[
+     {label:'Pay with a $25 fee',sub:()=>money(G.debt+25),need:()=>G.cash>=G.debt+25,fx:()=>{G.cash-=G.debt+25;G.debt=0},next:'END:costly'},
+     {label:'Run',fx:()=>{heatAdd(1.5);addRumor('defaulter',['cordelia','mina'])},next:'END:ruined'}]},
+   b2b:{wait:1,ignore:'b2a',text:'Vex Calloway gets to the point in the Velvet Room. "I bought your paper. I can be reasonable. I can also be useful."',choices:[
+     {label:'Pay with 20% interest',sub:()=>money(G.debt*1.2),need:()=>G.cash>=Math.round(G.debt*1.2),fx:()=>{G.cash-=Math.round(G.debt*1.2);G.debt=0},next:'END:costly'},
+     {label:'Work it off',next:'b3'}]},
+   b3:{wait:1,ignore:'END:ruined',text:'Two jobs for Vex. The first goes fine. The second smells like a setup, and a constable is two streets away.',choices:[
+     {label:'Do the job',fx:()=>{heatAdd(2);advance(120);memAdd('vex',8);G.debt=0},next:'END:ally'},
+     {label:'Tip off Reyes',fx:()=>{memAdd('reyes',10);memAdd('vex',-20);addRumor('informant',['vex','pip']);G.debt=0},next:'END:informant'}]}},
+  endings:{
+   cleared:{name:'Cleared',text:'The debt is gone and so is the stranger. Cordelia nods at you in the street. It is almost warm.',fx:()=>repAdd('Highline',3),harbor:'HARBOR commends your proactive relationship with money.'},
+   costly:{name:'Costly',text:'You paid it all, plus the cost of being difficult. Your wallet files a complaint.',harbor:'HARBOR has marked the transaction "character building".'},
+   ruined:{name:'Ruined',text:'Debt collection was not a request. Your name is on the wrong list now.',fx:()=>{G.debt=0;return seizeProperty()},harbor:'HARBOR regrets to inform you that regret is not refundable.'},
+   ally:{name:'Vex ally',text:'The job goes sideways in just the right way. Vex tears up your paper and looks at you like an asset.',fx:()=>{G.cash+=60;return 'Vex pays you $60.'},harbor:'HARBOR was not present. HARBOR does not have an alibi, either.'},
+   informant:{name:'Informant',text:'Reyes gets her collar. Vex gets a reason to remember your face.',harbor:'HARBOR salutes your civic spirit and your new enemies.'}}},
+ rival:{title:'The Rival',from:'Staff gossip',
+  hook:()=>bizPlain().length>0&&day()>=8,
+  start:()=>{const b=pick(bizPlain());return{rival:pick(WN)+' '+pick(LN),type:BT[b.type].n.toLowerCase(),d:b.d,key:b.key}},
+  beats:{
+   b1:{wait:0,ignore:'b2a',text:'{rival} just opened a {type} two blocks from yours in the {d}. Their prices are insultingly low.',choices:[
+     {label:'Undercut them',next:'b2a'},{label:'Go introduce yourself',next:'b2b'}]},
+   b2a:{wait:3,ignore:'END:truce',text:'The price war is on. Your till is thinner and so is theirs. {rival} sends a note: "Truce?"',choices:[
+     {label:'Keep fighting',sub:()=>'$80 in promotions',need:()=>G.cash>=80,fx:()=>{G.cash-=80},next:'END:warwin'},
+     {label:'Call a truce',next:'END:truce'}]},
+   b2b:{wait:1,ignore:'END:mentor',text:'Over coffee, {rival} admits they are undercapitalized and a little afraid of you.',choices:[
+     {label:'Offer a supply deal',next:'END:partner'},{label:'Sabotage their stock',next:'END:sabotage'},{label:'Trade advice for a favor',next:'END:mentor'}]}},
+  endings:{
+   warwin:{name:'Price war won',text:'You bury them, loudly. The neighborhood notices the noise more than the prices.',fx:th=>{const b=bizOf(th.roles.key);repAdd(th.roles.d,-2);if(b){b.till+=150;return 'Your till picks up $150.'}},harbor:'HARBOR notes that competition is just cooperation with worse manners.'},
+   truce:{name:'Truce',text:'You split the street like adults. Both of you keep the lights on.',fx:th=>repAdd(th.roles.d,3),harbor:'HARBOR was rooting for chaos and is disappointed.'},
+   partner:{name:'Partners',text:'You swap suppliers and shave costs on both sides. Neither of you says "synergy" out loud.',fx:th=>{const b=bizOf(th.roles.key);repAdd(th.roles.d,3);if(b){b.supplies+=25;return 'Your shop gets 25 supplies.'}},harbor:'HARBOR has added "synergy" to the list of banned words.'},
+   sabotage:{name:'Sabotage',text:'Their stock does not survive the night. Neither does your clean reputation.',fx:()=>{heatAdd(1.5);addRumor('thief',['pip','mina']);G.cash+=40;return 'You pocket $40 in salvage.'},harbor:'HARBOR saw nothing. HARBOR is very good at that.'},
+   mentor:{name:'Mentor',text:'You trade a few tricks for a favor owed. {rival} will remember it kindly, for now.',fx:th=>{repAdd(th.roles.d,2);G.cash+=60;return 'They repay you $60.'},harbor:'HARBOR classifies this as "networking".'}}},
+ ghost_farm:{title:'The Salted Fields',from:'Old Wren',
+  hook:()=>G.bg==='farm'&&day()>=5,
+  beats:{
+   b1:{wait:0,ignore:'END:abandoned',text:'"Something is eating the Greenbelt plots at night. I think a city someone is salting the soil. Can you come look? You know dirt."',choices:[
+     {label:'Go and look',next:'b2a'},{label:'Send $40 for seed',need:()=>G.cash>=40,fx:()=>{G.cash-=40},next:'END:patron'},{label:'Not my problem',next:'END:abandoned'}]},
+   b2a:{wait:1,ignore:'END:denial',text:'You find white salt crystals and tire tracks heading toward the Dockside. Wren watches you, waiting.',choices:[
+     {label:'Follow the tracks',next:'END:culprit'},{label:'Salt their docks right back',next:'END:revenge'},{label:'Tell Wren it was just weather',next:'END:denial'}]}},
+  endings:{
+   patron:{name:'Patron',text:'Wren buys seed with your money and tells everyone about it, loudly, twice.',fx:()=>{repAdd('Greenbelt',6);memAdd('wren',10)},harbor:'HARBOR is not touched. HARBOR does not have a heart. Allegedly.'},
+   abandoned:{name:'Abandoned',text:'The fields stay sick. Wren does not call again.',fx:()=>{repAdd('Greenbelt',-6);memAdd('wren',-10)},harbor:'HARBOR has filed this under "weather".'},
+   culprit:{name:'Culprit found',text:'A Dockside crew was dumping brine. Their foreman pays for the damage and pretends he never saw you.',fx:()=>{G.cash+=60;repAdd('Dockside',-5);repAdd('Greenbelt',5);memAdd('duarte',-6);return 'You collect $60 in damages.'},harbor:'HARBOR admires the efficiency of a good grudge.'},
+   revenge:{name:'Revenge',text:'Salt on the planks, salt in the soil. Nobody wins, but the story is excellent.',fx:()=>{repAdd('Dockside',-10);repAdd('Greenbelt',8);heatAdd(1)},harbor:'HARBOR has seasoned the incident report accordingly.'},
+   denial:{name:'Denial',text:'Wren nods the way people nod when they have stopped believing you.',fx:()=>{repAdd('Greenbelt',-4);memAdd('wren',-5)},harbor:'HARBOR agrees. It was weather.'}}},
+ ghost_dock:{title:'The Union Ledger',from:'Foreman Duarte',
+  hook:()=>G.bg==='dock'&&day()>=5,
+  beats:{
+   b1:{wait:0,ignore:'END:walked',text:'"The union fund is short. Your family name is on the ledger from the last count. Come look at it with me."',choices:[
+     {label:'Check the ledger',next:'b2a'},{label:'Pay $50 and move on',need:()=>G.cash>=50,fx:()=>{G.cash-=50},next:'END:paid'},{label:'Walk away',next:'END:walked'}]},
+   b2a:{wait:1,ignore:'END:quiet',text:'The entry next to your family name is forged. The handwriting is a banker\'s.',choices:[
+     {label:'Expose it publicly',next:'END:exposed'},{label:'Blackmail the forger',next:'END:blackmail'},{label:'Fix the ledger quietly',next:'END:quiet'}]}},
+  endings:{
+   paid:{name:'Paid up',text:'Duarte takes the cash, stamps the page, and says nothing. It is the highest praise available.',fx:()=>{repAdd('Dockside',3);memAdd('duarte',4)},harbor:'HARBOR records this as "solidarity (invoiced)".'},
+   walked:{name:'Walked away',text:'Your name stays on the wrong line. The line gets longer.',fx:()=>{repAdd('Dockside',-5);memAdd('duarte',-6)},harbor:'HARBOR admires your commitment to unresolved items.'},
+   exposed:{name:'Exposed',text:'You read the forgery aloud on the pier. The Dockside cheers. The Highline stops returning calls.',fx:()=>{repAdd('Dockside',10);repAdd('Highline',-8)},harbor:'HARBOR has scheduled a brief panic on the Highline.'},
+   blackmail:{name:'Blackmail',text:'The forger pays in cash and in fear. Duarte does not ask where the money came from.',fx:()=>{G.cash+=120;heatAdd(1);memAdd('duarte',-4);return 'You collect $120.'},harbor:'HARBOR reminds you that all income is, in a sense, freelance.'},
+   quiet:{name:'Quietly fixed',text:'The ledger balances and nobody asks why. Duarte nods slowly, like a tide going out.',fx:()=>{memAdd('duarte',8);repAdd('Dockside',4)},harbor:'HARBOR was never here, and neither was the problem.'}}},
+ ghost_banker:{title:'The Collapse File',from:'Cordelia Vance',
+  hook:()=>G.bg==='banker'&&day()>=5,
+  beats:{
+   b1:{wait:0,ignore:'END:silent',text:'"The collapse inquiry has reopened. They want a statement, and your name is the first one on the page. Do not call me. Call a lawyer."',choices:[
+     {label:'Give a statement',next:'b2a'},{label:'Stay silent',next:'END:silent'},{label:'Burn your copy of the file',next:'END:burned'}]},
+   b2a:{wait:1,ignore:'END:silent',text:'The investigator slides a pen across the table. "Whenever you are ready, {name}."',choices:[
+     {label:'Tell the truth',next:'END:truth'},{label:'Blame a colleague',next:'END:blame'},{label:'Bribe the clerk',sub:()=>'$100',need:()=>G.cash>=100,fx:()=>{G.cash-=100},next:'END:bribe'}]}},
+  endings:{
+   silent:{name:'Silent',text:'Nobody asks again. The silence sits on your shoulder like a very polite crow.',fx:()=>repAdd('Highline',-4),harbor:'HARBOR is legally required to find this suspicious and has chosen to be fond of it.'},
+   burned:{name:'Burned',text:'The file makes a lovely fire. Some of the people watching it do not look like friends.',fx:()=>{heatAdd(1);memAdd('vex',4)},harbor:'HARBOR has updated your threat model to "arsonist, but organized".'},
+   truth:{name:'The truth',text:'You say it plainly. It costs you the last of the Highline\'s goodwill and wins you the docks\' respect.',fx:()=>{repAdd('Highline',6);repAdd('Dockside',6)},harbor:'HARBOR is surprised. HARBOR checks the logs. HARBOR is still surprised.'},
+   blame:{name:'Scapegoat',text:'The colleague takes it hard. Cordelia nods like a banker who has seen it done better.',fx:()=>{repAdd('Highline',4);repAdd('Dockside',-6);memAdd('cordelia',6)},harbor:'HARBOR admires your gift for plausible deniability.'},
+   bribe:{name:'Bribed',text:'The clerk loses the page and finds your name pleasant. Reyes will hear about it eventually.',fx:()=>{memAdd('reyes',-6)},harbor:'HARBOR has no comment, in the sense that it is billing you for the comment.'}}},
+ ghost_artist:{title:'The Stolen Sketchbook',from:'Pip',
+  hook:()=>G.bg==='artist'&&day()>=5,
+  beats:{
+   b1:{wait:0,ignore:'END:letgo',text:'"Somebody on the Neon Mile is selling pages from a sketchbook. It looks like yours. Want me to point?"',choices:[
+     {label:'Hunt down the seller',next:'b2a'},{label:'Let it go',next:'END:letgo'},{label:'Claim it on the Plaza',next:'END:claimed'}]},
+   b2a:{wait:1,ignore:'END:letgo',text:'The seller is a polite man in a very expensive jacket with three more of your pages.',choices:[
+     {label:'Buy it back',sub:()=>'$60',need:()=>G.cash>=60,fx:()=>{G.cash-=60},next:'END:bought'},{label:'Steal it back',next:'END:stolen'},{label:'Make him pay full price',next:'END:collector'}]}},
+  endings:{
+   letgo:{name:'Let go',text:'It was only paper. Somewhere a stranger pins your best line over their couch.',harbor:'HARBOR admires non-attachment and has scheduled a reminder to invoice you for it.'},
+   claimed:{name:'Claimed',text:'You tell the Plaza the whole story. Half the crowd claps. The other half asks for sketches.',fx:()=>{repAdd('Grid',4);repAdd('Neon Mile',3)},harbor:'HARBOR has registered you as "a public nuisance of exceptional quality".'},
+   bought:{name:'Bought back',text:'You pay for your own work. It is the worst deal you have ever loved.',fx:()=>repAdd('Grid',2),harbor:'HARBOR calls this "the art market".'},
+   stolen:{name:'Stolen back',text:'Technically it was already yours. Legally it was a lot of paperwork.',fx:()=>{heatAdd(1.5);repAdd('Neon Mile',3)},harbor:'HARBOR is in no position to comment on the legal definition of "yours".'},
+   collector:{name:'Collector',text:'He hands you an astonishing sum for the rest, and a card with a very small name on it.',fx:()=>{G.cash+=80;repAdd('Highline',5);return 'He pays you $80.'},harbor:'HARBOR has added "art dealer" to your threat list, as a courtesy.'}}}
+};
+function threadsHourly(){
+  G.threads.active.slice().forEach(th=>{
+    const T=THREADS[th.tid],B=T.beats[th.beat];
+    if(!th.pending){
+      if(G.t>=th.due){th.pending=true;th.since=day();notify(`New message: ${T.title}. Check Phone, then Threads.`);news(`New message in "${T.title}".`,1)}
+    }else if(day()-th.since>=(B.timeout||3)){th.log.push('You did not respond.');advanceThread(th,B.ignore,false)}
+  });
+}
+function threadsDaily(){
+  const S=G.threads;
+  if(S.active.length>=2||day()<4||day()-S.lastStart<5)return;
+  const used=new Set([...S.active.map(t=>t.tid),...S.done.map(t=>t.tid)]);
+  const c=Object.keys(THREADS).filter(id=>!used.has(id)&&THREADS[id].hook());
+  if(!c.length)return;
+  const id=pick(c),def=THREADS[id];
+  S.active.push({tid:id,beat:'b1',due:G.t+60*ri(3,10),pending:false,since:0,log:[],roles:def.start?def.start():{}});
+  S.lastStart=day();
+}
+function advanceThread(th,next,interactive){
+  if(next.startsWith('END:'))return endThread(th,next.slice(4),interactive);
+  th.beat=next;th.pending=false;th.due=G.t+(THREADS[th.tid].beats[next].wait||0)*1440;
+  if(interactive)threadsMenu('Sent. The story waits for you, and the world does not.');
+}
+function endThread(th,key,interactive){
+  const T=THREADS[th.tid],E=T.endings[key];
+  const extra=(E.fx&&E.fx(th))||'';
+  G.threads.active=G.threads.active.filter(x=>x!==th);
+  G.threads.done.unshift({tid:th.tid,title:T.title,end:E.name,text:fmt(th,E.text),extra,harbor:E.harbor||'',day:day(),log:th.log});
+  news(`Story ended: ${T.title}. ${E.name}.`,2);
+  if(interactive)threadEnding(G.threads.done[0]);
+  else notify(`${T.title} ended without you: ${E.name}.`);
+}
+function threadEnding(d){
+  ui(`<h2>${esc(d.title)}</h2><p class="muted small">Ending: ${esc(d.end)} (day ${d.day})</p><p>${esc(d.text)}</p>${d.extra?`<p class="amber">${esc(d.extra)}</p>`:''}${d.harbor?`<p class="muted">${esc(d.harbor)}</p>`:''}
+    ${d.log.length?`<p class="muted small">Your choices: ${d.log.map(esc).join(', then ')}.</p>`:''}`,[{label:'Back',cls:'quiet',fn:()=>threadsMenu()}]);
+}
+function threadBeat(th){
+  const T=THREADS[th.tid],B=T.beats[th.beat];
+  const btns=B.choices.map(c=>({label:c.label,sub:typeof c.sub==='function'?c.sub():c.sub,off:c.need?!c.need():false,cls:'',fn:()=>{
+    if(c.fx)c.fx(th);th.log.push(c.label);advanceThread(th,c.next,true)}}));
+  ui(`<h2>${esc(T.title)}</h2><p class="muted small">${esc(T.from)}</p><p>${esc(fmt(th,B.text))}</p><p class="muted small">Leave it ${B.timeout||3} days and it resolves without you.</p>`,[...btns,{label:'Back',cls:'quiet',fn:()=>threadsMenu()}]);
+}
+function threadsMenu(msg){
+  const S=G.threads;
+  ui(`<h2>Threads</h2><p class="muted">Stories that find you. Ignore them and they happen anyway.</p>${msgP(msg)}${S.active.length?'':'<p class="muted">Nothing is looking for you yet.</p>'}`,[
+    ...S.active.map(th=>({label:THREADS[th.tid].title,sub:th.pending?'New message. Tap to read.':'Waiting for the next update',cls:th.pending?'primary':'',off:!th.pending,fn:()=>threadBeat(th)})),
+    ...(S.done.length?[{label:'Past stories',sub:`${S.done.length} finished`,cls:'',fn:threadsPast}]:[]),
+    {label:'Back',cls:'quiet',fn:()=>phone()}]);
+}
+function threadsPast(){
+  ui(`<h2>Past stories</h2>`,[...G.threads.done.map(d=>({label:d.title,sub:`${d.end}, day ${d.day}`,cls:'',fn:()=>threadEnding(d)})),{label:'Back',cls:'quiet',fn:()=>threadsMenu()}]);
 }
 
 /* ================= COLLAPSE ================= */
@@ -1700,7 +1873,7 @@ function drawBlock(b,lit,now){
   cx.fillStyle=c[0];cx.fillRect(sx+2,sy+2,w-4,hh-22);
   cx.fillStyle='rgba(255,255,255,.25)';cx.fillRect(sx+2,sy+2,w-4,2);
   cx.fillStyle='rgba(0,0,0,.18)';cx.fillRect(sx+2,sy+hh-22,w-4,2);
-  for(let i=0;i<3;i++){cx.fillStyle=lit?'#ffd88a':'#2c3440';cx.fillRect(sx+22+i*14,sy+hh-16,8,6)}
+  for(let i=0;i<3;i++){cx.fillStyle=lit?'#ffd88a':'#2c3440';cx.fillRect(sx+34+i*9,sy+hh-16,7,6)}
   cx.fillStyle='#2a1c12';cx.fillRect(sx+TS+3,sy+hh-12,10,10);
   const label=b.poi?SIGN[b.kind]:bt?bt.sign:null;
   cx.font='7px Silkscreen, monospace';cx.textAlign='center';
