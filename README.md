@@ -80,3 +80,8 @@ Constants for backgrounds (`BG`), 15 NPCs (`NPCS`, each with `aff` tag weights, 
 3. Add NPC-run competing businesses and NPC agents with goals like the player's, plus an optional bring-your-own-key LLM mode.
 4. Add tests for the confirm flow and for save and load.
 5. Add art and sound assets, plus story-driven missions.
+
+
+## Project layout
+
+`index.html` (page skeleton and script list), `css/style.css`, `js/` (core, world, data, state, sim, systems, story, ui, menus, render, save, main.js), `tests/smoke.html` (open through a local server), `tools/bump_version.py`. See `CLAUDE.md` for the rules for adding code.

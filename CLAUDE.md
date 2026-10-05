@@ -1,13 +1,30 @@
-# Marrow Bay (single file: `index.html`)
+# Marrow Bay (`index.html` + `css/` + `js/`)
 
-Mobile-first Canvas sandbox: a tidal city where NPCs react to the player's background, tags and actions. Vanilla JS in one IIFE, saves to localStorage `marrowbay_v3`, `migrate()` fills new fields on old saves. Repo `BiggaThanLife/marrow-bay`, Pages from root: https://biggathanlife.github.io/marrow-bay/
+Mobile-first Canvas sandbox: a tidal city where NPCs react to the player's background, tags and actions. Vanilla JS, no build step, saves to localStorage `marrowbay_v3`, `migrate()` fills new fields on old saves. Repo `BiggaThanLife/marrow-bay`, Pages from root: https://biggathanlife.github.io/marrow-bay/
+
+## Code layout (since the restructure)
+`index.html` holds only the page skeleton and an ordered list of `<script src="js/...">` tags. Styles are in `css/style.css`. Scripts are plain (non-module) scripts sharing one global scope, so a top-level `const`/`let`/`function` in any file is visible to every later file and at call time to all files. **Load order matters only for code that runs at load time** (e.g. `NPCS.forEach(...)`, `RES.forEach(...)`); everything else only runs when called.
+- `js/core` util helpers · `js/world` tile map, districts, pathfinding · `js/data` pure data tables (places, backgrounds, goods, NPCs, events, projects, appearance, event templates)
+- `js/state` the `G` object, clock, tags/attitude · `js/sim` simulation (time, hourly, NPC movement/needs, housing, business, events, crime, rumors, collapse)
+- `js/systems` city meters/factions/facts and FLACK · `js/story` HARBOR voice, intro, threads (helpers, data, engine)
+- `js/ui` HUD/sheet, phone, bag, build, talk, travel, customize, tutorial, input · `js/menus` building/POI menus (`MENUS[id]`)
+- `js/render` palette, tiles, structures, people/vehicles, world draw · `js/save` save + `migrate()` · `js/main.js` tick, frame loop, startup (must stay last)
+- To add a file: create it under the right folder (start with `"use strict";`), add its `<script>` tag in `index.html` at the right point in the order, run `python tools/bump_version.py`.
+- Before every push: run `python tools/bump_version.py` (cache-busting `?v=N` on every file so players never get a mix of old and new files).
+- Data tables go in `js/data`, rules in `js/sim` or `js/systems`, drawing only in `js/render`. Do not put new gameplay code into `index.html`.
+
+## Testing
+- Start a server in this folder: `python -m http.server 8765`, open `http://localhost:8765/tests/smoke.html`. It loads the game in an iframe, plays a seeded 30 days, walks NPCs across a schedule change, opens every menu and building, draws every vehicle, saves and migrates an old save, then compares a summary with `tests/baseline.json`. It must say "No errors."
+- If you change behavior ON PURPOSE (new field, new menu text length, balance), the baseline will differ: check the diff makes sense, then update `tests/baseline.json` from the result shown on the page. A refactor must leave the baseline untouched.
+- Scripts in the test have access to every global through `win.eval`, so no code needs a test hook inside the game.
+- The preview browser does not run animation frames, so call `tick(dt)` and `drawWorld(now)` manually.
 
 ## Working rules
 - New save fields need defaults in BOTH `start()` and `migrate()`.
 - UI copy: sentence case, plain, no jargon. Destructive/costly actions use `ask(title,text,label,fn,back)`.
 - Menus close with a Close button at the bottom plus the sticky x (`ui(html,btns,isModal,dismiss)`).
 - Commit trailer: `Co-Authored-By: Claude <model> <noreply@anthropic.com>` (use the model that did the work).
-- Testing: `python -m http.server 8765` in this folder, copy `index.html` to `test.html` with `window.__t={...}` injected after the final `title();` line. The preview browser does not run rAF, so call `tick(dt)`/`drawWorld(now)` manually. Delete `test.html` before committing.
+- Testing: see the Testing section above.
 - Thread engine: `THREADS[id]={title,from,hook,start?,beats,endings}`; beats `{wait,ignore,text,choices:[{label,sub,need,fx,next}]}`; `next`/`ignore` may be `'END:key'`. Endings `{name,text,fx,harbor}`.
 
 ## Design plan: story mode (KEEP THIS SECTION until every item is checked off)
@@ -72,10 +89,10 @@ Decisions (user, final): run length is ENDLESS (no forced end; epilogues are mil
 - Do NOT add indexes/A*/navmesh until the code is modular and population actually grows.
 
 ### H. Code structure plan (step 0 of the checklist)
-Goal: no single file that has to be reworked. Native ES modules, **no build step** (GitHub Pages serves them directly; `index.html` stays the entry point). See the checklist item 0 for status.
+Goal: no single file that has to be reworked. Plain scripts in folders, **no build step** (GitHub Pages serves them directly; `index.html` stays the entry point). See the checklist item 0 for status.
 
 ### F. Build order / checklist (tick `[x]` when done and pushed)
-- [ ] 0. Restructure into folders (data/, world/, sim/, systems/, ui/, render/, save/) with smoke test before and after; agree layout first
+- [x] 0. Restructure into folders (done: 62 script files under js/, css/style.css, tests/smoke.html matches the pre-split baseline exactly). Later optional step: convert files to ES modules one folder at a time
 - [x] Bike/scooter ride animation fix (seated rider, flips with direction, wheels spin)
 - [x] 1. Foundation: `G.meters` (6 district meters), `G.fac` (faction rep), `G.facts`, `G.flack` coverage, NPC `fac`, `cityInit()` defaults (start + migrate), `cityDaily()`, helpers `meterAdd/facAdd/setFact/fact/flackAdd/flackBand`; FLACK band slows heat decay; phone City tab
 - [x] 2. FLACK made visible: `FLACK_SITES` camera poles at intersections (count scales with coverage), `flackSeen()` extra heat when a camera sees a crime (pickpocket), fence price drops by band, phone FLACK tab (your file, Talk to HARBOR x7 escalating lines, Submit a tip, Paint over a lens), scarf/glasses at the pawn shop, `redact()` HARBOR lines at bands 2-3. State: `G.stance`, `G.blind`, `G.fx.mask`. (Foundry jammers come with item 9.)

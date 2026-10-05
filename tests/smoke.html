@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay smoke test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Marrow Bay smoke test</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script src="smoke.js"></script>
+<script>
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow;
+  const api = win.eval(`({get G(){return G},NPCS,start,closeMenu,day,advance,tick,phone,cityMenu,flackMenu,bag,town,threadsMenu,POIS,openPOI,setCam:(x,y)=>{camX=x;camY=y},drawWorld,save,setG:v=>{G=v},migrate,title})`);
+  const res = runSmoke(api, win);
+  let base = null;
+  try { base = await fetch('baseline.json').then(r => r.json()); } catch (e) {}
+  const same = base && JSON.stringify(base.snap) === JSON.stringify(res.snap);
+  const v = document.getElementById('verdict');
+  v.className = res.ok && same ? 'ok' : 'bad';
+  v.textContent = (res.ok ? 'No errors. ' : 'ERRORS. ') + (base ? (same ? 'Matches baseline.' : 'DIFFERS from baseline.') : 'No baseline.');
+  document.getElementById('out').textContent = JSON.stringify(res, null, 1) + (same ? '' : '\n\nBASELINE\n' + JSON.stringify(base && base.snap, null, 1));
+  window.__done = { ok: res.ok, same, errors: res.errors };
+});
+</script>
