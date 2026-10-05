@@ -22,6 +22,7 @@ function cityInit(){
   G.blind=G.blind||{};G.fx=G.fx||{};
   if(G.facts.mayor===undefined)G.facts.mayor='voss';
   G.council=G.council||{cur:null,hist:[],last:0,vetoDay:-99};
+  if(!G.mkt)marketInit();
   G.arc=G.arc||null;G.arcsDone=G.arcsDone||[];G.arcLast=G.arcLast||0;
 }
 const meterAdd=(d,n)=>{if(G.meters[d]!=null)G.meters[d]=clamp(G.meters[d]+n,0,100)};
@@ -41,6 +42,7 @@ function cityDaily(){
   if(flackBand()>=2){meterAdd('Grid',1);meterAdd('Neon Mile',-1)}
   if(G.flack<30&&Math.random()<.2)flackAdd(1);
   dockDaily();
+  marketDaily();
   councilDaily();
   arcsDaily();
   if(G.arc&&G.arc.waitThread)arcThread(G.arc.waitThread);

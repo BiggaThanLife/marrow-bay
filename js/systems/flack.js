@@ -46,6 +46,8 @@ function flackFile(){
   if(G.debt>0||G.arrears>0)l.push('Delinquent accounts.');
   if(G.stance.sab>0)l.push(`${G.stance.sab} reports of damaged camera lenses. Paint colour: "enthusiastic."`);
   if(G.stance.coop>0)l.push('Cooperating witness. Useful. Not liked.');
+  if((G.mkt.hold.flack||0)>0)l.push('Shareholder in FLACK Systems. Conflict of interest noted by nobody.');
+  if(fact('flack_contract_player'))l.push('Registered FLACK installer. Your neighbors have noticed the ladders.');
   if(G.fx.mask)l.push('Face covered in most recent frames. Logged as "unidentified, stylish."');
   if(b>=2)l.push('Tags on file: '+tagsNow().join(', ')+'.');
   if(!l.length)l.push(b===0?'A few blurry frames of you buying lunch.':'Nothing yet. HARBOR says this is "a bit suspicious."');
