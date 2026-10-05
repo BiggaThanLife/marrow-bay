@@ -681,7 +681,7 @@ function title(){
   const saved=loadSave();
   ui(`<h1>Marrow Bay</h1><p>A tidal city of six districts, from the Greenbelt farms to the Neon Mile and the Foundry. Work, build a business, buy property, get wheels, or cut corners.</p>
   <p class="muted">Nobody is scripted. People react to who you are, what you own, and what you do.</p>`,
-  [...(saved?[{label:'Continue',sub:`Day ${Math.floor(saved.t/1440)+1}, ${BG[saved.bg].n}`,fn:()=>{G=saved;migrate();G.p.path=[];G.p.onArrive=null;initNPCs();recomputeMods();hud();worldPanel()}}]:[]),
+  [...(saved?[{label:'Continue',sub:`Day ${Math.floor(saved.t/1440)+1}, ${BG[saved.bg].n}`,fn:()=>{G=saved;migrate();G.p.path=[];G.p.onArrive=null;initNPCs();recomputeMods();hud();worldPanel();if(G.flags.customDone===false){draft=null;G.flags.onboarded?customize(null,true):customize(G.bg)}}}]:[]),
    {label:'New game',cls:saved?'':'primary',fn:()=>saved?ask('Start a new game?','This replaces your saved game once you begin.','Start over',chooseBg,title):chooseBg()}],true,false);
 }
 function chooseBg(){
@@ -694,7 +694,7 @@ function start(k){
      rep:{Greenbelt:0,Highline:0,Grid:0,Dockside:0,'Neon Mile':0,'Foundry Row':0,...b.rep},
      inv:{crops:0,meals:0,fish:0,smoked:0,scrap:0,trinkets:0,seeds:0,loot:0,...b.inv},
      home:b.home,owned:{},debt:0,arrears:0,loanDay:0,loanTerm:10,structs:[],biz:[],pool:[],plots:FARM_TILES.map(([x,y])=>({x,y,s:0,d:0})),
-     gifts:0,flags:{},ev:null,npcs:{},rumors:[],projects:PROJECTS.map(p=>({id:p.id,have:{},done:false})),fx:{},
+     gifts:0,flags:{customDone:false},ev:null,npcs:{},rumors:[],projects:PROJECTS.map(p=>({id:p.id,have:{},done:false})),fx:{},
      fishStock:70,flats:70,demand:0,heat:0,mission:null,lastBills:0,news:[],newsSeq:0,newsRead:0,met:{},evs:[],queue:[],gps:null,
      name:'Stranger',look:{skin:1,hair:0,style:0,outfit:'blue',hat:'none'},wardrobe:{outfits:{blue:1},hats:{none:1}},quirk:null,
      veh:{owned:{},stolen:{},fuel:{},active:'none'},
@@ -758,23 +758,27 @@ function drawPlayer(c,px,py,l,sw,headOnly,t){
   c.fillStyle='#4fd1b5';c.fillRect(px-1,py-18+(t||0),2,3);
 }
 let draft=null;
-function customize(k){
-  if(!draft)draft={name:'',skin:1,hair:0,style:0,outfit:'blue',quirk:'night-owl'};
-  const d=draft,q=QUIRKS[d.quirk],starts=OUTFITS.filter(o=>o.start);
-  const look={skin:d.skin,hair:d.hair,style:d.style,outfit:d.outfit,hat:'none'};
+function customize(k,existing){
+  const starts=OUTFITS.filter(o=>o.start);
+  if(!draft)draft={name:existing&&G.name!=='Stranger'?G.name:'',skin:G.look.skin,hair:G.look.hair,style:G.look.style,outfit:starts.some(o=>o.id===G.look.outfit)?G.look.outfit:'blue',quirk:G.quirk||'night-owl'};
+  const d=draft,q=QUIRKS[d.quirk];
+  const look={skin:d.skin,hair:d.hair,style:d.style,outfit:d.outfit,hat:G.look.hat||'none'};
   const keep=()=>{const e=$('#pname');if(e)d.name=e.value.slice(0,12)};
-  const cyc=(key,len)=>()=>{keep();d[key]=(d[key]+1)%len;customize(k)};
-  ui(`<h2>Who are you, exactly?</h2><p class="muted">HARBOR requires a name for its records. It will not judge the name. It may judge the person.</p>
+  const cyc=(key,len)=>()=>{keep();d[key]=(d[key]+1)%len;customize(k,existing)};
+  ui(`<h2>${existing?'HARBOR has updated its records':'Who are you, exactly?'}</h2><p class="muted">${existing?'Marrow Bay now keeps a file on your name, looks and quirks, and yours is blank. This is a one-time form. HARBOR apologizes for the paperwork, but not very much.':'HARBOR requires a name for its records. It will not judge the name. It may judge the person.'}</p>
     <label class="small muted" for="pname">Name</label><input id="pname" class="txt" maxlength="12" autocomplete="off" placeholder="Stranger" value="${esc(d.name)}">
     <div class="look"><canvas id="pv" width="20" height="24"></canvas><div class="small muted">${esc(q.n)}: ${esc(q.d)}</div></div>`,
   [{label:`Skin: ${SKINN[d.skin]}`,cls:'',fn:cyc('skin',SKIN.length)},
    {label:`Hair color: ${HAIRN[d.hair]}`,cls:'',fn:cyc('hair',HAIR.length)},
    {label:`Hair style: ${STYLEN[d.style]}`,cls:'',fn:cyc('style',STYLEN.length)},
-   {label:`Outfit: ${outfitOf(d.outfit).n}`,sub:'Other outfits are sold at Hand-Me-Ups.',cls:'',fn:()=>{keep();d.outfit=starts[(starts.findIndex(o=>o.id===d.outfit)+1)%starts.length].id;customize(k)}},
-   {label:`Quirk: ${q.n}`,sub:q.d,cls:'',fn:()=>{keep();const ids=Object.keys(QUIRKS);d.quirk=ids[(ids.indexOf(d.quirk)+1)%ids.length];customize(k)}},
+   {label:`Outfit: ${outfitOf(d.outfit).n}`,sub:'Other outfits are sold at Hand-Me-Ups.',cls:'',fn:()=>{keep();d.outfit=starts[(starts.findIndex(o=>o.id===d.outfit)+1)%starts.length].id;customize(k,existing)}},
+   {label:`Quirk: ${q.n}`,sub:q.d,cls:'',fn:()=>{keep();const ids=Object.keys(QUIRKS);d.quirk=ids[(ids.indexOf(d.quirk)+1)%ids.length];customize(k,existing)}},
    {label:'This is me',cls:'primary',fn:()=>{
-     keep();G.name=(d.name||'').trim()||'Stranger';G.look=look;G.quirk=d.quirk;G.wardrobe={outfits:{[d.outfit]:1},hats:{none:1}};
-     draft=null;save();intro(0,k)}}],true,false);
+     keep();G.name=(d.name||'').trim()||'Stranger';G.look=look;G.quirk=d.quirk;
+     if(!existing||!G.wardrobe)G.wardrobe={outfits:{},hats:{none:1}};G.wardrobe.outfits[d.outfit]=1;
+     G.flags.customDone=true;draft=null;save();
+     if(existing){closeMenu();notify('Your file is complete. HARBOR is almost proud.')}else intro(0,k)}},
+   ...(existing?[{label:'Keep the default',sub:'Stay as Stranger, no quirk.',cls:'quiet',fn:()=>{G.flags.customDone=true;draft=null;save();closeMenu()}}]:[])],true,false);
   const c=$('#pv');if(c)drawPlayer(c.getContext('2d'),10,21,look,0,false,0);
 }
 function wardrobeMenu(back,msg){
@@ -1392,6 +1396,7 @@ function quip(key){
 }
 const timeStr=()=>{const h=hourOf(),m=Math.floor(G.t%60);return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'am':'pm'}`};
 function migrate(){
+  if(!G.look){G.flags=G.flags||{};G.flags.customDone=false}
   G.name=G.name||'Stranger';G.quirk=G.quirk||null;
   G.look=G.look||{skin:1,hair:0,style:0,outfit:'blue',hat:'none'};
   G.wardrobe=G.wardrobe||{outfits:{blue:1},hats:{none:1}};
@@ -1753,10 +1758,12 @@ function person(x,y,col,isP,moving,now,headOnly){
 function drawVeh(k,x,y,now,mv){
   const px=Math.round(x*TS+8-camX),py=Math.round(y*TS+14-camY),sp=mv?Math.floor(now/90)%2:0;
   if(k==='bike'){
-    cx.strokeStyle='#1c1c1c';cx.lineWidth=1;cx.beginPath();cx.arc(px-5,py-2,3,0,7);cx.stroke();cx.beginPath();cx.arc(px+5,py-2,3,0,7);cx.stroke();
-    cx.fillStyle='#d94a3a';cx.fillRect(px-5,py-5,10,1);cx.fillRect(px+3,py-8,1,4);
+    cx.lineWidth=2;cx.strokeStyle='#f2f2f2';cx.beginPath();cx.arc(px-5,py-2,3,0,7);cx.stroke();cx.beginPath();cx.arc(px+5,py-2,3,0,7);cx.stroke();
+    cx.lineWidth=1;cx.strokeStyle='#1c1c1c';cx.beginPath();cx.arc(px-5,py-2,3.6,0,7);cx.stroke();cx.beginPath();cx.arc(px+5,py-2,3.6,0,7);cx.stroke();
+    cx.fillStyle='#e0402f';cx.fillRect(px-5,py-6,10,2);cx.fillRect(px+3,py-9,2,5);cx.fillRect(px-6,py-8,3,1);
   }else if(k==='scooter'){
     cx.fillStyle='#e0b83a';cx.fillRect(px-6,py-5,12,3);cx.fillRect(px+4,py-9,2,5);
+    cx.fillStyle='#f2f2f2';cx.fillRect(px-7,py-3,5,5);cx.fillRect(px+2,py-3,5,5);
     cx.fillStyle='#1c1c1c';cx.fillRect(px-6,py-2,3,3);cx.fillRect(px+3,py-2,3,3);
   }else{
     const c=k==='coupe'?['#d04030','#a02a20']:['#3a7ad0','#2a5aa0'];
