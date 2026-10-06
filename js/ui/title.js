@@ -6,8 +6,14 @@ function title(){
   const saved=loadSave();
   ui(`<h1>Marrow Bay</h1><p>A tidal city of six districts, from the Greenbelt farms to the Neon Mile and the Foundry. Work, build a business, buy property, get wheels, or cut corners.</p>
   <p class="muted">Nobody is scripted. People react to who you are, what you own, and what you do.</p>`,
-  [...(saved?[{label:'Continue',sub:`Day ${Math.floor(saved.t/1440)+1}, ${BG[saved.bg].n}`,fn:()=>{buildWorld(saved.seed||0);G=saved;migrate();G.p.path=[];G.p.onArrive=null;initNPCs();recomputeMods();hud();worldPanel();if(G.flags.customDone===false){draft=null;G.flags.onboarded?customize(null,true):customize(G.bg)}}}]:[]),
+  [...(saved?[{label:'Continue',sub:`Day ${Math.floor(saved.t/1440)+1}, ${BG[saved.bg].n}`,fn:()=>continueSave(saved)}]:[]),
+   {label:'Settings',sub:'Sound, import and export, full screen',cls:'quiet',fn:()=>settingsMenu()},
    {label:'New game',cls:saved?'':'primary',fn:()=>saved?ask('Start a new game?','This replaces your saved game once you begin.','Start over',chooseBg,title):chooseBg()}],true,false);
+}
+function continueSave(saved){
+  placing=null;dest=null;alertQ=[];popClear();gpsPath=[];
+  buildWorld(saved.seed||0);G=saved;migrate();G.p.path=[];G.p.onArrive=null;initNPCs();recomputeMods();hud();worldPanel();
+  if(G.flags.customDone===false){draft=null;G.flags.onboarded?customize(null,true):customize(G.bg)}
 }
 function chooseBg(){
   ui('<h2>Who are you?</h2><p class="muted">Your background decides where you start, how people see you, and what you are good at.</p>',

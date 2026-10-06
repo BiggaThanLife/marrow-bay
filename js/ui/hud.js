@@ -17,6 +17,7 @@ function hud(){
   const dayTime=h>=6&&h<19;
   if(el.dataset.ico!==(dayTime?'s':'m')){el.dataset.ico=dayTime?'s':'m';
     $('#h-ico').innerHTML=dayTime?'<svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="3" fill="#f2b84b"/><path d="M6 0v2M6 10v2M0 6h2M10 6h2M2 2l1.4 1.4M8.6 8.6L10 10M2 10l1.4-1.4M8.6 3.4L10 2" stroke="#f2b84b" stroke-width="1.2"/></svg>':'<svg width="11" height="11" viewBox="0 0 12 12"><path d="M9.5 8A5 5 0 1 1 4 2.5 4 4 0 0 0 9.5 8z" fill="#c9d6ff"/></svg>'}
+  sfxCashWatch();
   $('#h-cash').textContent=money(G.cash);
   $('#h-dist').textContent=district(Math.round(G.p.x),Math.round(G.p.y));
   $('#h-tide').textContent=tideName();
@@ -44,6 +45,7 @@ function ui(html,btns=[],isModal=true,dismiss=true){
     el.innerHTML='<span>'+esc(b.label)+'</span>'+(b.sub?'<small>'+esc(b.sub)+'</small>':'');
     el.disabled=!!b.off;el.addEventListener('click',b.fn);a.appendChild(el);
   });
+  if(sheet.hidden)sfx('open');
   sheet.hidden=false;sheet.scrollTop=0;
 }
 function worldPanel(){ui('',[],false);if(G)hud()}

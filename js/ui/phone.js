@@ -14,6 +14,7 @@ function phone(msg){
     ...(G.companion?[{label:NPC[G.companion].name,sub:'Your companion',cls:'',fn:()=>companionMenu()}]:[]),
     ...(G.arc?[{label:ARCS[G.arc.id].title,sub:ARCS[G.arc.id].phases[G.arc.i].name+'. Tap to act.',cls:'primary',fn:()=>arcMenu()}]:[]),
     {label:'Town board',sub:'Conditions, rumors, projects',cls:'',fn:town},
+    {label:'Settings',sub:'Sound, save and load, full screen, quit',cls:'',fn:()=>settingsMenu()},
     {label:'Citizen onboarding',sub:'Replay the HARBOR orientation',cls:'quiet',fn:()=>tutorial(0,true)},
     leaveBtn]);
 }

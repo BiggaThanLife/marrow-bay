@@ -5,7 +5,7 @@ function popup(title,text,extra){popQ.push({title,text,extra});if(!popOpen)popNe
 function popNext(){
   const p=popQ.shift();
   if(!p){popOpen=false;$('#pop').hidden=true;return}
-  popOpen=true;
+  popOpen=true;sfx('alert');
   $('#pop-t').textContent=p.title;$('#pop-x').textContent=p.text;
   $('#pop-e').textContent=p.extra||'';$('#pop-e').hidden=!p.extra;
   $('#pop').hidden=false;

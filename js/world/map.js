@@ -1,7 +1,8 @@
 "use strict";
 /* Tile map, districts, roads, buildings (POIS), tram stops. */
 /* ================= WORLD ================= */
-const TS=16,VW=176,W=64,H=38;
+const TS=16,W=64,H=38;
+let VW=176;
 let VH=200;
 const T={WATER:0,ROAD:1,BLD:2,GRASS:3,FARM:4,PLAZA:5,DOCK:6,LOT:7,PARK:8};
 const PASSABLE=new Set([1,3,4,5,6,7,8]);

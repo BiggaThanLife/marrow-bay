@@ -5,7 +5,8 @@ const cv=$('#scene'),cx=cv.getContext('2d'),stage=$('#stage');
 let camX=0,camY=0,dest=null,last=performance.now();
 function fitCanvas(){
   const r=stage.getBoundingClientRect();if(!r.width)return;
-  const s=r.width/VW;VH=Math.max(96,Math.round(r.height/s));
+  if(r.width>r.height*1.25){const s=r.height/128;VH=128;VW=Math.min(W*TS,Math.round(r.width/s))}
+  else{VW=176;const s=r.width/VW;VH=Math.max(96,Math.round(r.height/s))}
   if(cv.width!==VW)cv.width=VW;if(cv.height!==VH)cv.height=VH;
 }
 new ResizeObserver(fitCanvas).observe(stage);window.addEventListener('resize',fitCanvas);fitCanvas();
