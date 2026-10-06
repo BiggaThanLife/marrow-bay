@@ -27,13 +27,13 @@ function bizTraffic(b){
 }
 function runBiz(b){
   const t=BT[b.type];if(!t)return;
+  if(b.type!=='rental'&&b.tenants){delete b.tenants;delete b.applicants;delete b.issues;delete b.manager}
   const dist=b.d,rep=G.rep[dist];
   const appeal=bizAppeal(b);
   const r={units:0,rev:0,cost:0,wages:0,theft:0,note:''};
   const wcap=b.workers.reduce((s,w)=>s+(4+w.skill*3)*(w.trait==='quick'?1.3:1),0);
   if(b.type==='rental'){
-    const units=4+2*(b.level-1),occ=clamp(.5+rep/200+.06*b.level,.35,1);
-    r.rev=Math.round(units*8*occ);r.units=units;b.till+=r.rev;
+    rentalDay(b,r);
   }else if(b.type==='farm'){
     const f=dist==='Greenbelt'?1:.5,crops=Math.round((3+wcap)*f*rnd(.8,1.1)*G.mod.yield);
     r.units=crops;r.cost=Math.round(crops*1.5);payOut(b,r.cost);

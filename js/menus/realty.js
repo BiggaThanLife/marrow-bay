@@ -45,6 +45,7 @@ function bizMenu(biz,msg){
       ...Object.entries(BT).filter(([k])=>k!=='farm'||biz.d==='Greenbelt').map(([k,t],i)=>({label:`${t.n}, fit-out ${money(t.fit)}`,sub:t.d,cls:i?'':'primary',off:G.cash<t.fit,fn:()=>ask(`Convert to a ${t.n.toLowerCase()}?`,`The fit-out costs ${money(t.fit)}.`,'Yes, convert',()=>{G.cash-=t.fit;biz.paid=(biz.paid||biz.price)+t.fit;biz.type=k;news(`A new ${t.n.toLowerCase()} opens in ${biz.d}.`,2);advance(120);bizMenu(biz,`Now a ${t.n.toLowerCase()}.`)},()=>bizMenu(biz))})),
       {label:'Sell it back',sub:`Get ${money(biz.price*.7)}`,cls:'quiet',fn:()=>sellBiz(biz)},{label:'Close',cls:'quiet',fn:closeMenu}]);
   }
+  if(biz.type==='rental')ensureRental(biz);
   const t=BT[biz.type],btns=[];
   const L=biz.last;
   if(biz.type==='home'){
@@ -59,14 +60,14 @@ function bizMenu(biz,msg){
     btns.push({label:`Auto-sell crops: ${biz.auto?'On':'Off'}`,sub:biz.auto?'Sells wholesale at $4 each':'Crops pile up for you to collect',cls:'',fn:()=>{biz.auto=!biz.auto;bizMenu(biz)}});
     btns.push({label:'Take stored crops',sub:`${biz.store} waiting`,off:biz.store<=0,cls:'',fn:()=>{G.inv.crops+=biz.store;biz.store=0;bizMenu(biz,'Crops added to your bag.')}});
   }
-  if(biz.type!=='rental')btns.push({label:`Staff (${biz.workers.length}/${1+biz.level})`,sub:'Hire and fire',cls:'',fn:()=>staffMenu(biz)});
-  if(biz.type==='cafe'||biz.type==='bar'||biz.type==='workshop')btns.push({label:`Price: ${MKN[biz.mk]}`,sub:'Low sells more, High sells less',cls:'',fn:()=>{biz.mk=(biz.mk+1)%3;bizMenu(biz)}});
+  if(biz.type==='rental')btns.push(...landlordButtons(biz));else btns.push({label:`Staff (${biz.workers.length}/${1+biz.level})`,sub:'Hire and fire',cls:'',fn:()=>staffMenu(biz)});
+  if(biz.type==='cafe'||biz.type==='bar'||biz.type==='workshop'||biz.type==='rental')btns.push({label:`${biz.type==='rental'?'Rent':'Price'}: ${MKN[biz.mk]}`,sub:biz.type==='rental'?'Low fills flats faster and keeps tenants happy. High pays more.':'Low sells more, High sells less',cls:'',fn:()=>{biz.mk=(biz.mk+1)%3;bizMenu(biz)}});
   if(biz.level<3)btns.push({label:`Upgrade to level ${biz.level+1}`,sub:`${money(700*biz.level)}. More demand and room for staff.`,off:G.cash<700*biz.level,cls:'',fn:()=>ask(`Upgrade to level ${biz.level+1}?`,`It costs ${money(700*biz.level)}.`,'Yes, upgrade',()=>{G.cash-=700*biz.level;biz.paid=(biz.paid||biz.price)+700*biz.level;biz.level++;bizMenu(biz,'Upgraded.')},()=>bizMenu(biz))});
   if(biz.level>1){const back=Math.round(350*(biz.level-1)),over=biz.workers.length>biz.level;btns.push({label:`Downsize to level ${biz.level-1}`,sub:over?`Let staff go first (room for ${biz.level} at level ${biz.level-1})`:`Refund ${money(back)}. Demand and staff room shrink.`,off:over,cls:'quiet',fn:()=>ask(`Downsize to level ${biz.level-1}?`,`You get ${money(back)} back and lose some demand and staff room.`,'Yes, downsize',()=>{G.cash+=back;biz.paid=Math.max(0,(biz.paid||biz.price)-700*(biz.level-1));biz.level--;advance(60);bizMenu(biz,`Downsized. ${money(back)} refunded.`)},()=>bizMenu(biz))});}
   btns.push({label:'Change business type',sub:'Refit this building without selling it. Pay the new fit-out.',cls:'quiet',fn:()=>convertMenu(biz)});
   btns.push({label:'Sell the building',sub:`Get ${money((biz.paid||biz.price)*.7)}`,cls:'quiet',fn:()=>sellBiz(biz)},leaveBtn);
   ui(`<h2>${t.n}, level ${biz.level}</h2><p class="muted">${biz.d}. ${t.d}</p>${msgP(msg)}
-  <div class="kv"><div><span>Till</span><b>${money(biz.till)}</b></div><div><span>Supplies</span><b>${biz.supplies}</b></div><div><span>Staff</span><b>${biz.workers.length}</b></div>
+  <div class="kv"><div><span>Till</span><b>${money(biz.till)}</b></div>${biz.type==='rental'?`<div><span>Tenants</span><b>${biz.tenants.length}/${rentalUnits(biz)}</b></div><div><span>Open problems</span><b>${biz.issues.length}</b></div>`:`<div><span>Supplies</span><b>${biz.supplies}</b></div><div><span>Staff</span><b>${biz.workers.length}</b></div>`}
   ${bizTraffic(biz)?`<div><span>Foot traffic</span><b>${bizTraffic(biz).dem} a day</b></div><div><span>Can serve</span><b>${bizTraffic(biz).cap} a day</b></div>`:''}
   ${L?`<div><span>Last day</span><b>${L.profit>=0?'+':''}${money(L.profit)}</b></div><div><span>Sold</span><b>${L.units}</b></div><div><span>Wages</span><b>${money(L.wages)}</b></div>`:''}</div>${L&&L.theft?`<p class="bad small">Staff skimmed ${money(L.theft)}.</p>`:''}${L&&L.note?`<p class="bad small">${esc(L.note)}</p>`:''}`,btns);
 }

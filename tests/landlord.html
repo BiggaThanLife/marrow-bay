@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay landlord test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Landlord system</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Owns a rental building (manager off, then on), runs 200 days, clicks through every landlord menu and problem, checks state stays sane. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document;
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,bizMenu,tenantsMenu,tenantMenu,applicantsMenu,applicantMenu,issuesMenu,issueMenu,tenantsOverview,landlordButtons,ensureRental,rentalUnits,save,migrate})`);
+  const G = () => api.G, btns = () => [...doc.querySelectorAll('#sheet #actions button')].filter(b => !b.disabled);
+  const flush = () => { api.popClear(); api.alertQ.length = 0; };
+  const sane = tag => { const b = G().biz.find(x => x.type === 'rental'); if (!b) return errs.push(tag + ': no building');
+    if (b.tenants.length > api.rentalUnits(b)) errs.push(tag + ': too many tenants');
+    if (!Number.isFinite(b.till) || !Number.isFinite(G().cash)) errs.push(tag + ': bad cash');
+    b.tenants.forEach(t => { if (!Number.isFinite(t.mood) || !Number.isFinite(t.owed)) errs.push(tag + ': bad tenant ' + t.name) });
+    b.issues.forEach(i => { if (!b.tenants.some(t => t.id === i.t)) errs.push(tag + ': orphan issue') }); };
+  const stats = {};
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush();
+    G().cash = 20000; G().inv.parts = 30; G().energy = 100; G().hunger = 100;
+    G().biz.push({ key: '16,13', d: 'Grid', price: 1500, paid: 1500, type: 'rental', level: 2, supplies: 0, till: 0, workers: [], mk: 1, last: null, store: 0, auto: false });
+    api.ensureRental(G().biz[0]);
+    for (let d = 0; d < 200; d++) {
+      G().energy = 100; G().hunger = 100; G().cash = Math.max(G().cash, 2000);
+      api.advance(1440, false, true); flush(); sane('day ' + d);
+      const b = G().biz[0];
+      if (d === 60) b.manager = true;
+      if (d === 120) b.manager = false;
+      if (d % 5 === 0) {
+        api.bizMenu(b);
+        api.applicantsMenu(b); if (btns().length > 1) { btns()[0].click(); btns()[0].click(); }
+        api.issuesMenu(b); if (btns().length > 1) { btns()[0].click(); const bs = btns().filter(x => !/^Back/.test(x.innerText)); if (bs.length) bs[Math.floor(Math.random() * bs.length)].click(); }
+        api.tenantsMenu(b); if (btns().length > 1) { btns()[0].click(); btns()[0].click(); }
+        flush(); sane('menu day ' + d);
+      }
+    }
+    const b = G().biz[0]; stats.tenants = b.tenants.length; stats.units = api.rentalUnits(b); stats.till = Math.round(b.till); stats.issues = b.issues.length;
+    stats.traits = b.tenants.map(t => t.trait).join(',');
+    api.tenantsOverview(); api.closeMenu();
+    // save and migrate keeps tenants
+    api.save(); const raw = JSON.parse(win.localStorage.getItem('marrowbay_v3')); stats.savedTenants = raw.biz[0].tenants.length;
+    // an old save with a rental and no tenant data gets tenants
+    delete G().biz[0].tenants; delete G().biz[0].applicants; delete G().biz[0].issues; api.migrate(); stats.migrated = G().biz[0].tenants.length;
+    if (!stats.migrated) errs.push('migrate did not create tenants');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 20).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

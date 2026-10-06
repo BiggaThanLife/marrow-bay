@@ -19,6 +19,7 @@ Start a server in this folder (`python -m http.server 8765`) and open:
 - `/tests/smoke.html`: plays a seeded 30 days, walks NPCs across a schedule change, opens every menu and building, draws every vehicle, saves and migrates an old save, compares with `tests/baseline.json`. Must say "No errors." If behavior changes ON PURPOSE the baseline will differ: check the diff makes sense, then update `tests/baseline.json`. A refactor must leave it untouched.
 - `/tests/arcs.html?runs=40`: plays every arc and thread through random and subset strategies and checks the game state after each step. Must say "No errors". The "not reached" list only names endings that need a specific setup (mayor, FLACK-7, mission chain).
 - `/tests/sim.html?games=4&days=365`: a year with an idle bot. Flags runaway loops (pinned meters, empty seas, NPC cash exploding or collapsing, starving NPCs, FLACK maxed). Run it after any economy change.
+- `/tests/landlord.html`: owns an apartment building for 200 days, clicks every tenant, applicant and problem menu, checks save and migrate. Must say "No errors".
 - Tests reach every global through `win.eval`, so nothing needs a hook inside the game. The preview browser does not run animation frames, so call `tick(dt)` and `drawWorld(now)` by hand.
 
 ## Working rules
@@ -38,6 +39,9 @@ Endless sandbox. Arc outcomes change the city permanently and play continues aft
 - **Arc triggering**: arcs with a `hook` start from a story hook. `G.engage[district]` rises when you enter a building there (+1), work a gig (+2) or own a business (+0.5 a day). Once it reaches `hook.need`, an NPC there offers the arc (accept or "not now", asked again after 4 days). Only one arc runs at a time, with a 6-day gap; a second NPC says they will not talk about it until the first concludes. The mayoral election and HARBOR's arc start on their own. An arc you stay out of ends with a HARBOR digest of what changed.
 - **Procedural city**: `buildWorld(seed)` shuffles buildings, lots and parks between the blocks of each district per new game (`G.seed`; seed 0 is the classic layout kept for old saves). Roads, borders, tram stops, the bridge, the plaza and the farm are fixed.
 
+- **Sound and settings**: `js/ui/audio.js` makes small synthesized effects with `sfx(name)` (no audio files; hooked to button taps, menu open, alerts and cash changes) and stores `SET` (mute, volume) in localStorage `marrowbay_settings`. `js/ui/settings.js` is Phone > Settings (also on the title): sound, save, load, export and import a JSON file, full screen and landscape lock, quit to title. In landscape (short wide screens) the toolbar moves to a right column, the sheet becomes a side panel and `fitCanvas()` widens `VW`. `manifest.webmanifest` makes a home-screen install full screen.
+- **Landlord system** (apartment buildings, type `rental`): data on the building (`b.tenants`, `b.applicants`, `b.issues`, `b.manager`). Tenants are generated (name, job, background, hidden trait: tidy, noisy, behind, nosy, handy, secretive). Applicants arrive daily and you choose; a property manager (10% of rent) fills flats and pays routine repairs. Problems (leaks, heating, pests, noise, rent overdue, unwelcome visitors) need decisions, tenant mood drives rent, move-outs and district standing. Files: `js/data/tenants.js`, `js/sim/tenants.js` (`rentalDay`), `js/menus/landlord.js`.
+
 ## Design rules to keep
 - Connect the systems instead of widening them: district state, NPC goals, world effects, visible feedback.
 - Every district meter should influence at least two other systems, and 0 or 100 is never simply good.
@@ -46,4 +50,4 @@ Endless sandbox. Arc outcomes change the city permanently and play continues aft
 - Do not add path caches, indexes or A* until population actually grows.
 
 ## Ideas not built yet
-Tide changing walkable flats tiles (needs a world revision counter for paths), visible rumor bubbles between NPCs, a feedback bus for particles and sound, NPC utility goals and event memory, an effects pipeline with a debug log, seedable RNG for the simulation, moving district borders in the procedural map, converting scripts to ES modules one folder at a time, more arcs and arc sequels.
+Tenants walking on the map and joining threads, buying out NPC-run shops, business expansion tiers, a new area (outer island or suburb), Tide changing walkable flats tiles (needs a world revision counter for paths), visible rumor bubbles between NPCs, a feedback bus for particles and sound, NPC utility goals and event memory, an effects pipeline with a debug log, seedable RNG for the simulation, moving district borders in the procedural map, converting scripts to ES modules one folder at a time, more arcs and arc sequels.
