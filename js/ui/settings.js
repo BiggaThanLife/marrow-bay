@@ -49,6 +49,16 @@ function importSave(back){
   });
   inp.click();
 }
+/* Moves the player to the closest open road tile, for anyone boxed in by their own buildings or stuck after a load. */
+function unstick(){
+  const p=G.p;let best=null,bd=1e9;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(map[y][x]!==T.ROAD||structAt(x,y)||!pass(x,y))continue;
+    const d=Math.abs(x-p.x)+Math.abs(y-p.y);if(d<bd){bd=d;best=[x,y]}
+  }
+  if(!best)return false;
+  p.x=best[0];p.y=best[1];p.path=[];p.onArrive=null;dest=null;gpsPath=[];save();return true;
+}
 function settingsMenu(msg){
   const inGame=!!G,full=isFull(),saved=loadSave();
   const back=m=>settingsMenu(m),leave=()=>inGame?phone():title();
@@ -63,6 +73,7 @@ function settingsMenu(msg){
     {label:'Import save',sub:'Load a backup file',cls:'',fn:()=>importSave(back)},
     {label:full?'Leave full screen':'Full screen',sub:'Hides the browser bar so you do not tap it by accident',cls:'',fn:async()=>{if(full){leaveFull();return back('Full screen is off.')}back(await goFull(false))}},
     ...(full?[]:[{label:'Full screen, landscape',sub:'Turns the game sideways and hides the browser bar',cls:'',fn:async()=>back(await goFull(true))}]),
+    ...(inGame?[{label:'Stuck? Move me to the street',sub:'Puts you on the nearest open road',cls:'',fn:()=>back(unstick()?'You are back on the street.':'No open road found.')}]:[]),
     ...(inGame?[{label:'Quit to title',sub:'Saves first',cls:'warn',fn:()=>ask('Quit to title?','Your game is saved first. You can continue from the title screen.','Quit',()=>{save();title()},()=>back())}]:[]),
     {label:'Back',cls:'quiet',fn:leave}]);
 }
