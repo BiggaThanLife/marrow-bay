@@ -1,7 +1,7 @@
 "use strict";
 /* Market, diner, dock, estate, workshop, bar, club, bank, clinic. */
 MENUS.market=(poi,n,msg)=>{
-  const f=buyF(n),seed=Math.round(4*f);
+  const f=buyF(n),seed=Math.round(4*f*shopMul('market',.75));
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the counter.</p>${msgP(msg)}`,[
     {label:'Sell goods',fn:()=>sellScreen(sellF(n),poi.name,()=>MENUS.market(poi,n))},
     {label:'Buy seed packets',sub:`${money(seed)} each. Choose how many.`,cls:'',off:G.cash<seed,fn:()=>qtyMenu({title:'Seed packets',intro:'Plant them in a plot or Greenhouse.',price:seed,max:99,mode:'buy',onConfirm:q=>{G.cash-=Math.round(seed*q);G.inv.seeds+=q;advance(5);return `You bought ${q} seed packet${q>1?'s':''}.`},back:m=>MENUS.market(poi,n,m)})},
@@ -10,15 +10,15 @@ MENUS.market=(poi,n,msg)=>{
       advance(10);
       if(Math.random()<c){addRumor('thief',['mina','reyes']);news('Theft reported at the Market Hall.',2);npcS(NPC.mina).m-=20;G.rep.Grid=clamp(G.rep.Grid-10,-100,100);G.heat=Math.min(5,G.heat+2);MENUS.market(poi,n,'Caught! Mina shouts for the constable. Run.')}
       else{G.inv.crops+=2;MENUS.market(poi,n,'You slip two crops into your coat and walk off.')}}},
-    leaveBtn]);
+    ...shopBtn(poi,n),leaveBtn]);
 };
 MENUS.diner=(poi,n,msg)=>{
-  const price=Math.round(mealPrice()*buyF(n));
+  const price=Math.round(mealPrice()*buyF(n)*shopMul('diner',.7));
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} is behind the grill.</p>${msgP(msg)}`,[
     {label:'Order a meal',sub:`${money(price)}. Restores 45 fullness.`,off:G.cash<price,fn:()=>{G.cash-=price;G.hunger=clamp(G.hunger+45,0,100);G.demand+=1;advance(30);MENUS.diner(poi,n,'You eat a hot meal.')}},
     {label:'Takeaway meals',sub:`${money(price)} each. Choose how many for your bag.`,off:G.cash<price,cls:'',fn:()=>qtyMenu({title:'Takeaway meals',intro:'Packed in paper. Eat them later.',price,max:30,mode:'buy',onConfirm:q=>{G.cash-=Math.round(price*q);G.inv.meals+=q;G.demand+=q*.5;advance(10);return `You take ${q} meal${q>1?'s':''} away.`},back:m=>MENUS.diner(poi,n,m)})},
     {label:'Work a kitchen shift',sub:`4 hours, about ${money(22*payF(n))}`,cls:'',fn:()=>MENUS.diner(poi,n,gig(n,{hrs:4,base:22,rep:'Grid',label:'the grill'}))},
-    leaveBtn]);
+    ...shopBtn(poi,n),leaveBtn]);
 };
 MENUS.estate=(poi,n,msg)=>{
   if(has('known-thief'))return ui(`<h2>${esc(poi.name)}</h2><p>The steward turns you away. Word of the theft reached the terraces.</p>`,[leaveBtn]);
@@ -39,9 +39,9 @@ MENUS.workshop=(poi,n,msg)=>{
 MENUS.gull=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} polishes a glass.</p>${msgP(msg)}`,[
     {label:'Listen for rumors',sub:'1 hour, free',fn:()=>{advance(60);MENUS.gull(poi,n,pick(worldLines()))}},
-    {label:'Buy a round for the bar',sub:'$15. Dockside will remember.',cls:'',off:G.cash<15,fn:()=>{G.cash-=15;G.rep.Dockside=clamp(G.rep.Dockside+4,-100,100);npcS(n).m+=5;advance(60);MENUS.gull(poi,n,'Glasses are raised. Dockside thinks better of you.')}},
+    {label:'Buy a round for the bar',sub:shopOwned('gull')?'Free, it is your bar. Dockside will remember.':'$15. Dockside will remember.',cls:'',off:!shopOwned('gull')&&G.cash<15,fn:()=>{if(!shopOwned('gull'))G.cash-=15;G.rep.Dockside=clamp(G.rep.Dockside+(shopOwned('gull')?6:4),-100,100);npcS(n).m+=5;advance(60);MENUS.gull(poi,n,'Glasses are raised. Dockside thinks better of you.')}},
     {label:'Union table',sub:'Dues, leaflets, and who is short-weighing whom',cls:'',fn:()=>unionTable(poi,n)},
-    leaveBtn]);
+    ...shopBtn(poi,n),leaveBtn]);
 };
 MENUS.club=(poi,n,msg)=>{
   const ok=(G.rep.Highline>=-10||has('educated')||has('smooth'))&&!has('known-thief');

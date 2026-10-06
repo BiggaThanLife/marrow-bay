@@ -26,7 +26,7 @@ function newDay(d){
   if(d%30===0)chargeBills();
   G.plots.forEach(p=>{if(p.s===1){p.d--;if(p.d<=0)p.s=2}});
   G.structs.forEach(s=>{if(s.type==='planter'&&s.s===1){s.d--;if(s.d<=0)s.s=2}});
-  G.biz.forEach(runBiz);
+  G.biz.forEach(runBiz);shopsDaily();
   makePool();
   if(G.debt>0&&day()-G.loanDay>(G.loanTerm||10)&&!G.flags.defRum){G.flags.defRum=1;addRumor('defaulter',['cordelia'])}
   G.rumors.forEach(r=>r.str-=4);G.rumors=G.rumors.filter(r=>r.str>=12);

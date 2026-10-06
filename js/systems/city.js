@@ -30,6 +30,7 @@ function cityInit(){
   G.favs=G.favs||[];if(G.veh)G.veh.paint=G.veh.paint||{};
   G.turf=G.turf||{door:'vex',pawn:'vex',casino:'vex',loft:'vex'};
   G.biz.forEach(b=>{if(b.type==='rental')ensureRental(b)});
+  G.shops=G.shops||{};
   G.arc=G.arc||null;G.arcsDone=G.arcsDone||[];G.arcLast=G.arcLast||0;
 }
 const meterAdd=(d,n)=>{if(G.meters[d]!=null)G.meters[d]=clamp(G.meters[d]+n,0,100)};

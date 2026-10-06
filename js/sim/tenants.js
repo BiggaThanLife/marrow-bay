@@ -15,7 +15,7 @@ function ensureRental(b){
   b.applicants=b.applicants||[];b.issues=b.issues||[];b.manager=!!b.manager;
   while(b.tenants.length>units){const t=b.tenants.pop();b.issues=b.issues.filter(i=>i.t!==t.id)}
 }
-const tenantRent=(b,t)=>Math.round(8*t.inc*MK[b.mk]*(1+.06*(b.level-1)));
+const tenantRent=(b,t)=>Math.round(8*t.inc*MK[b.mk]*(1+.06*(b.level-1))*addMod(b,'rent'));
 const moodWord=m=>m>=65?'Happy':m>=45?'Fine':m>=25?'Unhappy':'About to leave';
 const tenantOf=(b,id)=>b.tenants.find(t=>t.id===id);
 function addIssue(b,t,k){b.issues.push({k,t:t.id,d:day()});notify(`${t.name} in your ${b.d} flats: ${T_ISSUES[k].n.toLowerCase()}.`)}
@@ -43,12 +43,12 @@ function rentalDay(b,r){
     mine.forEach(i=>{if(i.k!=='late'&&i.k!=='secret')t.mood-=3});
     if(!mine.length)t.mood=Math.min(70,t.mood+1);
     if(noisy&&!mine.some(i=>i.k==='noise'))t.mood-=1;
-    t.mood+=MK[b.mk]>1?-.5:MK[b.mk]<1?.5:0;
+    t.mood+=(MK[b.mk]>1?-.5:MK[b.mk]<1?.5:0)+addSum(b,'mood');
     if(t.trait==='behind'&&Math.random()<.22)t.owed+=rent;
     else if(t.mood<30&&Math.random()<.5){/* withholds rent today */}
     else rev+=rent;
     if(b.issues.length<units){
-      if(Math.random()<.025*(t.trait==='tidy'?.4:1))addIssue(b,t,pick(['leak','heat','pests']));
+      if(Math.random()<.025*(t.trait==='tidy'?.4:1)*addMod(b,'issue'))addIssue(b,t,pick(['leak','heat','pests']));
       else if(t.trait==='noisy'&&Math.random()<.06)addIssue(b,t,'noise');
       else if(t.trait==='secretive'&&Math.random()<.025)addIssue(b,t,'secret');
     }

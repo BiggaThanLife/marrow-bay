@@ -23,6 +23,7 @@ function monthlyBills(){
   Object.keys(G.owned).forEach(id=>{if(G.home!==id)lines.push([POIS[id].name+' upkeep',Math.round(RENT[id]*.3)])});
   G.structs.forEach(s=>{if(s.type==='house'&&G.home!=='S:'+s.id)lines.push(['House upkeep',35])});
   Object.keys(G.veh.owned).forEach(k=>{if(G.veh.owned[k]&&!G.veh.stolen[k]&&VEH[k].ins)lines.push([VEH[k].n+' insurance',VEH[k].ins])});
+  Object.keys(G.shops||{}).forEach(id=>lines.push([POIS[id].name+' tax',Math.round(SHOP_DEFS[id].price*.008)]));
   G.biz.forEach(b=>{if(G.home==='B:'+b.key)return;lines.push(['Property tax',Math.round(b.price*.01)]);if(b.type&&b.type!=='home')lines.push(['Business license',20])});
   return lines;
 }

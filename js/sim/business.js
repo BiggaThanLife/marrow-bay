@@ -23,7 +23,7 @@ function bizTraffic(b){
   const t=BT[b.type];
   if(!t||b.type==='home'||b.type==='rental'||b.type==='farm')return null;
   const wcap=b.workers.reduce((s,w)=>s+(4+w.skill*3)*(w.trait==='quick'?1.3:1),0);
-  return{dem:Math.round(TR[b.d]*t.per*bizAppeal(b)*[1.3,1,.65][b.mk]),cap:Math.round((3+wcap)*(t.cap/7))};
+  return{dem:Math.round(TR[b.d]*t.per*bizAppeal(b)*[1.3,1,.65][b.mk]*addMod(b,'dem')),cap:Math.round((3+wcap)*(t.cap/7)*addMod(b,'cap'))};
 }
 function runBiz(b){
   const t=BT[b.type];if(!t)return;
@@ -35,14 +35,14 @@ function runBiz(b){
   if(b.type==='rental'){
     rentalDay(b,r);
   }else if(b.type==='farm'){
-    const f=dist==='Greenbelt'?1:.5,crops=Math.round((3+wcap)*f*rnd(.8,1.1)*G.mod.yield);
-    r.units=crops;r.cost=Math.round(crops*1.5);payOut(b,r.cost);
+    const f=dist==='Greenbelt'?1:.5,crops=Math.round((3+wcap)*f*rnd(.8,1.1)*G.mod.yield*addMod(b,'yield'));
+    r.units=crops;r.cost=Math.round(crops*1.5*addMod(b,'cost'));payOut(b,r.cost);
     if(b.auto){r.rev=crops*4;b.till+=r.rev}else b.store+=crops;
   }else if(b.type!=='home'){
-    const cap=Math.round((3+wcap)*(t.cap/7)),dem=TR[dist]*t.per*appeal*[1.3,1,.65][b.mk]*rnd(.85,1.15);
+    const cap=Math.round((3+wcap)*(t.cap/7)*addMod(b,'cap')),dem=TR[dist]*t.per*appeal*[1.3,1,.65][b.mk]*addMod(b,'dem')*rnd(.85,1.15);
     const units=Math.floor(Math.min(dem,cap)),used=Math.min(b.supplies,units),buy=units-used;
     b.supplies-=used;r.units=units;r.rev=Math.round(units*t.price*MK[b.mk]);b.till+=r.rev;
-    r.cost=Math.round(buy*t.cost);if(r.cost)payOut(b,r.cost);
+    r.cost=Math.round(buy*t.cost*addMod(b,'cost'));if(r.cost)payOut(b,r.cost);
     const sticky=b.workers.filter(w=>w.trait==='sticky').length,guard=b.workers.some(w=>w.trait==='guard');
     if(sticky&&!guard){r.theft=Math.min(b.till,Math.round(r.rev*.08*sticky));b.till-=r.theft}
   }

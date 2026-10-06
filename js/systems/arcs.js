@@ -6,7 +6,7 @@ const arcMark=(A,key,forever)=>{A.did=A.did||{};A.did[key]=forever?true:day()};
 const engageAdd=(d,n)=>{G.engage[d]=(G.engage[d]||0)+n};
 const arcDone=id=>G.arcsDone.some(a=>a.id===id&&!(ARCS[id].repeatAfter&&day()-a.day>=ARCS[id].repeatAfter));
 function arcsDaily(){
-  G.biz.forEach(b=>{if(b.type&&b.type!=='home')engageAdd(b.d,.5)});
+  G.biz.forEach(b=>{if(b.type&&b.type!=='home')engageAdd(b.d,.5)});Object.keys(G.shops||{}).forEach(id=>engageAdd(POIS[id].d,.5));
   if(G.arc){
     const A=G.arc,D=ARCS[A.id],ph=D.phases[A.i];
     if(ph.daily)ph.daily(A);

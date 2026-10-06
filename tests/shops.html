@@ -1,0 +1,61 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay shops and expansions test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Shop buyouts and expansions</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Buys every shop, runs 120 days, upgrades and sells; installs every add-on on every business type; checks totals stay sane and the menus open. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,BT,BT_ADD,SHOP_DEFS,POIS,NPC,OWNER,start,closeMenu,popClear,advance,alertQ,openPOI,shopMenu,offerMenu,shopBtn,expansionMenu,bizMenu,bizOverview,addMod,addList,monthlyBills,npcS,save,migrate,shopMul})`);
+  const G = () => api.G, flush = () => { api.popClear(); api.alertQ.length = 0; };
+  const click = txt => { const b = [...doc.querySelectorAll('#sheet #actions button')].find(x => !x.disabled && x.innerText.startsWith(txt)); if (b) b.click(); return !!b; };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush();
+    G().cash = 50000; G().energy = 100; G().hunger = 100;
+    const ids = Object.keys(api.SHOP_DEFS);
+    ids.forEach(id => { api.npcS(api.NPC[api.OWNER[id]]).m = 40; });
+    ids.forEach(id => {
+      api.offerMenu(api.POIS[id], api.NPC[api.OWNER[id]]);
+      if (!click('Buy for')) errs.push('no buy button ' + id); else click('Yes, buy');
+      if (!G().shops[id]) errs.push('shop not bought ' + id);
+      flush();
+    });
+    const before = G().cash;
+    for (let d = 0; d < 120; d++) { G().energy = 100; G().hunger = 100; G().cash = Math.max(G().cash, 2000); api.advance(1440, false, true); flush();
+      Object.values(G().shops).forEach(s => { if (!Number.isFinite(s.till)) errs.push('bad till') }); }
+    stats.tills = ids.map(id => id + ':' + Math.round(G().shops[id].till));
+    ids.forEach(id => { api.shopMenu(api.POIS[id], api.NPC[api.OWNER[id]]); click('Collect'); click('Expand'); click('Yes, expand'); api.shopBtn(api.POIS[id], api.NPC[api.OWNER[id]]); flush(); });
+    stats.levels = ids.map(id => G().shops[id].level);
+    stats.perks = [api.shopMul('market', .75), api.shopMul('garage', .6)];
+    api.bizOverview(); api.monthlyBills();
+    if (!api.monthlyBills().some(l => /tax/.test(l[0]) && /Market|Diner|Gull|Garage|Mack/i.test(l[0]))) stats.billNote = 'no shop tax line (check names)';
+    api.save(); api.migrate(); if (Object.keys(G().shops).length !== ids.length) errs.push('shops lost on migrate');
+    ids.forEach(id => { api.shopMenu(api.POIS[id], api.NPC[api.OWNER[id]]); click('Sell the shop'); click('Yes, sell'); });
+    if (Object.keys(G().shops).length) errs.push('shops not sold');
+    // add-ons on every business type
+    Object.keys(api.BT_ADD).forEach(type => {
+      const b = { key: '16,13', d: 'Grid', price: 1500, paid: 1500, type, level: 3, supplies: 0, till: 0, workers: [], mk: 1, last: null, store: 0, auto: false };
+      G().biz = [b]; G().cash = 50000;
+      const base = [api.addMod(b, 'dem'), api.addMod(b, 'cap')];
+      api.expansionMenu(b);
+      api.BT_ADD[type].forEach(a => { if (!click(a.n)) errs.push('no add-on button ' + a.n); else click('Yes, install'); });
+      if (b.add.length !== 3) errs.push(type + ' add-ons installed ' + b.add.length);
+      if (api.addList(b).length !== 3) errs.push(type + ' addList');
+      stats[type] = b.add.join(',');
+      b.level = 1; if (api.addList(b).length !== 1) errs.push(type + ' slots not limited by level');
+      b.level = 3; for (let d = 0; d < 20; d++) { api.advance(1440, false, true); flush(); }
+      if (!Number.isFinite(b.till) || !Number.isFinite(G().cash)) errs.push(type + ' bad numbers');
+      api.bizMenu(b);
+    });
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 20).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

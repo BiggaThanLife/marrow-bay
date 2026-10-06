@@ -18,11 +18,12 @@ MENUS.garage=(poi,n,msg)=>{
     const price=Math.round(VEH[k].price*f);
     return{label:G.veh.owned[k]?`${VEH[k].n} (owned)`:`${VEH[k].n}, ${money(price)}`,sub:`Speed ${VEH[k].sp}${VEH[k].fuel?', fuel needed':', no fuel'}${VEH[k].ins?`, insurance ${money(VEH[k].ins)}/mo`:''}`,off:!!G.veh.owned[k]||G.cash<price,cls:'',fn:()=>ask(`Buy the ${VEH[k].n.toLowerCase()}?`,`It costs ${money(price)}.`,'Yes, buy',()=>{G.cash-=price;G.veh.owned[k]=true;G.veh.fuel[k]=100;G.veh.active=k;MENUS.garage(poi,n,`You ride off on the ${VEH[k].n.toLowerCase()}.`)},()=>MENUS.garage(poi,n))};
   });
-  const a=G.veh.active,tank=VEH[a].fuel?Math.round(G.veh.fuel[a]||0):100,fuelCost=Math.round((100-tank)*.3);
+  const a=G.veh.active,tank=VEH[a].fuel?Math.round(G.veh.fuel[a]||0):100,fp=.3*shopMul('garage',.6),fuelCost=Math.round((100-tank)*fp);
   btns.push({label:'Refuel',sub:VEH[a].fuel?`${tank}% now, ${money(fuelCost)} to fill`:'Your ride does not need fuel',off:!VEH[a].fuel||tank>=100||G.cash<fuelCost,cls:'primary',fn:()=>{G.cash-=fuelCost;G.veh.fuel[a]=100;advance(10);MENUS.garage(poi,n,'Tank full.')}});
-  btns.push({label:'Refuel some',sub:VEH[a].fuel?`${tank}% now. Choose how much, about 30 cents per percent.`:'Your ride does not need fuel',off:!VEH[a].fuel||tank>=100||G.cash<1,cls:'',fn:()=>qtyMenu({title:'Refuel',intro:'Percent of a tank.',price:.3,max:100-tank,mode:'buy',onConfirm:q=>{G.cash-=Math.round(.3*q);G.veh.fuel[a]=Math.min(100,tank+q);advance(10);return `Added ${q}% fuel.`},back:m=>MENUS.garage(poi,n,m)})});
+  btns.push({label:'Refuel some',sub:VEH[a].fuel?`${tank}% now. Choose how much, about ${Math.round(fp*100)} cents per percent.`:'Your ride does not need fuel',off:!VEH[a].fuel||tank>=100||G.cash<1,cls:'',fn:()=>qtyMenu({title:'Refuel',intro:'Percent of a tank.',price:fp,max:100-tank,mode:'buy',onConfirm:q=>{G.cash-=Math.round(fp*q);G.veh.fuel[a]=Math.min(100,tank+q);advance(10);return `Added ${q}% fuel.`},back:m=>MENUS.garage(poi,n,m)})});
   btns.push({label:'Custom paint',sub:'Pick a ride and a color. Fee depends on the ride.',cls:'',fn:()=>paintMenu(poi,n)});
   btns.push({label:'Street race',sub:G.veh.active==='none'?'You need a ride':isNight()?'$30 entry, $110 to win. Nights only.':'Nights only',off:G.veh.active==='none'||!isNight()||G.cash<30,cls:'warn',fn:()=>streetRace(poi,n)});
+  btns.push(...shopBtn(poi,n));
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} wipes his hands.</p>${msgP(msg)}`,[...btns.filter(b=>b.label==='Refuel'),...btns.filter(b=>!['Refuel','Refuel some','Custom paint','Street race'].includes(b.label)),...btns.filter(b=>['Refuel some','Custom paint','Street race'].includes(b.label)),leaveBtn]);
 };
 MENUS.foundry=(poi,n,msg)=>{
