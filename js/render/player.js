@@ -1,5 +1,12 @@
 "use strict";
 /* Player sprite (shared by map and creator). */
+function drawHat(c,px,py,hat){
+  if(hat==='cap'){c.fillStyle='#3a2a1c';c.fillRect(px-3,py-14,6,2);c.fillRect(px+2,py-12,2,1)}
+  else if(hat==='beanie'){c.fillStyle='#b5453a';c.fillRect(px-2,py-15,4,3)}
+  else if(hat==='sun'){c.fillStyle='#e0c060';c.fillRect(px-5,py-13,10,1);c.fillRect(px-3,py-16,6,3)}
+  else if(hat==='wool'){c.fillStyle='#8a929c';c.fillRect(px-2,py-15,4,3);c.fillStyle='#d8dde4';c.fillRect(px-1,py-17,2,2)}
+  else if(hat==='brim'){c.fillStyle='#5a4326';c.fillRect(px-4,py-13,8,1);c.fillRect(px-2,py-16,4,3)}
+}
 function drawPlayer(c,px,py,l,sw,headOnly,t){
   if(!headOnly){
     c.fillStyle='rgba(0,0,0,.25)';c.fillRect(px-3,py,7,2);
@@ -12,10 +19,6 @@ function drawPlayer(c,px,py,l,sw,headOnly,t){
   if(l.style===0)c.fillRect(px-2,py-13,4,1);
   else if(l.style===1){c.fillRect(px-2,py-13,4,1);c.fillRect(px-3,py-13,1,5);c.fillRect(px+2,py-13,1,5)}
   else if(l.style===2){c.globalAlpha=.55;c.fillRect(px-2,py-13,4,1);c.globalAlpha=1}
-  if(l.hat==='cap'){c.fillStyle='#3a2a1c';c.fillRect(px-3,py-14,6,2);c.fillRect(px+2,py-12,2,1)}
-  else if(l.hat==='beanie'){c.fillStyle='#b5453a';c.fillRect(px-2,py-15,4,3)}
-  else if(l.hat==='sun'){c.fillStyle='#e0c060';c.fillRect(px-5,py-13,10,1);c.fillRect(px-3,py-16,6,3)}
-  else if(l.hat==='wool'){c.fillStyle='#8a929c';c.fillRect(px-2,py-15,4,3);c.fillStyle='#d8dde4';c.fillRect(px-1,py-17,2,2)}
-  else if(l.hat==='brim'){c.fillStyle='#5a4326';c.fillRect(px-4,py-13,8,1);c.fillRect(px-2,py-16,4,3)}
+  drawHat(c,px,py,l.hat);
   c.fillStyle='#4fd1b5';c.fillRect(px-1,py-18+(t||0),2,3);
 }

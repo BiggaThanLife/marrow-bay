@@ -1,6 +1,8 @@
 "use strict";
 /* Tenant data: names, jobs, backgrounds, traits, and the problems a landlord deals with. */
 const T_FIRST=['Ada','Bram','Cass','Dario','Elin','Farid','Greta','Hugo','Imani','Joss','Kenji','Lucia','Mateo','Noor','Orla','Pavel','Quinn','Rosa','Sven','Tamsin','Uma','Viktor','Wanda','Xavi','Yara','Zane','Bea','Cyrus','Dell','Esme','Finn','Gus','Hallie','Ines','Jun','Kira','Leif','Mara','Nico','Opal'];
+const T_FEM=['Ada','Elin','Greta','Imani','Lucia','Noor','Orla','Rosa','Tamsin','Uma','Wanda','Yara','Bea','Esme','Hallie','Ines','Kira','Mara','Opal'];
+const T_NEUTRAL=['Cass','Joss','Quinn','Dell','Jun'];
 const T_LAST=['Alder','Brandt','Castillo','Dunn','Egan','Frost','Gallo','Hart','Iyer','Jansen','Kovac','Lowry','Marsh','Nakamura','Okafor','Pruitt','Quill','Rivera','Stroud','Tran','Ulrich','Vega','Wexler','Yates','Zhou','Ashby','Boyd','Crane','Doyle','Ellis'];
 /* inc scales the rent they can pay */
 const T_JOBS=[

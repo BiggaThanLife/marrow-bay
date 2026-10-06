@@ -9,7 +9,7 @@ function tick(dt){
   const R=NPC.reyes;
   if(G.veh.active!=='none'&&G.veh.stolen[G.veh.active]){G.heat=Math.max(G.heat,1.2);if(!R.indoors&&Math.hypot(R.x-p.x,R.y-p.y)<7)G.heat=Math.max(G.heat,3)}
   if(G.heat>=2){
-    if(!R.chasing){R.chasing=true;if(R.indoors){R.indoors=false;R.x=POIS[R.home].ex;R.y=POIS[R.home].ey}notify('Wanted! Constable Reyes is after you. Outrun him and lay low.');quip('wanted')}
+    if(!R.chasing){R.chasing=true;if(R.indoors){R.indoors=false;R.x=POIS[R.home].ex;R.y=POIS[R.home].ey}notify('Wanted! Constable Reyes is after you. Outrun her and lay low.');quip('wanted')}
     R.rt-=dt;if(R.rt<=0){R.rt=.6;goto(R,[Math.round(p.x),Math.round(p.y)])}
     moveEnt(R,dt,(G.heat>=4?4.6:3.6)+(G.mod.cops?.5:0));
     if(Math.hypot(R.x-p.x,R.y-p.y)<1.2)return bust();

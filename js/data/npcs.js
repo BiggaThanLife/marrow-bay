@@ -87,5 +87,5 @@ const TIPS=[
  'A low price wins customers from the diner. A high price only sells to people who like you.',
  'Empty buildings are for sale at Lou\'s Realty. A café with two staff pays for itself fast.',
  'A bike or the tram beats walking. Vex pays well for couriers, if you are quick.',
- 'Constable Reyes gives up the chase if you outrun him and lay low at home.'
+ 'Constable Reyes gives up the chase if you outrun her and lay low at home.'
 ];

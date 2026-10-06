@@ -12,7 +12,7 @@ function syncWalkers(){
     b.tenants.forEach(t=>{
       if(next.length>=WALKER_MAX)return;
       const w=old.get(t.id)||{tid:t.id,key:b.key,x:0,y:0,path:[],indoors:true,goHome:false,face:1,rt:0,col:WALKER_COLS[t.id%WALKER_COLS.length],name:t.name};
-      w.key=b.key;w.d=b.d;
+      w.key=b.key;w.d=b.d;w.look=tenantLook(t);
       if(!old.has(t.id)){const dr=walkerDoor(w);if(dr){w.x=dr[0];w.y=dr[1]}}
       next.push(w);
     });

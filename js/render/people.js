@@ -1,9 +1,10 @@
 "use strict";
 /* People, vehicles and bike or scooter riding. */
-function person(x,y,col,isP,moving,now,headOnly){
+function person(x,y,col,isP,moving,now,headOnly,look){
   const px=Math.round(x*TS+8-camX),py=Math.round(y*TS+14-camY);
   const sw=moving&&Math.floor(now/140)%2;
   if(isP&&G&&G.look)return drawPlayer(cx,px,py,G.look,sw,headOnly,Math.floor(now/300)%2);
+  if(look&&!isP)return drawNpc(cx,px,py,look,col,sw,headOnly);
   if(!headOnly){
     cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(px-3,py,7,2);
     cx.fillStyle='#2b2118';cx.fillRect(px-3+(sw?1:0),py-3,2,3);cx.fillRect(px+1-(sw?1:0),py-3,2,3);
@@ -12,6 +13,31 @@ function person(x,y,col,isP,moving,now,headOnly){
   cx.fillStyle='#e8c39e';cx.fillRect(px-2,py-13,4,4);
   cx.fillStyle='#2b2118';cx.fillRect(px-2,py-13,4,1);
   if(isP){cx.fillStyle='#4fd1b5';cx.fillRect(px-1,py-18+(Math.floor(now/300)%2),2,3);if(!headOnly){cx.fillStyle='#fff';cx.fillRect(px-3,py-9,6,1)}}
+}
+/* Named NPCs and tenants: skin tone, hair, build and clothes vary so the crowd does not look like one person. */
+function drawNpc(c,px,py,l,col,sw,headOnly){
+  const skin=SKIN[l.skin]||SKIN[1],hair=HAIR[l.hair]||HAIR[0];
+  if(!headOnly){
+    c.fillStyle='rgba(0,0,0,.25)';c.fillRect(px-3,py,7,2);
+    if(l.fem){
+      c.fillStyle=skin;c.fillRect(px-2+(sw?1:0),py-2,1,2);c.fillRect(px+1-(sw?1:0),py-2,1,2);
+      c.fillStyle=col;c.fillRect(px-3,py-9,6,5);c.fillRect(px-4,py-4,8,3);
+    }else{
+      c.fillStyle='#2b2118';c.fillRect(px-3+(sw?1:0),py-3,2,3);c.fillRect(px+1-(sw?1:0),py-3,2,3);
+      c.fillStyle=col;c.fillRect(px-3,py-9,6,7);
+    }
+    c.fillStyle='rgba(255,255,255,.55)';c.fillRect(px-3,py-9,6,1);
+  }
+  c.fillStyle=skin;c.fillRect(px-2,py-13,4,4);
+  c.fillStyle=hair;const st=l.style||0;
+  if(st===0){c.fillRect(px-2,py-13,4,1);c.fillRect(px-3,py-13,1,2)}
+  else if(st===1){c.fillRect(px-2,py-13,4,1);c.fillRect(px-3,py-13,1,6);c.fillRect(px+2,py-13,1,6)}
+  else if(st===2){c.globalAlpha=.55;c.fillRect(px-2,py-13,4,1);c.globalAlpha=1}
+  else if(st===4){c.fillRect(px-2,py-13,4,1);c.fillRect(px-1,py-15,2,2)}
+  else if(st===5){c.fillRect(px-2,py-13,4,1);c.fillRect(px+2,py-12,1,4)}
+  else if(st===6){c.fillRect(px-3,py-15,6,3);c.fillRect(px-3,py-12,1,2);c.fillRect(px+2,py-12,1,2)}
+  if(l.beard){c.globalAlpha=.85;c.fillRect(px-2,py-11,4,2);c.globalAlpha=1;c.fillStyle=skin;c.fillRect(px-1,py-12,2,1)}
+  if(l.hat)drawHat(c,px,py,l.hat);
 }
 const vehColor=(k,def)=>(G&&G.veh&&G.veh.paint&&G.veh.paint[k])||def;
 function shade(hex,f){const n=parseInt(hex.slice(1),16),r=Math.round((n>>16&255)*f),g=Math.round((n>>8&255)*f),b=Math.round((n&255)*f);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1)}

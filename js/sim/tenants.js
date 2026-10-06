@@ -6,6 +6,12 @@ function genTenant(){
   const job=pick(T_JOBS),trait=pick(T_TRAIT_IDS);
   return{id:G.tenantSeq,name:pick(T_FIRST)+' '+pick(T_LAST),job:job.j,inc:job.inc,bio:pick(T_BACK),trait,mood:60,owed:0,since:day(),chat:-1};
 }
+/* look is derived from the tenant id and name, so it is stable and never needs saving */
+function tenantLook(t){
+  const h=hash(t.id,7),first=t.name.split(' ')[0],fem=T_FEM.includes(first)||(T_NEUTRAL.includes(first)&&(h>>3)%2===0);
+  const style=fem?[1,4,5,6,0,1][(h>>5)%6]:[0,2,3,0,2,6][(h>>5)%6];
+  return{skin:h%5,hair:(h>>8)%7,style,fem,beard:!fem&&style!==3&&(h>>11)%4===0,hat:(h>>13)%7===0?'beanie':undefined};
+}
 function ensureRental(b){
   const units=rentalUnits(b);
   if(!Array.isArray(b.tenants)){
