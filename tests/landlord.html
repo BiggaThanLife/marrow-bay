@@ -11,7 +11,7 @@
 const f = document.getElementById('game');
 f.addEventListener('load', () => {
   const win = f.contentWindow, errs = [], doc = win.document;
-  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,bizMenu,tenantsMenu,tenantMenu,applicantsMenu,applicantMenu,issuesMenu,issueMenu,tenantsOverview,landlordButtons,ensureRental,rentalUnits,save,migrate})`);
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,bizMenu,tenantsMenu,tenantMenu,applicantsMenu,applicantMenu,issuesMenu,issueMenu,tenantsOverview,landlordButtons,walkersHourly,tickWalkers,walkerTalk,get WALKERS(){return WALKERS},ensureRental,rentalUnits,save,migrate})`);
   const G = () => api.G, btns = () => [...doc.querySelectorAll('#sheet #actions button')].filter(b => !b.disabled);
   const flush = () => { api.popClear(); api.alertQ.length = 0; };
   const sane = tag => { const b = G().biz.find(x => x.type === 'rental'); if (!b) return errs.push(tag + ': no building');
@@ -41,6 +41,15 @@ f.addEventListener('load', () => {
     }
     const b = G().biz[0]; stats.tenants = b.tenants.length; stats.units = api.rentalUnits(b); stats.till = Math.round(b.till); stats.issues = b.issues.length;
     stats.traits = b.tenants.map(t => t.trait).join(',');
+    // walkers: rebuilt from tenants, move without errors, can be talked to
+    G().t = Math.floor(G().t / 1440) * 1440 + 12 * 60; api.walkersHourly(true);
+    for (let i = 0; i < 12; i++) { api.walkersHourly(false); for (let k = 0; k < 40; k++) api.tickWalkers(.1); }
+    stats.walkers = api.WALKERS.length; stats.outside = api.WALKERS.filter(w => !w.indoors).length;
+    if (api.WALKERS.length !== Math.min(10, b.tenants.length)) errs.push('walker count ' + api.WALKERS.length + ' vs tenants ' + b.tenants.length);
+    api.WALKERS.forEach(w => { if (!Number.isFinite(w.x) || !Number.isFinite(w.y)) errs.push('walker position') });
+    api.walkerTalk(api.WALKERS[0]); flush();
+    G().t = Math.floor(G().t / 1440) * 1440 + 23 * 60; api.walkersHourly(true);
+    if (api.WALKERS.some(w => !w.indoors)) errs.push('walkers outside at night');
     api.tenantsOverview(); api.closeMenu();
     // save and migrate keeps tenants
     api.save(); const raw = JSON.parse(win.localStorage.getItem('marrowbay_v3')); stats.savedTenants = raw.biz[0].tenants.length;

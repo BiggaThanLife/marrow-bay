@@ -19,6 +19,7 @@ function tick(dt){
     moveEnt(n,dt,2.6);
     if(!n.path.length&&n.goHome&&n.act==='home')n.indoors=true;
   });
+  tickWalkers(dt);
   const v=VEH[G.veh.active];
   let sp=vehSpeed(G.veh.active)*G.mod.vspeed;
   if(v.fuel&&(G.veh.fuel[G.veh.active]||0)<=0)sp=3;

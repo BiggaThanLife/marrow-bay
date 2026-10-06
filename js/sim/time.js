@@ -18,6 +18,7 @@ function advance(m,sleep,quiet){
   const h0=Math.floor(b/60),h1=Math.floor(G.t/60);
   for(let h=h0+1;h<=h1&&h<=h0+30;h++)hourly(h);
   if(m>=60)syncNPCs();else if(h1>h0)NPCS.forEach(n=>{if(!(n.id==='reyes'&&n.chasing))assign(n,false)});
+  if(m>=60||h1>h0)walkersHourly(m>=60);
   if(!quiet)hud();
 }
 function newDay(d){

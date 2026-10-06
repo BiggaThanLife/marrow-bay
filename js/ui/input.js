@@ -38,6 +38,7 @@ cv.addEventListener('pointerdown',e=>{
   let best=null,bd=1.3;
   NPCS.forEach(n=>{if(n.indoors)return;const d=Math.hypot(n.x+.5-fx,n.y+.5-fy);if(d<bd){bd=d;best=n}});
   if(best)return goTalk(best);
+  const wk=walkerAt(fx,fy);if(wk)return goTalkWalker(wk);
   const stop=STOPS.find(s=>Math.abs(s.x-tx)<=0&&Math.abs(s.y-ty)<=0);
   if(stop)return walkTo(tx,ty,()=>stopMenu(stop));
   const st=structAt(tx,ty);

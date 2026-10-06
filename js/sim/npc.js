@@ -25,7 +25,7 @@ function assign(n,instant){
   }
 }
 function syncNPCs(){NPCS.forEach(n=>{if(n.id==='reyes'&&n.chasing)return;assign(n,true)})}
-function initNPCs(){NPCS.forEach(n=>{n.x=0;n.y=0;n.path=[];n.indoors=true;n.goHome=false;n.act='home';n.chasing=false;n.rt=0});syncNPCs()}
+function initNPCs(){NPCS.forEach(n=>{n.x=0;n.y=0;n.path=[];n.indoors=true;n.goHome=false;n.act='home';n.chasing=false;n.rt=0});syncNPCs();WALKERS=[];walkersHourly(true)}
 function moveEnt(e,dt,sp){
   if(!e.path||!e.path.length)return false;
   const [nx,ny]=e.path[0],dx=nx-e.x,dy=ny-e.y,d=Math.hypot(dx,dy),st=sp*dt;
