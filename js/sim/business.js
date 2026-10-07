@@ -45,6 +45,11 @@ function runBiz(b){
     r.cost=Math.round(buy*t.cost*addMod(b,'cost'));if(r.cost)payOut(b,r.cost);
     const sticky=b.workers.filter(w=>w.trait==='sticky').length,guard=b.workers.some(w=>w.trait==='guard');
     if(sticky&&!guard){r.theft=Math.min(b.till,Math.round(r.rev*.08*sticky));b.till-=r.theft}
+    if(t.shady){
+      G.rep[dist]=clamp(G.rep[dist]-t.shady.rep,-100,100);
+      if(Math.random()<t.shady.inspect){const fine=Math.min(t.shady.fine,Math.max(0,G.cash+b.till));payOut(b,fine);r.cost+=fine;r.note=`Fined ${money(fine)}.`;news(t.shady.news.replace('{d}',dist),2);notify(`Inspectors at your ${t.n.toLowerCase()} in ${dist}. Fined ${money(fine)}.`)}
+    }
+    if(t.calm&&G.heat>0)G.heat=Math.max(0,G.heat-t.calm.heat);
   }
   b.workers=b.workers.filter(w=>{
     const ok=payOut(b,w.wage);

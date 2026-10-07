@@ -11,7 +11,7 @@
 const f = document.getElementById('game');
 f.addEventListener('load', () => {
   const win = f.contentWindow, errs = [], doc = win.document;
-  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,EVT,startEvent,recomputeMods,T_TRAITS,T_ISSUES,genTenant,ensureRental,bizMenu,tenantsMenu,tenantMenu,issuesMenu,issueMenu,baywatchMenu,baywatchPosts,baywatchIntel,phone,bag,town,eatCandy,plaqueMenu,keepsakeButtons,disasterOn,save,migrate,day})`);
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,EVT,startEvent,recomputeMods,T_TRAITS,T_ISSUES,genTenant,ensureRental,bizMenu,tenantsMenu,tenantMenu,issuesMenu,issueMenu,baywatchMenu,baywatchPosts,baywatchIntel,phone,bag,town,eatCandy,plaqueMenu,keepsakeButtons,disasterOn,save,migrate,day,BT,convertMenu})`);
   const G = () => api.G, btns = () => [...doc.querySelectorAll('#sheet #actions button')].filter(b => !b.disabled);
   const flush = () => { api.popClear(); api.alertQ.length = 0; };
   const stats = {};
@@ -66,6 +66,20 @@ f.addEventListener('load', () => {
     const rep0 = G().rep.Grid; api.plaqueMenu(); const gb = btns().find(x => /^Grid/.test(x.innerText)); gb.click();
     if (G().rep.Grid <= rep0 || G().inv.plaque !== 0) errs.push('plaque did not work');
     api.bag(); api.town(); api.closeMenu();
+    // shady and calming business types
+    ['pies', 'cages', 'wellness'].forEach(k => {
+      if (!api.BT[k]) return errs.push('missing business type ' + k);
+      const bz = { key: '21,13', d: 'Dockside', price: 1500, paid: 1500, type: k, level: 1, supplies: 0, till: 0, workers: [], mk: 1, last: null, store: 0, auto: false };
+      G().biz = G().biz.filter(x => x.key !== bz.key); G().biz.push(bz);
+      const rep0 = G().rep.Dockside; G().heat = 3; G().cash = 20000;
+      let rev = 0; for (let d = 0; d < 60; d++) { G().cash = Math.max(G().cash, 5000); api.advance(1440, false, true); flush(); rev += bz.last ? bz.last.rev : 0; if (!Number.isFinite(bz.till)) errs.push('bad till ' + k); }
+      stats[k] = { rev: Math.round(rev), repShift: Math.round((G().rep.Dockside - rep0) * 10) / 10, heat: Math.round(G().heat * 10) / 10 };
+      if (!(rev > 0)) errs.push(k + ' earns nothing');
+      if (api.BT[k].shady && G().rep.Dockside >= rep0) errs.push(k + ' did not cost standing');
+      if (api.BT[k].calm && G().heat >= 3) errs.push(k + ' did not calm heat');
+      api.bizMenu(bz); if (!btns().length) errs.push('no menu ' + k); api.convertMenu(bz); if (!btns().some(x => /Meat pie|Micro-cage|Wellness|Caf/.test(x.innerText))) errs.push('convert list missing types'); flush();
+    });
+    G().biz = G().biz.filter(x => x.type !== 'pies' && x.type !== 'cages' && x.type !== 'wellness');
     // save and migrate
     api.save(); delete G().inv.candy; delete G().inv.plaque; delete G().plaque; api.migrate();
     if (G().inv.candy !== 0 || G().inv.plaque !== 0 || !G().plaque) errs.push('migrate did not default items');
