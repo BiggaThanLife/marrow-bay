@@ -19,6 +19,8 @@ function marketDaily(){
     const p=G.mkt.p[s.id],fair=s.base*s.fair();
     G.mkt.p[s.id]=clamp(p*(1+(Math.random()-.5)*.07+bd)+(fair-p)*.06,3,500);
   });
+  G.mkt.hist=G.mkt.hist||{};SHARES.forEach(s=>pushHist(G.mkt.hist[s.id]=G.mkt.hist[s.id]||[],G.mkt.p[s.id],60));
+  G.mkt.pf=G.mkt.pf||[];pushHist(G.mkt.pf,portfolio(),60);
   if(fact('flack_contract_player')&&day()%7===0){G.cash+=70;flackAdd(1);facAdd('union',-1);news('Your FLACK installation contract pays $70. Another camera goes up.',1)}
 }
 function buyShare(id,q){

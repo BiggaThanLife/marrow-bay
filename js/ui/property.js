@@ -21,11 +21,11 @@ function bizOverview(){
   const nextBill=30-(day()-1)%30;
   const tills=G.biz.reduce((s,b)=>s+b.till,0)+G.structs.reduce((s,x)=>s+(x.stored||0),0)+shopTills();
   const vehs=Object.keys(G.veh.owned).filter(k=>G.veh.owned[k]).map(k=>`${VEH[k].n}${G.veh.stolen[k]?' (stolen)':''}`).join(', ')||'none';
-  const btns=G.biz.map(b=>({label:`${b.type?BT[b.type].n:'Empty building'}, ${b.d}`,sub:b.type&&b.type!=='home'?`Till ${money(b.till)}, ${b.workers.length} staff${b.last?`, last day ${b.last.profit>=0?'+':''}${money(b.last.profit)}`:''}`:'Tap to manage',cls:'',fn:()=>bizMenu(b)}));
+  const btns=G.biz.map(b=>({badge:b.type==='rental'&&b.issues?b.issues.length:0,label:`${b.type?BT[b.type].n:'Empty building'}, ${b.d}`,sub:b.type==='rental'&&b.tenants?`Till ${money(b.till)}, ${b.tenants.length}/${rentalUnits(b)} let${b.issues.length?`, ${b.issues.length} problem${b.issues.length>1?'s':''}`:''}${b.last?`, last day ${b.last.profit>=0?'+':''}${money(b.last.profit)}`:''}`:b.type&&b.type!=='home'?`Till ${money(b.till)}, ${b.workers.length} staff${b.last?`, last day ${b.last.profit>=0?'+':''}${money(b.last.profit)}`:''}`:'Tap to manage',cls:'',fn:()=>bizMenu(b)}));
   btns.unshift({label:'Collect all tills',sub:money(tills),off:tills<=0,cls:'primary',fn:()=>{Object.values(G.shops).forEach(s=>{G.cash+=Math.max(0,s.till);s.till=Math.min(0,s.till)});G.biz.forEach(b=>{G.cash+=b.till;b.till=0});G.structs.forEach(s=>{if(s.stored){G.cash+=s.stored;s.stored=0}});advance(10);bizOverview()}});
   btns.push(...shopButtons());
   btns.push({label:'Close',cls:'quiet',fn:closeMenu});
   ui(`<h2>Properties and business</h2><div class="kv"><div><span>Buildings</span><b>${G.biz.length}</b></div><div><span>Vehicles</span><b>${esc(vehs)}</b></div>
   <div><span>Next bills</span><b>${money(tot)} in ${nextBill} d</b></div><div><span>Owed</span><b>${money(G.arrears)}</b></div></div>
-  <p class="muted small">Tap a building on the map, or from here, to manage staff, supplies, and prices.</p>`,btns);
+  ${issueTotal()?`<p class="bad">${issueTotal()} tenant problem${issueTotal()>1?'s':''} waiting. Look for the red numbers.</p>`:''}${lineChart(sumHist([...G.biz.map(b=>b.hist||[]),...Object.values(G.shops||{}).map(s=>s.hist||[])]),{title:'All businesses, profit per day',zero:true})}<p class="muted small">Tap a building on the map, or from here, to manage staff, supplies, and prices.</p>`,btns);
 }

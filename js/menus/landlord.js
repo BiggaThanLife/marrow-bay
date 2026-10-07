@@ -5,7 +5,7 @@ function landlordButtons(biz){
   return[
     {label:`Tenants (${biz.tenants.length}/${rentalUnits(biz)})`,sub:free?`${free} flat${free===1?'':'s'} empty`:'Fully let',cls:'',fn:()=>tenantsMenu(biz)},
     {label:`Applicants (${biz.applicants.length})`,sub:biz.applicants.length?'People want to move in':'Nobody is asking right now',off:!biz.applicants.length,cls:biz.applicants.length?'primary':'',fn:()=>applicantsMenu(biz)},
-    {label:`Problems (${biz.issues.length})`,sub:biz.issues.length?'Tenants are waiting on you':'All quiet',off:!biz.issues.length,cls:biz.issues.length?'primary':'',fn:()=>issuesMenu(biz)},
+    {label:`Problems (${biz.issues.length})`,badge:biz.issues.length,sub:biz.issues.length?'Tenants are waiting on you':'All quiet',off:!biz.issues.length,cls:biz.issues.length?'primary':'',fn:()=>issuesMenu(biz)},
     {label:`Property manager: ${biz.manager?'On':'Off'}`,sub:'Takes 10% of rent. Fills empty flats and pays routine repairs. You still handle rent trouble.',cls:'',fn:()=>{biz.manager=!biz.manager;bizMenu(biz,biz.manager?'A manager now runs the day to day.':'You run the building yourself again.')}}
   ];
 }
@@ -70,6 +70,6 @@ function tenantsOverview(){
   const rs=G.biz.filter(b=>b.type==='rental');rs.forEach(ensureRental);
   const issues=rs.reduce((s,b)=>s+b.issues.length,0),apps=rs.reduce((s,b)=>s+b.applicants.length,0);
   ui(`<h2>Tenants</h2><p class="muted">${apps} applicant${apps===1?'':'s'}, ${issues} open problem${issues===1?'':'s'} across your buildings.</p>`,[
-    ...rs.map(b=>({label:`Apartments, ${b.d}`,sub:`${b.tenants.length}/${rentalUnits(b)} let, ${b.issues.length} problem${b.issues.length===1?'':'s'}, ${b.applicants.length} applicant${b.applicants.length===1?'':'s'}`,cls:b.issues.length||b.applicants.length?'primary':'',fn:()=>bizMenu(b)})),
+    ...rs.map(b=>({label:`Apartments, ${b.d}`,sub:`${b.tenants.length}/${rentalUnits(b)} let, ${b.issues.length} problem${b.issues.length===1?'':'s'}, ${b.applicants.length} applicant${b.applicants.length===1?'':'s'}`,badge:b.issues.length,cls:b.issues.length||b.applicants.length?'primary':'',fn:()=>bizMenu(b)})),
     {label:'Back',cls:'quiet',fn:()=>phone()}]);
 }

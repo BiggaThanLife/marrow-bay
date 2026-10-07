@@ -5,13 +5,13 @@ function tradingMenu(poi,n,msg){
     const h=G.mkt.hold[s.id]||0;
     return{label:`${s.n}: $${sharePrice(s.id).toFixed(1)}`,sub:h?`You hold ${h}, worth ${money(h*sharePrice(s.id))}${G.mkt.cost[s.id]?` (cost ${money(G.mkt.cost[s.id])})`:''}`:`${s.d}. You hold none.`,cls:'',fn:()=>shareMenu(poi,n,s.id)};
   });
-  ui(`<h2>Trading desk</h2><p class="muted">Prices follow their district and the mood of Highline. Fee ${money(tradeFee())} a trade. Portfolio ${money(portfolio())}.</p>${G.arc&&G.arc.id==='bubble'?'<p class="amber">Everyone at the desk is talking at once.</p>':''}${msgP(msg)}`,[
+  ui(`<h2>Trading desk</h2><p class="muted">Prices follow their district and the mood of Highline. Fee ${money(tradeFee())} a trade. Portfolio ${money(portfolio())}.</p>${G.arc&&G.arc.id==='bubble'?'<p class="amber">Everyone at the desk is talking at once.</p>':''}${msgP(msg)}${lineChart(G.mkt.pf,{title:'Your portfolio value',empty:'Your portfolio chart appears after a couple of days of trading.'})}`,[
     ...rows,{label:'Back',cls:'quiet',fn:()=>MENUS.bank(poi,n)}]);
 }
 function shareMenu(poi,n,id,msg){
   const s=SHARES.find(x=>x.id===id),p=sharePrice(id),h=G.mkt.hold[id]||0;
   const act=(f,q)=>()=>shareMenu(poi,n,id,f(id,q));
-  ui(`<h2>${esc(s.n)}</h2><p class="muted">$${p.toFixed(1)} a share. You hold ${h}. ${s.d} district.</p>${msgP(msg)}`,[
+  ui(`<h2>${esc(s.n)}</h2><p class="muted">$${p.toFixed(1)} a share. You hold ${h}. ${s.d} district.</p>${msgP(msg)}${lineChart((G.mkt.hist||{})[id],{title:'Share price, last 60 days',fmt:v=>'$'+v.toFixed(1),line:h&&G.mkt.cost[id]?G.mkt.cost[id]/h:undefined,lineLabel:'your average cost'})}`,[
     {label:'Buy 1',sub:money(p+tradeFee()),off:G.cash<p+tradeFee(),cls:'',fn:act(buyShare,1)},
     {label:'Buy 5',sub:money(p*5+tradeFee()),off:G.cash<p*5+tradeFee(),cls:'',fn:act(buyShare,5)},
     {label:'Buy 20',sub:money(p*20+tradeFee()),off:G.cash<p*20+tradeFee(),cls:'',fn:act(buyShare,20)},

@@ -34,7 +34,7 @@ function offerMenu(poi,n,msg){
 function shopMenu(poi,n,msg){
   const s=G.shops[poi.id],def=SHOP_DEFS[poi.id],up=900*s.level,L=s.last;
   ui(`<h2>${esc(poi.name)}, level ${s.level}</h2><p class="muted">${esc(n.name)} manages it for you. ${esc(def.perk)}</p>${msgP(msg)}
-  <div class="kv"><div><span>Takings</span><b>${money(s.till)}</b></div><div><span>Manager wage</span><b>${money((WAGE[n.id]||30)*.5*(1+.25*(s.level-1)))} a day</b></div>${L?`<div><span>Last day</span><b>${L.profit>=0?'+':''}${money(L.profit)}</b></div><div><span>Sold</span><b>${money(L.rev)}</b></div>`:''}</div>`,[
+  <div class="kv"><div><span>Takings</span><b>${money(s.till)}</b></div><div><span>Manager wage</span><b>${money((WAGE[n.id]||30)*.5*(1+.25*(s.level-1)))} a day</b></div>${L?`<div><span>Last day</span><b>${L.profit>=0?'+':''}${money(L.profit)}</b></div><div><span>Sold</span><b>${money(L.rev)}</b></div>`:''}</div>${lineChart(s.hist,{title:'Profit per day, last 30 days',zero:true})}`,[
     {label:'Collect takings',sub:money(s.till),off:s.till<=0,cls:'primary',fn:()=>{G.cash+=s.till;s.till=0;advance(5);shopMenu(poi,n,'Cash collected.')}},
     ...(s.level<3?[{label:`Expand to level ${s.level+1}`,sub:`${money(up)}. About ${Math.round((SHOP_LVL[s.level]/SHOP_LVL[s.level-1]-1)*100)}% more takings.`,off:G.cash<up,cls:'',fn:()=>ask(`Expand to level ${s.level+1}?`,`It costs ${money(up)}. The manager asks for a small raise.`,'Yes, expand',()=>{G.cash-=up;s.paid+=up;s.level++;shopMenu(poi,n,'Expanded.')},()=>shopMenu(poi,n))}]:[]),
     {label:'Use the shop',sub:'Buy and sell like any customer, with your perk',cls:'',fn:()=>(MENUS[poi.id]||info)(poi,n)},

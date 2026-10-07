@@ -52,5 +52,5 @@ function runBiz(b){
     notify(`${w.name} quit. Wages went unpaid.`);return false;
   });
   if(b.till>150&&Math.random()<.07*(b.workers.some(w=>w.trait==='guard')?.3:1)){const loss=Math.round(b.till*.5);b.till-=loss;r.note=`Robbed. ${money(loss)} taken.`;{notify(`Break-in at your ${t.n.toLowerCase()}. ${money(loss)} gone.`);news(`A ${t.n.toLowerCase()} in the ${dist} was broken into.`,2)}}
-  r.profit=r.rev-r.cost-r.wages-r.theft;b.last=r;
+  r.profit=r.rev-r.cost-r.wages-r.theft;b.last=r;pushHist(b.hist=b.hist||[],r.profit);
 }

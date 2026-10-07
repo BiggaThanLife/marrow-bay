@@ -8,10 +8,13 @@ function drawWorld(now){
     if(placing&&canBuild(tx,ty)){const sx=tx*TS-camX,sy=ty*TS-camY;cx.fillStyle='rgba(79,209,181,.28)';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='rgba(79,209,181,.9)';cx.fillRect(sx,sy,3,1);cx.fillRect(sx,sy,1,3);cx.fillRect(sx+TS-3,sy+TS-1,3,1);cx.fillRect(sx+TS-1,sy+TS-3,1,3)}
   }
   const n=night(),lit=n>.2;
+  const issByKey={};if(G)G.biz.forEach(b=>{if(b.type==='rental'&&b.issues&&b.issues.length)issByKey[b.key]=b.issues.length});
   blocks.forEach(b=>{
     const sx=b.x*TS-camX,sy=b.y*TS-camY;
     if(sx>VW||sy>VH||sx<-64||sy<-64)return;
     drawBlock(b,lit,now);
+    const bz=G&&issByKey[b.key];
+    if(bz){const bx=sx+TS*2,by=sy+3;cx.fillStyle='#fff';cx.beginPath();cx.arc(bx,by,7,0,7);cx.fill();cx.fillStyle='#d33a2c';cx.beginPath();cx.arc(bx,by,6,0,7);cx.fill();cx.fillStyle='#fff';cx.font='bold 9px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(String(bz),bx,by+.5);cx.textAlign='left';cx.textBaseline='alphabetic'}
   });
   STOPS.forEach(s=>{const sx=s.x*TS-camX,sy=s.y*TS-camY;if(sx>-16&&sx<VW&&sy>-16&&sy<VH)drawStop(s)});
   if(G){const nc=camCount();for(let i=0;i<nc;i++){const q=FLACK_SITES[i],sx=q.x*TS-camX,sy=q.y*TS-camY;if(sx>-16&&sx<VW&&sy>-8&&sy<VH+8)drawCam(sx,sy,i,now)}}
