@@ -214,8 +214,9 @@ function ggMine(b){
   if(b.type==='rental'&&b.issues&&b.issues.length){const i=b.issues[0],tn=b.tenants.find(x=>x.id===i.t);rev.unshift([tn?tn.name.split(' ')[0]:'Tenant',2,`${T_ISSUES[i.k].n}. Nobody has come.`]);rev.length=3}
   else if(!b.workers.length&&b.type!=='farm'&&b.type!=='home'){rev.unshift(['Customer',2,'Nobody was serving. The door was open and so was the till.']);rev.length=3}
   const extra=b.type==='rental'?` ${(b.tenants||[]).length} of ${rentalUnits(b)} flats are let.`:b.workers.length?` ${b.workers.length} staff on the floor.`:' It currently has no staff.';
+  const chain=chainCount(b)>1&&CHAIN_TYPES.includes(b.type)?[['Is it part of a chain?',`Yes, one of ${chainCount(b)} ${t.n.toLowerCase()} locations${chainScandal(b)?'. Some customers are staying away at the moment':''}.`]]:[];
   return{cat:t.n,tag:pick(BIZ_TAGS[b.type]||BIZ_TAGS.home),about:`${t.d}${extra}`,base,
-    faq:[['Who owns it?',`You do.`],[b.type==='rental'?'Are there any flats free?':'Is it busy?',b.type==='rental'?`${rentalUnits(b)-(b.tenants||[]).length} at the moment.`:b.last?`About ${b.last.units} customers yesterday.`:'Ask again tomorrow.']],rev};
+    faq:[...chain,['Who owns it?',`You do.`],[b.type==='rental'?'Are there any flats free?':'Is it busy?',b.type==='rental'?`${rentalUnits(b)-(b.tenants||[]).length} at the moment.`:b.last?`About ${b.last.units} customers yesterday.`:'Ask again tomorrow.']],rev};
 }
 function googullPage(d){
   const e=d.biz?ggMine(d.biz):(GG[d.kind]||GG_FALLBACK),h=hash(d.x*7+d.y,d.name.length*31+(d.kind?d.kind.length:0));
@@ -232,7 +233,7 @@ function googullPage(d){
   if(d.kind==='stop')facts.push(['Fare',G.fx&&G.fx.pass?'Free':'$2']);
   if(own&&(!d.mine))facts.push([own.role,`${own.name}. Attitude to you: ${LAB[tier(att(own))]}`]);
   if(d.id&&typeof shopOwned==='function'&&shopOwned(d.id))facts.push(['Owner','You']);
-  if(d.biz){facts.push(['Owner','You']);facts.push(['District',d.biz.d]);if(d.biz.type)facts.push(['Level',String(d.biz.level)]);if(d.biz.last)facts.push(['Last day',`${d.biz.last.profit>=0?'+':''}${money(d.biz.last.profit)}`])}
+  if(d.biz){facts.push(['Owner','You']);facts.push(['District',d.biz.d]);if(d.biz.type)facts.push(['Level',String(d.biz.level)]);if(d.biz.type&&chainCount(d.biz)>1)facts.push(['Chain',`${chainCount(d.biz)} locations`]);if(d.biz.mgr)facts.push(['Manager','Yes']);if(d.biz.last)facts.push(['Last day',`${d.biz.last.profit>=0?'+':''}${money(d.biz.last.profit)}`])}
   facts.push(['Distance',`${man(Math.round(G.p.x),Math.round(G.p.y),d.x,d.y)} tiles`]);
   ui(`<div class="gg">${GG_LOGO}
     <div class="gg-search"><span>${esc(d.name.replace(' (tram stop)',''))}</span><i>Search</i></div>

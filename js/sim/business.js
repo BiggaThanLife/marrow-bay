@@ -47,17 +47,17 @@ function runBiz(b){
   }else if(b.type==='farm'){
     const f=dist==='Greenbelt'?1:.5,crops=Math.round((3+wcap)*f*rnd(.8,1.1)*G.mod.yield*addMod(b,'yield'));
     r.units=crops;r.cost=Math.round(crops*1.5*addMod(b,'cost'));payOut(b,r.cost);
-    if(b.auto){r.rev=crops*4;b.till+=r.rev}else b.store+=crops;
+    if(b.auto||b.mgr){r.rev=crops*4;b.till+=r.rev}else b.store+=crops;
   }else if(b.type!=='home'){
     const cap=Math.round((3+wcap)*(t.cap/7)*addMod(b,'cap')),dem=TR[dist]*t.per*appeal*[1.3,1,.65][b.mk]*addMod(b,'dem')*rnd(.85,1.15);
     const units=Math.floor(Math.min(dem,cap)),used=Math.min(b.supplies,units),buy=units-used;
     b.supplies-=used;r.units=units;r.rev=Math.round(units*t.price*MK[b.mk]);b.till+=r.rev;
     r.cost=Math.round(buy*t.cost*addMod(b,'cost'));if(r.cost)payOut(b,r.cost);
     const sticky=b.workers.filter(w=>w.trait==='sticky').length,guard=b.workers.some(w=>w.trait==='guard');
-    if(sticky&&!guard){r.theft=Math.min(b.till,Math.round(r.rev*.08*sticky));b.till-=r.theft}
+    if(sticky&&!guard){r.theft=Math.min(b.till,Math.round(r.rev*.08*sticky*(b.mgr?.5:1)));b.till-=r.theft}
     if(t.shady){
       G.rep[dist]=clamp(G.rep[dist]-t.shady.rep,-100,100);
-      if(Math.random()<t.shady.inspect){const fine=Math.min(t.shady.fine,Math.max(0,G.cash+b.till));payOut(b,fine);r.cost+=fine;r.note=`Fined ${money(fine)}.`;news(t.shady.news.replace('{d}',dist),2);notify(`Inspectors at your ${t.n.toLowerCase()} in ${dist}. Fined ${money(fine)}.`)}
+      if(Math.random()<t.shady.inspect){const fine=Math.min(Math.round(t.shady.fine*(b.mgr?.5:1)),Math.max(0,G.cash+b.till));payOut(b,fine);r.cost+=fine;r.note=`Fined ${money(fine)}.`;news(t.shady.news.replace('{d}',dist),2);notify(`Inspectors at ${bizName(b)} in ${dist}. Fined ${money(fine)}.`);startScandal(b)}
     }
     if(t.calm&&G.heat>0)G.heat=Math.max(0,G.heat-t.calm.heat);
   }
@@ -67,5 +67,11 @@ function runBiz(b){
     notify(`${w.name} quit. Wages went unpaid.`);return false;
   });
   if(b.till>150&&Math.random()<.07*(b.workers.some(w=>w.trait==='guard')?.3:1)){const loss=Math.round(b.till*.5);b.till-=loss;r.note=`Robbed. ${money(loss)} taken.`;{notify(`Break-in at your ${t.n.toLowerCase()}. ${money(loss)} gone.`);news(`A ${t.n.toLowerCase()} in the ${dist} was broken into.`,2)}}
+  if(b.mgr&&b.type!=='rental'&&b.type!=='home'){
+    /* the manager takes a tenth of takings, hires someone if the place is empty, and banks the till every night */
+    const fee=Math.round(r.rev*.1);r.wages+=fee;payOut(b,fee);
+    if(!b.workers.length&&G.pool.length){const w=G.pool.slice().sort((x,y)=>(y.skill/y.wage)-(x.skill/x.wage))[0];b.workers.push(w);G.pool=G.pool.filter(x=>x!==w);notify(`${bizName(b)}'s manager hires ${w.name}.`)}
+    const take=Math.max(0,b.till);if(take){G.cash+=take;b.till=0;r.banked=take}
+  }
   r.profit=r.rev-r.cost-r.wages-r.theft;b.last=r;pushHist(b.hist=b.hist||[],r.profit);
 }

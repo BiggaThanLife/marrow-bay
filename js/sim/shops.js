@@ -1,7 +1,25 @@
 "use strict";
 /* Expansion add-ons on your businesses, and the daily run of NPC shops you have bought. */
 const addList=b=>((BT_ADD[b.type]||[]).filter(a=>(b.add||[]).includes(a.id))).slice(0,b.level);
-const addMod=(b,k)=>addList(b).reduce((m,a)=>m*(a.eff[k]||1),1);
+const addMod=(b,k)=>addList(b).reduce((m,a)=>m*(a.eff[k]||1),1)*chainMod(b,k);
+/* Owning several of one kind of business: each extra location is worth a little more foot traffic and cheaper supplies, up to four extras.
+   A scandal at one location (an inspector's fine) puts off customers at all of them for a few days. */
+const CHAIN_TYPES=['cafe','bar','workshop','pies','cages','wellness'];
+const chainCount=b=>b.type?G.biz.filter(x=>x.type===b.type).length:0;
+const chainScandal=b=>b.type&&G.scandal&&G.scandal[b.type]>day();
+function chainMod(b,k){
+  if(k!=='dem'&&k!=='cost')return 1;
+  const n=chainCount(b);if(n<2||!CHAIN_TYPES.includes(b.type))return 1;
+  const m=Math.min(n-1,4);
+  return k==='cost'?1-.04*m:(1+.05*m)*(chainScandal(b)?.85:1);
+}
+function startScandal(b){
+  const same=G.biz.filter(x=>x!==b&&x.type===b.type);
+  if(!same.length||!CHAIN_TYPES.includes(b.type))return;
+  G.scandal=G.scandal||{};G.scandal[b.type]=day()+5;
+  same.forEach(x=>{G.rep[x.d]=clamp(G.rep[x.d]-1,-100,100)});
+  news(`The ${BT[b.type].n.toLowerCase()} scandal reaches your other ${same.length} location${same.length>1?'s':''}. Customers are staying away for a few days.`,2);
+}
 const addSum=(b,k)=>addList(b).reduce((m,a)=>m+(a.eff[k]||0),0);
 const shopOwned=id=>!!(G.shops&&G.shops[id]);
 const shopMul=(id,m)=>shopOwned(id)?m:1;

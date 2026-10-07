@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay chains and managers test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Chains and managers</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Chain bonuses, the scandal that spreads and fades, managers on every business type, and the two new career titles. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,BT,DISTS,CHAIN_TYPES,start,closeMenu,popClear,advance,alertQ,blocks,district,bizMenu,bizOverview,bizTraffic,chainMod,chainCount,chainScandal,startScandal,careerDaily,bizName,googullPage,gvPins,save,migrate,day,makePool})`);
+  const G = () => api.G, btns = () => [...doc.querySelectorAll('#sheet #actions button')], flush = () => { api.popClear(); api.alertQ.length = 0; };
+  const mk = (type, i, d) => { const b = api.blocks.filter(x => !x.poi && x.kind !== 'farmstead')[i]; return { key: b.key, d: d || api.district(b.x + 1, b.y + 1), price: 1, paid: 1, type, level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, auto: false, last: null } };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush(); G().cash = 20000;
+    // chain bonuses
+    G().biz = [mk('cafe', 0, 'Grid')];
+    const dem1 = api.bizTraffic(G().biz[0]).dem, cost1 = api.chainMod(G().biz[0], 'cost');
+    G().biz.push(mk('cafe', 1, 'Grid'), mk('cafe', 2, 'Grid'));
+    if (api.chainCount(G().biz[0]) !== 3) errs.push('chain count');
+    const dm = api.chainMod(G().biz[0], 'dem'); if (!(dm > 1.09 && dm < 1.11)) errs.push('dem bonus for 3 is ' + dm);
+    const cm = api.chainMod(G().biz[0], 'cost'); if (!(cm < cost1 && Math.abs(cm - .92) < .001)) errs.push('cost discount ' + cm);
+    if (!(api.bizTraffic(G().biz[0]).dem >= dem1)) errs.push('traffic did not grow');
+    G().biz.push(mk('cafe', 3, 'Grid'), mk('cafe', 4, 'Grid'), mk('cafe', 5, 'Grid'), mk('cafe', 6, 'Grid'));
+    if (api.chainMod(G().biz[0], 'dem') > 1.2001) errs.push('chain bonus not capped');
+    if (api.chainMod({ type: 'rental' }, 'dem') !== 1 || api.chainMod({ type: null }, 'dem') !== 1) errs.push('bonus leaked to other types');
+    stats.cafes = api.chainCount(G().biz[0]);
+    // scandal spreads and fades
+    G().biz = [mk('pies', 0, 'Grid'), mk('pies', 1, 'Dockside'), mk('bar', 2, 'Grid')];
+    const rep0 = G().rep.Dockside, d0 = api.chainMod(G().biz[1], 'dem');
+    api.startScandal(G().biz[0]);
+    if (!api.chainScandal(G().biz[1])) errs.push('scandal did not spread');
+    if (api.chainScandal(G().biz[2])) errs.push('scandal hit another type');
+    if (!(api.chainMod(G().biz[1], 'dem') < d0)) errs.push('scandal did not cut demand');
+    if (!(G().rep.Dockside < rep0)) errs.push('scandal did not cost standing at the other location');
+    G().biz = [mk('pies', 0, 'Grid'), mk('pies', 1, 'Dockside')];
+    api.advance(1440 * 7, false, true); flush();
+    if (api.chainScandal(G().biz[1])) errs.push('scandal did not fade');
+    // managers
+    G().biz = []; ['cafe', 'bar', 'workshop', 'farm', 'pies', 'cages', 'wellness'].forEach((t, i) => G().biz.push(mk(t, i, t === 'farm' ? 'Greenbelt' : 'Grid')));
+    G().biz.forEach(b => { api.bizMenu(b); const mb = btns().find(x => /^Manager:/.test(x.innerText)); if (!mb) errs.push('no manager button ' + b.type); else { mb.click(); if (!b.mgr) errs.push('manager did not switch on ' + b.type) } });
+    api.makePool(); G().cash = 5000;
+    api.advance(1440 * 3, false, true); flush();
+    G().biz.forEach(b => { if (b.till !== 0 && b.type !== 'farm') errs.push('till not banked ' + b.type + ' ' + b.till); if (!Number.isFinite(G().cash)) errs.push('bad cash') });
+    const staffed = G().biz.filter(b => b.workers.length).length; stats.staffed = staffed; if (!staffed) errs.push('manager hired nobody');
+    const withLast = G().biz.filter(b => b.last && b.last.rev > 0); stats.earning = withLast.length; if (!withLast.length) errs.push('nothing earned with managers');
+    if (withLast.some(b => b.last.wages < Math.round(b.last.rev * .1))) errs.push('manager fee missing from wages');
+    const banked = G().biz.filter(b => b.last && b.last.banked).length; stats.banked = banked; if (!banked) errs.push('nothing banked');
+    // switch off
+    const c0 = G().biz[0]; api.bizMenu(c0); btns().find(x => /^Manager:/.test(x.innerText)).click(); if (c0.mgr) errs.push('manager did not switch off');
+    // overview and Googull
+    api.bizOverview(); if (!btns().length) errs.push('empty overview');
+    G().biz = [mk('cafe', 0, 'Grid'), mk('cafe', 1, 'Dockside')]; G().biz[0].mgr = true;
+    const pin = api.gvPins().find(p => p.biz === G().biz[0]); api.googullPage(pin);
+    const t = doc.getElementById('sheet').innerText;
+    if (!/Chain\s*2 locations/.test(t) || !/Manager\s*Yes/.test(t) || !/part of a chain/.test(t)) errs.push('Googull page missing chain or manager');
+    // career titles
+    G().titles = []; G().biz = [mk('bar', 0, 'Grid'), mk('bar', 1, 'Grid'), mk('bar', 2, 'Grid')]; api.careerDaily(); flush(); if (!G().titles.some(x => x.id === 'chain')) errs.push('no Chain Owner title');
+    G().biz = api.DISTS.map((d, i) => mk('cafe', i, d)); api.careerDaily(); flush(); if (!G().titles.some(x => x.id === 'regional')) errs.push('no Regional Boss title');
+    // save, migrate
+    api.save(); delete G().scandal; api.migrate(); if (!G().scandal) errs.push('migrate did not default scandal');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 20).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

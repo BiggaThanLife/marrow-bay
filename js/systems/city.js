@@ -24,7 +24,7 @@ function cityInit(){
   G.council=G.council||{cur:null,hist:[],last:0,vetoDay:-99};
   if(!G.mkt)marketInit();
   if(typeof G.seed!=='number')G.seed=0;
-  G.veh.mods=G.veh.mods||{};G.inv.parts=G.inv.parts||0;G.inv.jammers=G.inv.jammers||0;G.tips=G.tips||{};G.inv.candy=G.inv.candy||0;NPCS.forEach(n=>{if(!G.npcs[n.id])G.npcs[n.id]={m:0,chat:-1,cash:n.wage*2+10,hunger:70}});G.inv.plaque=G.inv.plaque||0;G.plaque=G.plaque||{};
+  G.veh.mods=G.veh.mods||{};G.inv.parts=G.inv.parts||0;G.inv.jammers=G.inv.jammers||0;G.tips=G.tips||{};G.scandal=G.scandal||{};G.inv.candy=G.inv.candy||0;NPCS.forEach(n=>{if(!G.npcs[n.id])G.npcs[n.id]={m:0,chat:-1,cash:n.wage*2+10,hunger:70}});G.inv.plaque=G.inv.plaque||0;G.plaque=G.plaque||{};
   G.titles=G.titles||[];G.decor=G.decor||{};if(G.companion===undefined)G.companion=null;
   G.engage=G.engage||{};G.hookCool=G.hookCool||{};G.hookBusy=G.hookBusy||{};
   G.favs=G.favs||[];if(G.veh)G.veh.paint=G.veh.paint||{};
