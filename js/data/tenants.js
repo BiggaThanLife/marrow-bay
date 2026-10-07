@@ -22,6 +22,10 @@ const T_TRAITS={
   behind:{n:'Always short',hint:'Asks if the due date is "flexible."',chat:['Says money has been tight. It has been tight for a while.','Promises the rest on Friday. Which Friday is unclear.']},
   nosy:{n:'Nosy',hint:'Asks about every neighbour before even seeing the room.',chat:['Knows who is dating whom on the whole street.','Leans in. "You did not hear it from me."']},
   handy:{n:'Handy',hint:'Arrived with their own toolbox.',chat:['Already fixed a hinge that was not on any list.','Offers to look at the pipes themselves.']},
+  optimist:{n:'Terminal optimist',hint:'Calls the damp patch "character" before even seeing the room.',chat:['Says the flooded stairwell gives the building a waterfront feel.','Thanks you for the rent rise. "It keeps me motivated."','Has not noticed the smell, or has decided to love it.']},
+  defaulter:{n:'Pays in IOUs',hint:'Offers a hand-drawn promissory note instead of a deposit.',chat:['Hands you a drawing of a cheque. The drawing is quite good.','Says everyone in the building owes them something, so it evens out.']},
+  pyro:{n:'Pyromaniac',hint:'Asks whether the walls are fireproof. Seems disappointed by the answer.',chat:['Lights every candle in the room before offering you tea.','Says they work best "with a terrifying urgency." Their eyes are on the stove.']},
+  morbid:{n:'Morbidly curious',hint:'Asks which rooms have had something happen in them.',chat:['Knows about every accident on the street and was there for most of them.','Keeps a scrapbook of local disasters. It has a bookmark in it.']},
   secretive:{n:'Secretive',hint:'Gives no previous address.',chat:['Keeps the blinds shut. Pays on time, though.','Changes the subject when you ask what they do for work.']}
 };
 const T_TRAIT_IDS=Object.keys(T_TRAITS);
@@ -33,5 +37,6 @@ const T_ISSUES={
   pests:{n:'Pests',cost:35,parts:0,text:'Something has been in the pantry. Several somethings.'},
   noise:{n:'Noise complaints',cost:0,parts:0,text:'The neighbours say the noise from this flat goes on past midnight.'},
   late:{n:'Rent overdue',cost:0,parts:0,text:'They have fallen several days behind on rent.'},
+  fire:{n:'Scorch marks',cost:60,parts:1,text:'Something in this flat caught fire. The tenant swears it was already like that.'},
   secret:{n:'Unwelcome visitors',cost:0,parts:0,text:'Two people in coats came asking after this tenant.'}
 };

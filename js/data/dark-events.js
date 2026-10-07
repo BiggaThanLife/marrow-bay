@@ -1,0 +1,10 @@
+"use strict";
+/* Dark-comedy events. They use only the modifiers recomputeMods already understands, so they need no new rules. Added to EVT after event-templates.js loads. */
+EVT.push(
+ {id:'sinkhole',sev:2,w:5,dur:[2,3],mk:()=>({name:'Sinkhole on the Grid',desc:'A block of the Grid has dropped out of sight. The Town Board calls it the Sub-Level Open-Air Amphitheater, sells tickets, and lists the trapped vehicles as interactive sculptures.',mod:{traffic:{Grid:1.3},bills:1.05,vspeed:.95}})},
+ {id:'biohazard',sev:2,w:5,dur:[2,3],mk:()=>({name:'Barrels on the flats',desc:'Unmarked barrels have washed up along the shore. Scrap is thick on the flats, and every diner now sells "Glow-Grown" specials at a thirty percent artisan surcharge.',mod:{meal:1.3,drain:1.05},start:()=>{G.flats=clamp(G.flats+40,0,100)}})},
+ {id:'probate',sev:2,w:5,dur:[2,3],mk:()=>({name:'High tide, busy courts',desc:'A spring tide has flooded the low-lying homes of the Greenbelt. Probate has opened a drive-thru window to handle the surge in contested wills.',mod:{flood:['Greenbelt'],crops:1.15,traffic:{Greenbelt:.6}}})},
+ {id:'safetyweek',sev:3,w:4,dur:[2,3],mk:()=>({name:'Workplace Safety Week',desc:'After an unfortunate incident, Foundry Row has declared a district-wide Workplace Safety Week. The doors are locked from the outside to guarantee zero reported injuries.',mod:{closed:['foundry'],traffic:{'Foundry Row':.6}}})},
+ {id:'darkday',sev:2,w:5,dur:[1,1],mk:()=>({name:'Dark Thursday',desc:'To save money, the Town Board has switched off the streetlights and the emergency line for the day. It is being called a green initiative. Burglars call it a gift.',mod:{traffic:ALL(.8),heist:.25,cops:false}})},
+ {id:'redtide',sev:2,w:5,dur:[2,4],mk:()=>({name:'Red tide',desc:'The water has turned the colour of a bad decision. Fish are hard to sell, bottled water is not, and the Town Board has issued a Community Resilience Certificate to the first person who raised the price.',mod:{fish:1.5,meal:1.1,traffic:{Dockside:.75}}})}
+);

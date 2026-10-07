@@ -5,6 +5,7 @@ function phone(msg){
   const un=G.news.filter(x=>x.id>G.newsRead).length;
   ui(`<h2>Phone</h2><p class="muted">Day ${day()}, ${timeStr()}. ${G.gps?`GPS route: ${esc(G.gps.name)}.`:'No GPS route.'}</p>${msgP(msg)}`,[
     {label:'GPS',sub:'Pick a destination. Get a route or auto-walk.',fn:gpsMenu},
+    {label:'Bay-Watch Feed',sub:'Neighbours, complaints, patrol sightings',cls:'',fn:baywatchMenu},
     {label:'News',sub:un?`${un} new`:'Today and earlier days',cls:'',fn:newsMenu},
     {label:'Contacts',sub:`${Object.keys(G.met).length} people`,cls:'',fn:contactsMenu},
     {label:'Threads',sub:G.threads.active.some(t=>t.pending)?'New message':`${G.threads.active.length} active`,cls:G.threads.active.some(t=>t.pending)?'primary':'',fn:()=>threadsMenu()},

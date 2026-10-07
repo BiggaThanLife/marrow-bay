@@ -46,19 +46,24 @@ function rentalDay(b,r){
   const noisy=b.issues.some(i=>i.k==='noise');
   b.tenants.slice().forEach(t=>{
     const rent=tenantRent(b,t),mine=b.issues.filter(i=>i.t===t.id);
-    mine.forEach(i=>{if(i.k!=='late'&&i.k!=='secret')t.mood-=3});
+    mine.forEach(i=>{if(i.k!=='late'&&i.k!=='secret')t.mood-=t.trait==='optimist'?1:3});
     if(!mine.length)t.mood=Math.min(70,t.mood+1);
     if(noisy&&!mine.some(i=>i.k==='noise'))t.mood-=1;
     t.mood+=(MK[b.mk]>1?-.5:MK[b.mk]<1?.5:0)+addSum(b,'mood');
-    if(t.trait==='behind'&&Math.random()<.22)t.owed+=rent;
-    else if(t.mood<30&&Math.random()<.5){/* withholds rent today */}
+    if(t.trait==='morbid'&&G.evs.some(e=>e.sev>=3))t.mood=Math.min(100,t.mood+2);
+    if((t.trait==='behind'&&Math.random()<.22)||(t.trait==='defaulter'&&Math.random()<.3))t.owed+=rent;
+    else if(t.mood<30&&t.trait!=='optimist'&&Math.random()<.5){/* withholds rent today */}
     else rev+=rent;
     if(b.issues.length<units){
       if(Math.random()<.025*(t.trait==='tidy'?.4:1)*addMod(b,'issue'))addIssue(b,t,pick(['leak','heat','pests']));
       else if(t.trait==='noisy'&&Math.random()<.06)addIssue(b,t,'noise');
       else if(t.trait==='secretive'&&Math.random()<.025)addIssue(b,t,'secret');
+      else if(t.trait==='pyro'&&Math.random()<.035)addIssue(b,t,'fire');
     }
-    if(t.owed>=rent*3&&!b.issues.some(i=>i.t===t.id&&i.k==='late'))addIssue(b,t,'late');
+    if(t.owed>=rent*3&&!b.issues.some(i=>i.t===t.id&&i.k==='late')){
+      addIssue(b,t,'late');
+      if(t.trait==='defaulter'){G.rep[D]=clamp(G.rep[D]-1,-100,100);news(`${t.name} is telling the whole ${D} that your building runs on predatory collection tactics.`,1)}
+    }
     if(t.trait==='handy')b.issues=b.issues.filter(i=>!(i.t===t.id&&i.k!=='late'&&i.k!=='noise'&&i.k!=='secret'&&Math.random()<.6));
     if(b.manager)b.issues=b.issues.filter(i=>{
       if(i.t!==t.id||!(i.k==='leak'||i.k==='heat'||i.k==='pests'))return true;

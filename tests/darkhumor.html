@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay dark humor test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Dark humor pack</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Starts every new event, plays days with each new tenant trait, opens the Bay-Watch Feed, buys and uses the town board items, checks save and migrate. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document;
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,EVT,startEvent,recomputeMods,T_TRAITS,T_ISSUES,genTenant,ensureRental,bizMenu,tenantsMenu,tenantMenu,issuesMenu,issueMenu,baywatchMenu,baywatchPosts,baywatchIntel,phone,bag,town,eatCandy,plaqueMenu,keepsakeButtons,disasterOn,save,migrate,day})`);
+  const G = () => api.G, btns = () => [...doc.querySelectorAll('#sheet #actions button')].filter(b => !b.disabled);
+  const flush = () => { api.popClear(); api.alertQ.length = 0; };
+  const stats = {};
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush();
+    G().cash = 20000; G().inv.parts = 30;
+    // events
+    const ids = ['sinkhole', 'biohazard', 'probate', 'safetyweek', 'darkday', 'redtide'];
+    ids.forEach(id => { if (!api.EVT.find(e => e.id === id)) errs.push('missing event ' + id) });
+    ids.forEach(id => {
+      G().evs = []; G().queue = [];
+      api.startEvent(api.EVT.find(e => e.id === id)); flush();
+      const m = G().mod;
+      ['sell', 'crops', 'meal', 'fish', 'drain', 'vspeed', 'bills', 'yield', 'busk', 'heist'].forEach(k => { if (!Number.isFinite(m[k])) errs.push(id + ': bad mod ' + k) });
+      api.advance(1440 * 3, false, true); flush();
+    });
+    G().evs = []; api.recomputeMods();
+    // tenants with each new trait
+    G().biz.push({ key: '16,13', d: 'Grid', price: 1500, paid: 1500, type: 'rental', level: 2, supplies: 0, till: 0, workers: [], mk: 1, last: null, store: 0, auto: false });
+    const b = G().biz[0]; api.ensureRental(b); b.tenants = [];
+    ['optimist', 'defaulter', 'pyro', 'morbid'].forEach(tr => { if (!api.T_TRAITS[tr]) errs.push('missing trait ' + tr); const t = api.genTenant(); t.trait = tr; b.tenants.push(t) });
+    G().evs.push({ id: 'x', sev: 4, name: 't', desc: 't', mod: {}, until: 9999 });
+    let fires = 0, rumors = 0;
+    for (let d = 0; d < 150; d++) {
+      G().energy = 100; G().hunger = 100; G().cash = Math.max(G().cash, 3000);
+      api.advance(1440, false, true); flush();
+      if (b.issues.some(i => i.k === 'fire')) fires++;
+      if (d % 6 === 0) {
+        api.issuesMenu(b); const bs = btns().filter(x => !/^Back/.test(x.innerText)); if (bs.length) { bs[0].click(); const ac = btns().filter(x => !/^Back/.test(x.innerText)); if (ac.length) ac[0].click(); }
+        api.tenantsMenu(b); api.tenantMenu(b, b.tenants[0] || { id: -1 }); flush();
+      }
+      b.tenants.forEach(t => { if (!Number.isFinite(t.mood) || !Number.isFinite(t.owed)) errs.push('bad tenant ' + t.trait) });
+      b.issues.forEach(i => { if (!api.T_ISSUES[i.k]) errs.push('unknown issue ' + i.k) });
+      if (b.tenants.length < 4) { const t = api.genTenant(); t.trait = ['optimist', 'defaulter', 'pyro', 'morbid'][d % 4]; b.tenants.push(t) }
+    }
+    stats.fires = fires; stats.tenants = b.tenants.length;
+    // each issue opens
+    Object.keys(api.T_ISSUES).forEach(k => { if (!b.tenants.length) return; b.issues.push({ k, t: b.tenants[0].id, d: api.day() }); api.issueMenu(b, b.issues[b.issues.length - 1]); if (!btns().length) errs.push('issue menu empty ' + k); b.issues.pop() });
+    // bay-watch
+    const posts = api.baywatchPosts(); stats.posts = posts.length; if (posts.length !== 5 || posts.some(p => !p.t || /\{/.test(p.t))) errs.push('bad bay-watch posts');
+    if (!api.baywatchIntel() || /\{/.test(api.baywatchIntel())) errs.push('bad intel');
+    api.phone(); if (![...doc.querySelectorAll('#sheet button')].some(x => /Bay-Watch/.test(x.innerText))) errs.push('phone has no Bay-Watch button');
+    api.baywatchMenu(); flush();
+    // items
+    G().evs = []; G().heat = 0;
+    if (api.keepsakeButtons(api.town).some(x => /candy/.test(x.label))) errs.push('candy sold with no disaster');
+    G().evs.push({ id: 'y', sev: 3, name: 'd', desc: 'd', mod: {}, until: 9999 });
+    const kb = api.keepsakeButtons(api.town); if (!kb.some(x => /candy/.test(x.label))) errs.push('no candy during disaster');
+    kb.forEach(x => x.fn()); flush();
+    stats.candy = G().inv.candy; stats.plaque = G().inv.plaque; if (G().inv.candy !== 1 || G().inv.plaque !== 1) errs.push('purchases failed');
+    G().heat = .8; api.eatCandy(); if (G().heat !== 0 || G().inv.candy !== 0) errs.push('candy did not work');
+    const rep0 = G().rep.Grid; api.plaqueMenu(); const gb = btns().find(x => /^Grid/.test(x.innerText)); gb.click();
+    if (G().rep.Grid <= rep0 || G().inv.plaque !== 0) errs.push('plaque did not work');
+    api.bag(); api.town(); api.closeMenu();
+    // save and migrate
+    api.save(); delete G().inv.candy; delete G().inv.plaque; delete G().plaque; api.migrate();
+    if (G().inv.candy !== 0 || G().inv.plaque !== 0 || !G().plaque) errs.push('migrate did not default items');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 20).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

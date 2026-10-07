@@ -1,6 +1,6 @@
 "use strict";
 /* Item names, prices, hunger values, vehicles. */
-const NAMES={crops:'crops',meals:'meals',fish:'fish',smoked:'smoked fish',scrap:'scrap',trinkets:'trinkets',seeds:'seeds',loot:'hot goods',parts:'parts',jammers:'jammers'};
+const NAMES={crops:'crops',meals:'meals',fish:'fish',smoked:'smoked fish',scrap:'scrap',trinkets:'trinkets',seeds:'seeds',loot:'hot goods',parts:'parts',jammers:'jammers',candy:'prayer candy',plaque:'plaques'};
 const FAIR={meals:12,smoked:12,fish:7,crops:5,trinkets:30};
 const HUNG={meals:45,smoked:35,fish:20,crops:12};
 const MK=[.7,1,1.25],MKN=['Low','Fair','High'];

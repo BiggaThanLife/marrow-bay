@@ -50,7 +50,7 @@ function issueMenu(biz,i,msg){
   if(!t){closeIssue(biz,i);return issuesMenu(biz)}
   const back=m=>issuesMenu(biz,m),btns=[];
   const head=`<h2>${def.n}</h2><p class="muted">${esc(t.name)}, ${esc(t.job)}.</p><p>${esc(def.text)}</p>${msgP(msg)}`;
-  if(i.k==='leak'||i.k==='heat'||i.k==='pests'){
+  if(i.k==='leak'||i.k==='heat'||i.k==='pests'||i.k==='fire'){
     btns.push({label:'Hire a repairer',sub:`${money(def.cost)}`,off:G.cash<def.cost,fn:()=>{G.cash-=def.cost;t.mood=Math.min(100,t.mood+5);closeIssue(biz,i);advance(20);back('Fixed. They are grateful.')}});
     if(def.parts)btns.push({label:'Fix it yourself',sub:`${def.parts} part${def.parts>1?'s':''} and some energy. You have ${G.inv.parts}.`,off:G.inv.parts<def.parts||G.energy<12,cls:'',fn:()=>{G.inv.parts-=def.parts;G.energy=clamp(G.energy-8,0,100);t.mood=Math.min(100,t.mood+6);closeIssue(biz,i);advance(90);back('You fixed it yourself.')}});
   }else if(i.k==='noise'){
