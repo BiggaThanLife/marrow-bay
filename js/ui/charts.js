@@ -5,7 +5,10 @@ const pushHist=(arr,v,max=HIST_DAYS)=>{arr.push(Math.round(v*100)/100);while(arr
 function lineChart(vals,o={}){
   vals=(vals||[]).filter(Number.isFinite);
   const title=o.title?`<p class="small" style="margin:8px 0 2px"><b>${esc(o.title)}</b></p>`:'';
-  if(vals.length<2)return `${title}<p class="small muted">${esc(o.empty||'Not enough days yet. The chart fills in as time passes.')}</p>`;
+  if(vals.length<2){
+    const fmt0=o.fmt||(v=>money(v)),first=vals.length?` So far: ${fmt0(vals[0])}.`:'';
+    return `${title}<p class="small muted">${esc(o.empty||'Tracking has started.')}${esc(first)} The line appears after two game days, so check back tomorrow.</p>`;
+  }
   const fmt=o.fmt||(v=>money(v)),w=300,h=o.h||80,pad=5,n=vals.length;
   let lo=Math.min(...vals,o.line===undefined?Infinity:o.line),hi=Math.max(...vals,o.line===undefined?-Infinity:o.line);
   if(o.zero){lo=Math.min(lo,0);hi=Math.max(hi,0)}

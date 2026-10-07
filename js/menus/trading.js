@@ -5,7 +5,7 @@ function tradingMenu(poi,n,msg){
     const h=G.mkt.hold[s.id]||0;
     return{label:`${s.n}: $${sharePrice(s.id).toFixed(1)}`,sub:h?`You hold ${h}, worth ${money(h*sharePrice(s.id))}${G.mkt.cost[s.id]?` (cost ${money(G.mkt.cost[s.id])})`:''}`:`${s.d}. You hold none.`,cls:'',fn:()=>shareMenu(poi,n,s.id)};
   });
-  ui(`<h2>Trading desk</h2><p class="muted">Prices follow their district and the mood of Highline. Fee ${money(tradeFee())} a trade. Portfolio ${money(portfolio())}.</p>${G.arc&&G.arc.id==='bubble'?'<p class="amber">Everyone at the desk is talking at once.</p>':''}${msgP(msg)}${lineChart(G.mkt.pf,{title:'Your portfolio value',empty:'Your portfolio chart appears after a couple of days of trading.'})}`,[
+  ui(`<h2>Trading desk</h2><p class="muted">Prices follow their district and the mood of Highline. Fee ${money(tradeFee())} a trade. Portfolio ${money(portfolio())}.</p>${G.arc&&G.arc.id==='bubble'?'<p class="amber">Everyone at the desk is talking at once.</p>':''}${msgP(msg)}${lineChart(G.mkt.pf,{title:'Your portfolio value',empty:'Tracking has started.'})}`,[
     ...rows,{label:'Back',cls:'quiet',fn:()=>MENUS.bank(poi,n)}]);
 }
 function shareMenu(poi,n,id,msg){
