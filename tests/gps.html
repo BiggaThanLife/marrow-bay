@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay GPS test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:640px;border:1px solid #888}</style>
+<h2>GPS map and Googull</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Opens the GPS map from the phone, taps every pin, opens every Googull page, checks routes, favorites, zoom and pan, and that every kind of place has an entry. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,POIS,GG,start,closeMenu,popClear,advance,alertQ,phone,gpsMap,gvPins,gvTap,gvZoom,gvClose,googullPage,gpsMenu,get GV(){return GV},hash})`);
+  const G = () => api.G, sheet = () => doc.getElementById('sheet').innerText, flush = () => { api.popClear(); api.alertQ.length = 0; };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush(); G().cash = 5000;
+    Object.values(api.POIS).forEach(p => { if (!api.GG[p.kind]) errs.push('no Googull entry for ' + p.kind) });
+    ['stop', 'mine', 'lot'].forEach(k => { if (!api.GG[k]) errs.push('no Googull entry for ' + k) });
+    Object.entries(api.GG).forEach(([k, e]) => { if (!e.cat || !e.tag || !e.about || e.faq.length < 2 || e.rev.length < 3 || !(e.base >= 1 && e.base <= 5)) errs.push('incomplete Googull entry ' + k) });
+    G().biz.push({ key: '16,13', d: 'Grid', price: 1, type: 'cafe', level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, auto: false });
+    api.phone(); const gb = [...doc.querySelectorAll('#sheet button')].find(b => /^GPS/.test(b.innerText)); if (!gb) throw new Error('no GPS button'); gb.click();
+    const map = doc.getElementById('gpsmap'); if (!map || map.hidden) errs.push('map not shown');
+    const pins = api.gvPins(); stats.pins = pins.length; if (pins.length < 25) errs.push('too few pins ' + pins.length);
+    if (!pins.some(p => p.kind === 'stop') || !pins.some(p => p.mine) || !pins.some(p => p.home)) errs.push('missing stop, mine or home pin');
+    const z0 = api.GV.z; api.gvZoom(1.5); if (!(api.GV.z > z0)) errs.push('zoom in failed'); api.gvZoom(1 / 1.5);
+    api.gvZoom(1 / 100); if (api.GV.z < 1) errs.push('zoomed out past the whole city');
+    api.GV.z = 3; api.GV.ox = 99999; api.GV.oy = 99999; win.eval('gvClamp()'); if (api.GV.ox > 0 || api.GV.oy > 0) errs.push('pan not clamped');
+    let tapped = 0, pages = 0;
+    pins.forEach(d => {
+      api.GV.sel = d; win.eval('gvCard()');
+      if (doc.getElementById('gm-card').hidden) errs.push('no card for ' + d.name);
+      api.gvClose(); api.googullPage(d);
+      const t = sheet();
+      if (!/Googull/.test(t) || /undefined|NaN|\{/.test(t)) errs.push('bad Googull page for ' + d.name);
+      pages++;
+      api.gpsMap();
+    });
+    stats.pages = pages;
+    // route, favorite, back keeps selection
+    const diner = api.gvPins().find(p => p.id === 'diner'); api.GV.sel = diner; win.eval('gvCard()');
+    doc.getElementById('gm-guide').click(); if (!G().gps || G().gps.name !== diner.name) errs.push('route not set');
+    doc.getElementById('gm-fav').click(); if (!(G().favs || []).includes(diner.name)) errs.push('favorite not saved');
+    doc.getElementById('gm-gg').click(); if (!doc.getElementById('gpsmap').hidden) errs.push('map still showing over Googull');
+    [...doc.querySelectorAll('#sheet button')].find(b => /Back to the map/.test(b.innerText)).click();
+    if (!api.GV.sel || api.GV.sel.name !== diner.name) errs.push('selection lost after Googull');
+    doc.getElementById('gm-list').click(); if (!/GPS/.test(sheet())) errs.push('list view missing');
+    api.gpsMap(); doc.getElementById('gm-x').click(); if (!doc.getElementById('gpsmap').hidden) errs.push('close failed'); if (!/Phone/.test(sheet())) errs.push('close did not return to phone');
+    // mouse path: tap on a pin picks it
+    api.gpsMap(); const gv = api.GV, s = gv.s(), p0 = api.gvPins()[0]; gv.z = 6; win.eval('gvCenter(' + p0.x + ',' + p0.y + ')'); const s2 = gv.s();
+    api.gvTap(gv.ox + (p0.x + .5) * s2, gv.oy + (p0.y + .5) * s2); if (!gv.sel || gv.sel.name !== p0.name) errs.push('tap did not select ' + p0.name);
+    api.gvTap(5, 5); api.gvClose();
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 20).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

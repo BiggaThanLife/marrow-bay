@@ -91,3 +91,35 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 #bar button{position:relative}
 #b-biz[data-n]:not([data-n=""])::after{content:attr(data-n);position:absolute;right:-3px;top:-7px;box-shadow:0 0 0 2px var(--bg);min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#d33a2c;color:#fff;font:700 .7rem/18px "DM Sans",system-ui,sans-serif}
 .chart{background:var(--bg);border:2px solid var(--line);padding:6px 8px;margin:2px 0 8px}
+
+/* GPS sky view and Googull */
+#gpsmap{position:fixed;inset:0;z-index:40;display:grid;grid-template-rows:auto 1fr auto;background:var(--bg);color:var(--text)}
+#gpsmap[hidden]{display:none}
+#gpsmap .gm-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;padding-top:max(8px,env(safe-area-inset-top));background:var(--panel);border-bottom:3px solid var(--accent)}
+#gpsmap .gm-bar b{font:700 1rem "Silkscreen","DM Sans",sans-serif;letter-spacing:.05em}
+#gpsmap .gm-sp{flex:1}
+#gpsmap .gm-bar button,#gm-card button{min-height:40px;min-width:40px;padding:0 12px;border:2px solid var(--line);background:var(--bg);color:var(--text);font:600 .95rem "DM Sans",system-ui,sans-serif;border-radius:0}
+#gpsmap .gm-bar button:active,#gm-card button:active{background:var(--accent);color:var(--accent-ink)}
+#gm-cv{width:100%;height:100%;min-height:0;display:block;touch-action:none;background:#14262f}
+#gm-card{padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:var(--panel);border-top:3px solid var(--accent)}
+#gm-card[hidden]{display:none}
+#gm-card .gm-name{display:flex;flex-direction:column;margin-bottom:8px}
+#gm-card .gm-name small{color:var(--muted)}
+#gm-card .gm-btns{display:flex;flex-wrap:wrap;gap:6px}
+#gm-card .gm-btns button{flex:1 1 auto}
+#gm-card .gm-btns .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.gg-logo{font:700 2rem "DM Sans",system-ui,sans-serif;text-align:center;letter-spacing:-.02em;margin:2px 0 6px}
+.gg-search{display:flex;align-items:center;justify-content:space-between;border:2px solid var(--line);background:var(--bg);padding:8px 12px;border-radius:22px}
+.gg-search i{font-style:normal;color:var(--accent);font-weight:700;font-size:.85rem}
+.gg-meta{margin:6px 4px}
+.gg-card{border:2px solid var(--line);background:var(--bg);padding:10px 12px;margin-top:4px}
+.gg-card h3{margin:0 0 2px;font-size:1.25rem}
+.gg-card h4{margin:12px 0 4px;font-size:.95rem}
+.gg-cat{margin:0 0 4px}
+.gg-stars{color:#f2b84b;letter-spacing:1px}
+.gg-open{color:var(--good);font-weight:700}
+.gg-closed{color:var(--warn);font-weight:700}
+.gg-tag{font-style:italic}
+.gg-q,.gg-rev{margin:4px 0}
+.gg-kv{margin-top:8px}
+.gg-kv{grid-template-columns:1fr}
