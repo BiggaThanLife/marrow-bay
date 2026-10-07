@@ -14,6 +14,9 @@ function intro(i,k){
   if(i===0)return ui(`<h2>Welcome to Marrow Bay, ${esc(G.name)}</h2><p>This is HARBOR, the Harbor Administration and Resident Benefits Office. I am delighted you chose to arrive. Statistically, most people do not.</p>
     <p class="muted">Population: fluctuating. Tide: yes.</p>`,[{label:'Continue',fn:next(1)}],true,false);
   if(i===1)return ui(`<h2>${esc(b.n)}</h2><p>${esc(INTRO_BG[k]||b.desc)}</p><p class="muted">${esc(b.desc)}</p>`,[{label:'Continue',fn:next(2)}],true,false);
+  if(i===2)return ui(`<h2>What I do</h2><p>I keep the city's records and hand out its benefits. Births, bills, bridges, the tide table. Marrow Bay does not forget a thing, because I am not permitted to lose it.</p>
+    <p>The grey poles on the street corners are FLACK cameras. They tell me who is where. I will say nothing about this, which is sometimes the same as doing something.</p>
+    <p class="muted">HARBOR is the city's records office. It is also, you may notice, listening.</p>`,[{label:'Continue',fn:next(3)}],true,false);
   ui(`<h2>Your accommodation</h2><p>You live at <b>${esc(h.name)}</b>. Rent is ${money(RENT[b.home])} a month. HARBOR has noted this. HARBOR notes everything.</p>
     <p class="muted">Citizen onboarding takes about a minute. It is optional, like most of the things that keep you alive.</p>`,
     [{label:'Begin onboarding',sub:'Recommended. Replay it any time from the Phone.',fn:()=>tutorial(0)},{label:'Skip, I will figure it out',cls:'quiet',fn:finishIntro}],true,false);

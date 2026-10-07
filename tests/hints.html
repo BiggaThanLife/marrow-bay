@@ -11,9 +11,13 @@
 const f = document.getElementById('game');
 f.addEventListener('load', () => {
   const win = f.contentWindow, errs = [], doc = win.document, stats = {};
-  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,HINTS,hintsCheck,SET,TUT,migrate,get popOpen(){return popOpen},get popQ(){return popQ}})`);
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,HINTS,hintsCheck,SET,TUT,migrate,get popOpen(){return popOpen},get popQ(){return popQ},intro,get ui(){return ui}})`);
   const G = () => api.G, title = () => doc.getElementById('pop-t').textContent, shown = () => !doc.getElementById('pop').hidden;
   try {
+    // HARBOR intro explains what it does
+    api.start(Object.keys(api.BG)[0]); api.intro(2, Object.keys(api.BG)[0]);
+    if (!/What I do/.test(doc.getElementById('sheet').innerText) || !/FLACK/.test(doc.getElementById('sheet').innerText)) errs.push('intro step 2 missing');
+    api.closeMenu();
     if (api.TUT.length !== 3) errs.push('tutorial should be 3 cards, is ' + api.TUT.length);
     api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear();
     G().flags.onboarded = false; G().met = {}; G().cash = 500; G().hunger = 100; G().energy = 100; G().heat = 0; G().biz = [];
@@ -26,9 +30,12 @@ f.addEventListener('load', () => {
       bills: () => { win.eval('G.t=24*1440+8*60') },
       heat: () => { G().heat = 2 },
       biz: () => { G().biz.push({ key: '16,13', d: 'Grid', price: 1, type: 'cafe', level: 1, workers: [], till: 0 }) },
+      cameras: () => {},
       tenants: () => { G().biz[0].type = 'rental'; G().biz[0].tenants = [{ id: 1 }]; G().biz[0].applicants = [] }
     };
+    const camOrig = win.camNear;
     api.HINTS.forEach(h => {
+      win.camNear = h.id === 'cameras' ? () => true : camOrig;
       if (!cond[h.id]) return errs.push('no test for ' + h.id);
       api.popClear(); cond[h.id]();
       // earlier hints may fire first; drain until this one has fired

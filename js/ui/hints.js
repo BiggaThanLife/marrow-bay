@@ -3,6 +3,7 @@
    Each hint has an id (saved in G.tips so it never repeats), a test, and the text. At most one shows per hour of game time.
    Players can switch hints off in Settings (SET.hints). */
 const HINTS=[
+  {id:'cameras',when:()=>typeof camNear==='function'&&camNear(6),t:'Those grey poles',b:'They are FLACK cameras, and they report to HARBOR. The more coverage the city has, the slower your heat cools and the less HARBOR is allowed to say out loud. You can see the coverage in the FLACK tab of your Phone.',q:'I see nothing. I am told that is the point.'},
   {id:'people',when:()=>Object.keys(G.met).length>=1,t:'People remember',b:'Everyone reads your background and your actions, and they talk to each other. Open the Bag to see how people see you. Chat, give meals, and mind your reputation in each district. Some doors close for good.',q:'Everyone here is watching. HARBOR is simply the only one with a filing system.'},
   {id:'hungry',when:()=>G.hunger<=30||G.energy<=30,t:'Running low',b:'The Fed and Rested bars drain as time passes. If either hits zero you collapse and wake at Bell Clinic, six hours later and a little poorer. Eat at Teo\'s Diner or cook at home. Sleep at home.',q:'Collapsing is technically a form of rest.'},
   {id:'money',when:()=>G.cash<25,t:'Making money',b:'Earn it by working shifts (docks, diner, estate, foundry), fishing, farming the Greenbelt plots, or busking on the Plaza. Bills come every 30 days.',q:'Debt is just money that has not met you yet.'},
