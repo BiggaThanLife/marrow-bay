@@ -2,6 +2,16 @@
 /* Player businesses: staff pool, daily run, payouts. */
 /* ================= BUSINESS ================= */
 function makePool(){G.pool=Array.from({length:4},()=>{const skill=ri(1,3);return{id:Math.random().toString(36).slice(2,8),name:pick(WN)+' '+pick(LN),skill,wage:[0,16,24,34][skill]+ri(-2,3),trait:pick(TRAITS)}})}
+/* a name for each building you own, picked once and kept until the business type changes */
+function bizName(b){
+  const k=b.type||'empty';
+  if(b.name&&b.nameFor===k)return b.name;
+  const pool=BIZ_NAMES[k]||BIZ_NAMES.empty,used=G.biz.filter(x=>x!==b&&x.name).map(x=>x.name);
+  const free=pool.filter(n=>!used.includes(n));
+  let n=free.length?pick(free):pick(pool)+' II';
+  b.name=n;b.nameFor=k;return n;
+}
+const stallName=s=>STALL_NAMES[hash(s.x,s.y)%STALL_NAMES.length];
 function payOut(b,amt){
   const fromTill=Math.min(b.till,amt);b.till-=fromTill;let rest=amt-fromTill;
   const fromCash=Math.min(G.cash,rest);G.cash-=fromCash;rest-=fromCash;

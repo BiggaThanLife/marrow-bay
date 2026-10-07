@@ -11,7 +11,7 @@
 const f = document.getElementById('game');
 f.addEventListener('load', () => {
   const win = f.contentWindow, errs = [], doc = win.document, stats = {};
-  const api = win.eval(`({get G(){return G},BG,POIS,GG,start,closeMenu,popClear,advance,alertQ,phone,gpsMap,gvPins,gvTap,gvZoom,gvClose,googullPage,gpsMenu,get GV(){return GV},hash})`);
+  const api = win.eval(`({get G(){return G},BG,POIS,GG,start,closeMenu,popClear,advance,alertQ,phone,gpsMap,gvPins,gvTap,bizName,stallName,BT,BIZ_NAMES,ensureRental,rentalUnits,T_ISSUES,blocks,district,gvZoom,gvClose,googullPage,gpsMenu,get GV(){return GV},hash})`);
   const G = () => api.G, sheet = () => doc.getElementById('sheet').innerText, flush = () => { api.popClear(); api.alertQ.length = 0; };
   try {
     api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush(); G().cash = 5000;
@@ -26,6 +26,23 @@ f.addEventListener('load', () => {
     const z0 = api.GV.z; api.gvZoom(1.5); if (!(api.GV.z > z0)) errs.push('zoom in failed'); api.gvZoom(1 / 1.5);
     api.gvZoom(1 / 100); if (api.GV.z < 1) errs.push('zoomed out past the whole city');
     api.GV.z = 3; api.GV.ox = 99999; api.GV.oy = 99999; win.eval('gvClamp()'); if (api.GV.ox > 0 || api.GV.oy > 0) errs.push('pan not clamped');
+    // your own businesses get names and their own Googull pages
+    G().biz = [];
+    const free = api.blocks.filter(b => !b.poi && b.kind === 'tower').slice(0, 12).map(b => b.key);
+    const types = Object.keys(api.BT).concat([null]);
+    types.forEach((k, i) => G().biz.push({ key: free[i], d: 'Grid', price: 1, paid: 1, type: k, level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, auto: false, last: null }));
+    G().biz.forEach(b => { if (b.type === 'rental') api.ensureRental(b) });
+    const nm = G().biz.map(api.bizName); stats.names = nm.length;
+    if (new Set(nm).size !== nm.length) errs.push('duplicate business names');
+    if (nm.some(n => !n)) errs.push('missing business name');
+    if (G().biz.map(api.bizName).join() !== nm.join()) errs.push('business names not stable');
+    G().biz.forEach(b => { if (b.type && !api.BIZ_NAMES[b.type].includes(b.name.replace(' II', ''))) errs.push('name not from pool ' + b.name) });
+    const mine = api.gvPins().filter(p => p.mine && p.biz); if (mine.length !== G().biz.length) errs.push('business pins ' + mine.length + ' of ' + G().biz.length);
+    mine.forEach(p => { if (p.name !== p.biz.name) errs.push('pin not named for business'); api.gvClose(); api.googullPage(p); const t = sheet(); if (!t.includes(p.biz.name) || /undefined|NaN|\{/.test(t)) errs.push('bad business page ' + p.name); if (!/Owner\s*You/.test(t)) errs.push('no owner line ' + p.name); api.gpsMap() });
+    const cafe = G().biz.find(b => b.type === 'cafe'), before = cafe.name; cafe.type = 'bar'; if (api.bizName(cafe) === before && api.BIZ_NAMES.bar.length) errs.push('name did not change with type'); if (!api.BIZ_NAMES.bar.includes(cafe.name)) errs.push('new name not a bar name');
+    const rent = G().biz.find(b => b.type === 'rental'); rent.issues = [{ k: 'leak', t: rent.tenants[0].id, d: 1 }]; api.gvClose(); api.googullPage(api.gvPins().find(p => p.biz === rent)); if (!/Leaking pipe/.test(sheet())) errs.push('current problem not reviewed');
+    api.gpsMap();
+    G().biz = [];
     let tapped = 0, pages = 0;
     pins.forEach(d => {
       api.GV.sel = d; win.eval('gvCard()');

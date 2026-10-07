@@ -26,8 +26,8 @@ function gpsList(){
   if(G.mission){const t=POIS[G.mission.stops[G.mission.i]];list.push({name:`Job: ${t.name}`,x:t.ex,y:t.ey})}
   Object.values(POIS).forEach(q=>list.push({name:q.name,id:q.id,kind:q.kind,x:q.ex,y:q.ey}));
   STOPS.forEach(s=>list.push({name:s.name+' (tram stop)',kind:'stop',x:s.x,y:s.y}));
-  G.biz.forEach(b=>{const bl=blockByKey(b.key);if(bl)list.push({name:`Your ${b.type?BT[b.type].n.toLowerCase():'building'} (${b.d})`,kind:'mine',mine:true,x:bl.x+1,y:bl.y+4})});
-  G.structs.filter(s=>s.type==='stall'||s.type==='house').forEach(s=>list.push({name:`Your ${STRUCTS[s.type].n.toLowerCase()}`,kind:'mine',mine:true,x:s.x,y:s.y}));
+  G.biz.forEach(b=>{const bl=blockByKey(b.key);if(bl)list.push({name:bizName(b),kind:'mine',mine:true,biz:b,x:bl.x+1,y:bl.y+4})});
+  G.structs.filter(s=>s.type==='stall'||s.type==='house').forEach(s=>list.push({name:s.type==='stall'?stallName(s):`Your ${STRUCTS[s.type].n.toLowerCase()}`,kind:'mine',mine:true,x:s.x,y:s.y}));
   return list.map(d=>({...d,dist:man(Math.round(p.x),Math.round(p.y),d.x,d.y)})).sort((a,b)=>a.dist-b.dist);
 }
 function gpsMenu(){

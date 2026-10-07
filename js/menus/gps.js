@@ -193,9 +193,33 @@ function gvCard(){
 /* ----- Googull: the city's search page ----- */
 const GG_LOGO='<div class="gg-logo" aria-label="Googull"><b style="color:#4f8cf2">G</b><b style="color:#e65a4f">o</b><b style="color:#f2b84b">o</b><b style="color:#4f8cf2">g</b><b style="color:#5fb86a">u</b><b style="color:#e65a4f">l</b><b style="color:#f2b84b">l</b></div>';
 function ggStars(v){const f=Math.round(v*2)/2,full=Math.floor(f),half=f-full>=.5;return '★'.repeat(full)+(half?'½':'')+'☆'.repeat(Math.max(0,5-full-(half?1:0)))}
+/* The Googull entry for a building you own. Rating and reviews come from how it is actually doing. */
+function ggMine(b){
+  if(!b.type)return{cat:'Vacant building',tag:'Potential, mostly.',about:`You own this empty building in the ${b.d}. It needs a fit-out and a good story.`,base:2.5,
+    faq:[['Can I open a business here?','Yes. Open Biz, or tap it on the map.'],['What will it become?','Whatever you can afford.']],
+    rev:[['Passer-by',3,'Spacious.'],['Pigeon',5,'Excellent crumbs.'],['Developer',4,'Great potential. Terrible foundations.']]};
+  const t=BT[b.type],pool=BIZ_REV[b.type==='rental'||b.type==='cages'?'home':b.type==='farm'?'farm':'shop'];
+  let base=3.1+G.rep[b.d]/70;
+  if(b.last)base+=b.last.profit>0?.4:-.4;
+  if(b.type==='rental'){const n=(b.tenants||[]).length;if(n)base+=((b.tenants.reduce((s,x)=>s+x.mood,0)/n)-50)/60;base-=(b.issues||[]).length*.25}
+  else if(b.type!=='farm'&&b.type!=='home'){if(!b.workers.length)base-=.4}
+  if(b.type==='pies'||b.type==='cages')base-=.3;
+  base=Math.min(5,Math.max(1,base));
+  const h=hash(b.key.length*13+(b.d.length),b.level*7+day()),good=base>=3.5;
+  const pick3=(arr,n)=>{const out=[],a=arr.slice();for(let i=0;i<n&&a.length;i++){const j=(h>>i*3)%a.length;out.push(a.splice(j,1)[0])}return out};
+  const who=['Regular','Neighbour','Passer-by','Local','Stranger','Pigeon'],rev=[];
+  pick3(pool.g,good?2:1).forEach((x,i)=>rev.push([who[(h>>i)%who.length],good?5:4,x]));
+  pick3(pool.b,good?1:2).forEach((x,i)=>rev.push([who[(h>>(i+3))%who.length],good?3:2,x]));
+  /* one line about a real, current problem */
+  if(b.type==='rental'&&b.issues&&b.issues.length){const i=b.issues[0],tn=b.tenants.find(x=>x.id===i.t);rev.unshift([tn?tn.name.split(' ')[0]:'Tenant',2,`${T_ISSUES[i.k].n}. Nobody has come.`]);rev.length=3}
+  else if(!b.workers.length&&b.type!=='farm'&&b.type!=='home'){rev.unshift(['Customer',2,'Nobody was serving. The door was open and so was the till.']);rev.length=3}
+  const extra=b.type==='rental'?` ${(b.tenants||[]).length} of ${rentalUnits(b)} flats are let.`:b.workers.length?` ${b.workers.length} staff on the floor.`:' It currently has no staff.';
+  return{cat:t.n,tag:pick(BIZ_TAGS[b.type]||BIZ_TAGS.home),about:`${t.d}${extra}`,base,
+    faq:[['Who owns it?',`You do.`],[b.type==='rental'?'Are there any flats free?':'Is it busy?',b.type==='rental'?`${rentalUnits(b)-(b.tenants||[]).length} at the moment.`:b.last?`About ${b.last.units} customers yesterday.`:'Ask again tomorrow.']],rev};
+}
 function googullPage(d){
-  const e=GG[d.kind]||GG_FALLBACK,h=hash(d.x*7+d.y,d.name.length*31+(d.kind?d.kind.length:0));
-  const rating=Math.min(5,Math.max(1,e.base+((h%7)-3)*.08)),count=60+h%900;
+  const e=d.biz?ggMine(d.biz):(GG[d.kind]||GG_FALLBACK),h=hash(d.x*7+d.y,d.name.length*31+(d.kind?d.kind.length:0));
+  const rating=d.biz?e.base:Math.min(5,Math.max(1,e.base+((h%7)-3)*.08)),count=d.biz?5+Math.round(day()*.8)+h%12:60+h%900;
   const poi=d.id&&POIS[d.id]?POIS[d.id]:null,own=OWNER[d.id]?NPC[OWNER[d.id]]:null;
   let status='';
   if(poi&&OPEN[d.id]){
@@ -208,6 +232,7 @@ function googullPage(d){
   if(d.kind==='stop')facts.push(['Fare',G.fx&&G.fx.pass?'Free':'$2']);
   if(own&&(!d.mine))facts.push([own.role,`${own.name}. Attitude to you: ${LAB[tier(att(own))]}`]);
   if(d.id&&typeof shopOwned==='function'&&shopOwned(d.id))facts.push(['Owner','You']);
+  if(d.biz){facts.push(['Owner','You']);facts.push(['District',d.biz.d]);if(d.biz.type)facts.push(['Level',String(d.biz.level)]);if(d.biz.last)facts.push(['Last day',`${d.biz.last.profit>=0?'+':''}${money(d.biz.last.profit)}`])}
   facts.push(['Distance',`${man(Math.round(G.p.x),Math.round(G.p.y),d.x,d.y)} tiles`]);
   ui(`<div class="gg">${GG_LOGO}
     <div class="gg-search"><span>${esc(d.name.replace(' (tram stop)',''))}</span><i>Search</i></div>
