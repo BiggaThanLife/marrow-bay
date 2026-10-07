@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay hints test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>One-time hints</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Each hint fires once when its condition is met, stays quiet when switched off or when a popup is open, shows during normal play (advance), and old saves skip them all. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,alertQ,HINTS,hintsCheck,SET,TUT,migrate,get popOpen(){return popOpen},get popQ(){return popQ}})`);
+  const G = () => api.G, title = () => doc.getElementById('pop-t').textContent, shown = () => !doc.getElementById('pop').hidden;
+  try {
+    if (api.TUT.length !== 3) errs.push('tutorial should be 3 cards, is ' + api.TUT.length);
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear();
+    G().flags.onboarded = false; G().met = {}; G().cash = 500; G().hunger = 100; G().energy = 100; G().heat = 0; G().biz = [];
+    api.hintsCheck(); if (shown()) errs.push('hint shown before onboarding finished');
+    G().flags.onboarded = true;
+    const cond = {
+      people: () => { G().met = { bell: 1 } },
+      hungry: () => { G().hunger = 20 },
+      money: () => { G().cash = 5 },
+      bills: () => { win.eval('G.t=24*1440+8*60') },
+      heat: () => { G().heat = 2 },
+      biz: () => { G().biz.push({ key: '16,13', d: 'Grid', price: 1, type: 'cafe', level: 1, workers: [], till: 0 }) },
+      tenants: () => { G().biz[0].type = 'rental'; G().biz[0].tenants = [{ id: 1 }]; G().biz[0].applicants = [] }
+    };
+    api.HINTS.forEach(h => {
+      if (!cond[h.id]) return errs.push('no test for ' + h.id);
+      api.popClear(); cond[h.id]();
+      // earlier hints may fire first; drain until this one has fired
+      let guard = 0; while (!G().tips[h.id] && guard++ < 12) { api.popClear(); api.hintsCheck(); }
+      if (!G().tips[h.id]) errs.push('hint did not fire ' + h.id);
+      if (!shown()) errs.push('no popup for ' + h.id);
+      if (!h.t || !h.b || !h.q) errs.push('incomplete hint ' + h.id);
+      api.popClear(); api.hintsCheck(); if (shown() && title() === h.t) errs.push('hint repeated ' + h.id);
+    });
+    stats.fired = Object.keys(G().tips).length;
+    // switched off
+    G().tips = {}; api.popClear(); api.SET.hints = false; G().hunger = 10; api.hintsCheck(); if (shown()) errs.push('hint shown while switched off');
+    api.SET.hints = true;
+    // does not stack on an open popup
+    api.popClear(); win.eval("popup('x','y')"); const q0 = api.popQ.length; api.hintsCheck(); if (api.popQ.length !== q0) errs.push('hint stacked on open popup');
+    // fires during normal play
+    api.popClear(); G().tips = {}; G().met = {}; G().cash = 500; G().heat = 0; G().biz = []; G().hunger = 10; G().energy = 100;
+    api.advance(120, false, true); if (!G().tips.hungry) errs.push('hint did not fire during advance');
+    // old save: no tips field means all seen
+    api.popClear(); delete G().tips; api.migrate(); if (Object.keys(G().tips).length !== api.HINTS.length) errs.push('old save not grandfathered');
+    G().hunger = 5; api.hintsCheck(); if (shown()) errs.push('old save saw a hint');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 20).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

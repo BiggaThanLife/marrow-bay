@@ -1,6 +1,7 @@
 "use strict";
 /* Hourly world update: stock, heat, rumors, NPC wages. */
 function hourly(h){
+  hintsCheck();
   const hr=h%24,t=h*60,high=tideV(t)>.45,low=tideV(t)<-.45;
   G.fishStock=clamp(G.fishStock+(high?2.5:1.2),0,100);
   G.flats=clamp(G.flats+(high?2.2:.5),0,100);

@@ -1,6 +1,7 @@
 "use strict";
 /* Fills in new fields on old saves. */
 function migrate(){
+  if(!G.tips)G.tips=Object.fromEntries(HINTS.map(h=>[h.id,1])); /* anyone with a save has already been through the old long tutorial */
   cityInit();
   if(!G.look){G.flags=G.flags||{};G.flags.customDone=false}
   G.name=G.name||'Stranger';G.quirk=G.quirk||null;

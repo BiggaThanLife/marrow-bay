@@ -73,6 +73,7 @@ function settingsMenu(msg){
   ui(`<h2>Settings</h2><p class="muted">${inGame?`Saved game: ${saveStamp(saved)}. The game also saves by itself.`:'Sound and screen options.'}</p>${msgP(msg)}`,[
     {label:`Sound: ${SET.mute?'Off':'On'}`,sub:'Tap to switch',cls:'primary',fn:()=>{SET.mute=!SET.mute;saveSettings();sfx('open');back()}},
     {label:`Volume: ${VOLNAMES[SET.vol]}`,sub:'Tap to change',off:SET.mute,cls:'',fn:()=>{SET.vol=SET.vol%3+1;saveSettings();sfx('good');back()}},
+    {label:`Hints: ${SET.hints===false?'Off':'On'}`,sub:'Short notes the first time something matters',cls:'',fn:()=>{SET.hints=SET.hints===false;saveSettings();sfx('open');back()}},
     ...(inGame?[
       {label:'Save now',sub:'Write your game to this device',cls:'',fn:()=>{save();back('Game saved.')}},
       {label:'Load last save',sub:saved?`Go back to ${saveStamp(saved)}`:'No save yet',off:!saved,cls:'',fn:()=>ask('Load your last save?','Anything since your last save is lost.','Load',()=>{continueSave(loadSave())},()=>back())}

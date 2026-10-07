@@ -1,7 +1,7 @@
 "use strict";
 /* Sound: small synthesized effects (no audio files), plus the saved sound settings. */
 const SETTINGS_KEY='marrowbay_settings';
-const SET={mute:false,vol:2};
+const SET={mute:false,vol:2,hints:true};
 try{Object.assign(SET,JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}'))}catch(e){}
 function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(SET))}catch(e){}}
 let actx=null;const sfxLast={};
