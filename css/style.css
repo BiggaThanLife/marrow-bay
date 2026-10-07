@@ -123,3 +123,15 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .gg-q,.gg-rev{margin:4px 0}
 .gg-kv{margin-top:8px}
 .gg-kv{grid-template-columns:1fr}
+
+/* action scenes and the tap shield */
+#shield{position:fixed;inset:0;z-index:70;background:transparent}
+#shield[hidden]{display:none}
+#actscene{position:fixed;inset:0;z-index:65;display:flex;align-items:center;justify-content:center;background:rgba(4,10,14,.78);padding:16px}
+#actscene[hidden]{display:none}
+.sc-card{width:min(340px,92vw);background:var(--panel);border:3px solid var(--accent);padding:10px;text-align:center}
+#sc-cv{width:100%;height:auto;aspect-ratio:2/1;image-rendering:pixelated;display:block;background:#000;border:2px solid var(--line)}
+#sc-cap{margin:8px 0 6px;font:600 1rem "DM Sans",system-ui,sans-serif;color:var(--text)}
+.sc-track{height:8px;background:var(--bg);border:2px solid var(--line)}
+.sc-track i{display:block;height:100%;width:0;background:var(--accent)}
+#sc-hint{margin-top:6px;font-size:.8rem;color:var(--muted);visibility:hidden}

@@ -1,0 +1,64 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay action scenes test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Action scenes and the tap shield</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* A tagged button plays its scene first and acts exactly once afterwards, can be skipped only after a moment, is not run twice by a double tap,
+   the shield goes up after menus open and close, scenes can be switched off, and every rule has a drawing. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const api = win.eval(`({get G(){return G},BG,SET,SCENE_RULES,SCENE_MS,SCENE_DRAW,sceneFor,playScene,start,closeMenu,popClear,bizMenu,shopMenu,MENUS,POIS,NPC,ui,worldPanel,get sceneBusy(){return sceneBusy},blocks,saveSettings,settingsMenu})`);
+  const G = () => api.G, btn = rx => [...doc.querySelectorAll('#sheet #actions button')].find(x => rx.test(x.innerText));
+  const shown = () => !doc.getElementById('actscene').hidden, shieldOn = () => !doc.getElementById('shield').hidden;
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; api.SET.hints = false;
+    // every rule has a type with a drawing and a length
+    api.SCENE_RULES.forEach(r => { if (!api.SCENE_DRAW[r[1]] || !api.SCENE_MS[r[1]]) errs.push('no drawing or length for ' + r[0]) });
+    ['Haul cargo', 'Work a kitchen shift', 'Tend the gardens', 'Repair shift', 'Foundry shift', 'Collect till', 'Collect all tills', 'Sleep until morning', 'Nap for 2 hours', 'Get treated', 'Pay union dues'].forEach(l => { if (!api.sceneFor(l)) errs.push('no scene for ' + l) });
+    ['Collect a debt', 'Sell goods', 'Buy 10 scrap', 'Back', 'Leave'].forEach(l => { if (api.sceneFor(l)) errs.push('unexpected scene for ' + l) });
+    // draw every rule at several moments with no errors
+    const cv = doc.getElementById('sc-cv'), g = cv.getContext('2d');
+    api.SCENE_RULES.forEach(r => { [0, 300, 900, 1400].forEach(t => api.SCENE_DRAW[r[1]](g, t, Math.min(1, t / api.SCENE_MS[r[1]]), r[2])) });
+    // in a frame, scenes are skipped (so the other test pages stay fast)
+    G().cash = 1000; const ran = []; api.ui('<p>x</p>', [{ label: 'Collect till', fn: () => ran.push(1) }]); btn(/^Collect till/).click(); if (ran.length !== 1 || shown()) errs.push('scene played inside a frame without being forced');
+    // force scenes on
+    win.eval('SCENE_FORCE=true');
+    const t0 = Date.now(); api.ui('<p>x</p>', [{ label: 'Collect till', fn: () => ran.push(Date.now()) }]); ran.length = 0;
+    btn(/^Collect till/).click();
+    if (!shown() || !api.sceneBusy) errs.push('scene did not start'); if (ran.length) errs.push('action ran before the scene');
+    if (!/Counting/.test(doc.getElementById('sc-cap').textContent)) errs.push('caption missing');
+    btn(/^Collect till/).click(); if (ran.length) errs.push('second tap ran the action during the scene');
+    doc.getElementById('actscene').onpointerdown({ preventDefault() {} }); if (!shown()) errs.push('scene could be skipped instantly'); if (ran.length) errs.push('skipped too early');
+    await sleep(500); doc.getElementById('actscene').onpointerdown({ preventDefault() {} });
+    if (shown() || api.sceneBusy) errs.push('skip did not close the scene'); if (ran.length !== 1) errs.push('action ran ' + ran.length + ' times after skip');
+    if (!shieldOn()) errs.push('shield not up after a scene');
+    await sleep(520); if (shieldOn()) errs.push('shield did not come down');
+    // plays out by itself
+    ran.length = 0; btn(/^Collect till/).click(); await sleep(api.SCENE_MS.cash + 400); if (shown() || ran.length !== 1) errs.push('scene did not finish by itself (' + ran.length + ')');
+    await sleep(500);
+    // shield after menus open and close
+    api.ui('<p>y</p>', [{ label: 'Hello', fn() {} }]); if (!shieldOn()) errs.push('no shield after a menu opened'); await sleep(300); if (shieldOn()) errs.push('shield stuck after open');
+    api.closeMenu(); if (!shieldOn()) errs.push('no shield after a menu closed'); await sleep(350); if (shieldOn()) errs.push('shield stuck after close');
+    // switched off
+    api.SET.scenes = false; ran.length = 0; api.ui('<p>x</p>', [{ label: 'Haul cargo', fn: () => ran.push(1) }]); btn(/^Haul cargo/).click(); if (shown() || ran.length !== 1) errs.push('scenes did not switch off'); api.SET.scenes = true;
+    // settings has the switch
+    api.settingsMenu(); const sb = btn(/^Action scenes/); if (!sb) errs.push('no Action scenes setting'); else { sb.click(); if (api.SET.scenes !== false) errs.push('setting did not switch off'); btn(/^Action scenes/).click(); if (api.SET.scenes === false) errs.push('setting did not switch back on') }
+    // a real button: collect a till in a building, after the scene it acts once
+    const free = api.blocks.filter(b => !b.poi && b.kind === 'tower')[0];
+    G().biz = [{ key: free.key, d: 'Grid', price: 1, paid: 1, type: 'cafe', level: 1, workers: [], till: 77, supplies: 0, mk: 1, store: 0, auto: false, last: null }];
+    const cash = G().cash; api.bizMenu(G().biz[0]); btn(/^Collect till/).click(); if (G().biz[0].till !== 77) errs.push('real action ran before its scene'); await sleep(api.SCENE_MS.cash + 400); if (G().biz[0].till !== 0 || G().cash !== cash + 77) errs.push('real action did not run after its scene');
+    win.eval('SCENE_FORCE=false');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  try { win.localStorage.removeItem('marrowbay_settings') } catch (e) {} /* the settings menu saves SET, so leave nothing behind for the other test pages */
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

@@ -44,12 +44,12 @@ function ui(html,btns=[],isModal=true,dismiss=true){
     const cls=b.cls??(i===0?'primary':'');
     el.className='btn'+(cls?' '+cls:'');
     el.innerHTML='<span>'+esc(b.label)+'</span>'+(b.sub?'<small>'+esc(b.sub)+'</small>':'')+(b.badge?`<i class="badge" title="${b.badge} problem${b.badge>1?'s':''}">${b.badge}</i>`:'');
-    el.disabled=!!b.off;el.addEventListener('click',b.fn);a.appendChild(el);
+    el.disabled=!!b.off;el.addEventListener('click',e=>runButton(b,e));a.appendChild(el);
   });
   if(sheet.hidden)sfx('open');
-  sheet.hidden=false;sheet.scrollTop=0;
+  sheet.hidden=false;sheet.scrollTop=0;shield(250);
 }
-function worldPanel(){ui('',[],false);if(G){hud();if(G.jail&&!popOpen)jailMenu()}}
+function worldPanel(){ui('',[],false);shield(300);if(G){hud();if(G.jail&&!popOpen)jailMenu()}}
 const closeMenu=()=>{save();worldPanel()};
 const leaveBtn={label:'Leave',cls:'quiet',fn:closeMenu};
 $('#xbtn').addEventListener('click',()=>{if(dismissable)closeMenu()});
