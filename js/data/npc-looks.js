@@ -16,5 +16,7 @@ const NPC_LOOK={
   vex:{skin:3,hair:6,style:0,beard:false},
   mack:{skin:2,hair:1,style:0,beard:true},
   ines:{skin:2,hair:0,style:5,fem:true},
-  lou:{skin:0,hair:1,style:0,beard:false}
+  lou:{skin:0,hair:1,style:0,beard:false},
+  kofi:{skin:4,hair:0,style:2,beard:true},
+  priya:{skin:3,hair:0,style:4,fem:true}
 };

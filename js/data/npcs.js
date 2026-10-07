@@ -75,7 +75,17 @@ const NPCS=[
   aff:{landowner:18,shopkeeper:10,educated:6,smooth:8,broke:-10,'in-debt':-25,'known-thief':-25,'local-hero':8,disgraced:-6,employer:8},
   tier:['Lou does not meet your eyes. "Not interested."','Lou sighs. "Browsing?"','Lou smiles. "Let me show you something."','Lou beams. "My best client."'],
   react:{landowner:'"A fellow property person. I have just the thing."',broke:'"Everyone starts somewhere. Just not here."','in-debt':'"I do not sell to people who owe."',smooth:'"You close like a closer."'},
-  topic:'"Location, location, and the tide table."'}
+  topic:'"Location, location, and the tide table."'},
+ {id:'kofi',name:'Kofi Mensah',role:'Barber',d:'Highline',home:'flats',work:'barber',hang:'club',col:'#c0884a',
+  aff:{smooth:8,creative:8,educated:4,outsider:4,'working-class':4,disgraced:-4,'known-thief':-12,'local-hero':6,shopkeeper:5},
+  tier:['Kofi keeps his back to you and his scissors busy.','Kofi nods at the chair. "Sit, if you are sitting."','Kofi grins. "Same as last time? Or something braver?"','Kofi spins the chair. "For you, the good mirror."'],
+  react:{smooth:'"You already know what suits you. Rare. I respect it."',outsider:'"New in town? A fresh cut helps. Nobody asks questions of a good haircut."','known-thief':'"Hide the face if you like. I will not tell. I did not see it."',creative:'"Another artist. Let us do something terrible to your hair."'},
+  topic:'"Everyone tells their secrets in the chair. I forget them by closing time. Mostly."'},
+ {id:'priya',name:'Priya Nair',role:'Tailor',d:'Grid',home:'studio',work:'tailor',hang:'plaza',col:'#c0508a',
+  aff:{creative:10,educated:6,smooth:6,'working-class':4,broke:2,disgraced:-4,'known-thief':-14,'local-hero':6,shopkeeper:6},
+  tier:['Priya pins a hem and does not look up.','Priya glances over. "Browse. Do not touch the good wool."','Priya smiles. "That colour is wrong for you. Wait here."','Priya holds up a jacket. "I made this for you. I just did not know it yet."'],
+  react:{creative:'"You have an eye. Most people just point."',broke:'"Everything here was owned by someone. It is all fully laundered."',smooth:'"You carry a suit well. Let me fix the shoulders."','known-thief':'"If anything in the shop goes missing, I will know whose hem it was."'},
+  topic:'"I measure people all day. You can tell a lot from a waistline and a nervous laugh."'}
 ];
 const NPC={};
 NPCS.forEach(n=>{NPC[n.id]=n;n.wage=WAGE[n.id];if(n.id==='cordelia'||n.id==='ashgrove')n.wants='trinkets'});

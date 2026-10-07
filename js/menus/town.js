@@ -62,8 +62,8 @@ MENUS.bank=(poi,n,msg)=>{
     leaveBtn]);
 };
 MENUS.clinic=(poi,n,msg)=>{
-  const free=tier(att(n))>=2&&(has('broke')||G.cash<20);
+  const mine=shopOwned('clinic'),free=mine||(tier(att(n))>=2&&(has('broke')||G.cash<20));
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">Clean sheets and a ticking clock.</p>${msgP(msg)}`,[
-    {label:'Get treated',sub:free?'Dr. Bell waves the fee':'$10. Restores energy.',off:!free&&G.cash<10,fn:()=>{if(!free)G.cash-=10;G.energy=clamp(G.energy+35,0,100);advance(60,true);MENUS.clinic(poi,n,'You feel better.')}},
-    leaveBtn]);
+    {label:'Get treated',sub:mine?'Free, and you get the good bed':free?'Dr. Bell waves the fee':'$10. Restores energy.',off:!free&&G.cash<10,fn:()=>{if(!free)G.cash-=10;G.energy=clamp(G.energy+(mine?55:35),0,100);advance(60,true);MENUS.clinic(poi,n,'You feel better.')}},
+    ...shopBtn(poi,n),leaveBtn]);
 };

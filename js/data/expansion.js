@@ -28,6 +28,9 @@ const SHOP_DEFS={
   market:{price:2200,base:36,perk:'Seed packets cost 25% less.'},
   diner:{price:2000,base:42,perk:'Meals at the diner cost 30% less.'},
   gull:{price:2200,base:36,perk:'Rounds for the bar are free and Dockside likes you more.'},
-  garage:{price:2800,base:46,perk:'Fuel costs 40% less.'}
+  garage:{price:2800,base:46,perk:'Fuel costs 40% less.'},
+  clinic:{price:2600,base:46,perk:'Your treatment is free and restores more energy.'},
+  barber:{price:1800,base:40,perk:'Your haircuts and dye are free.'},
+  tailor:{price:2200,base:38,perk:'Clothes and hats cost 25% less.'}
 };
 const SHOP_LVL=[1,1.5,2.1];

@@ -29,9 +29,11 @@ f.addEventListener('load', () => {
     for (let d = 0; d < 120; d++) { G().energy = 100; G().hunger = 100; G().cash = Math.max(G().cash, 2000); api.advance(1440, false, true); flush();
       Object.values(G().shops).forEach(s => { if (!Number.isFinite(s.till)) errs.push('bad till') }); }
     stats.tills = ids.map(id => id + ':' + Math.round(G().shops[id].till));
-    ids.forEach(id => { api.shopMenu(api.POIS[id], api.NPC[api.OWNER[id]]); click('Collect'); click('Expand'); click('Yes, expand'); api.shopBtn(api.POIS[id], api.NPC[api.OWNER[id]]); flush(); });
+    ids.forEach(id => { api.shopMenu(api.POIS[id], api.NPC[api.OWNER[id]]); click('Collect'); click('Expand'); click('Yes, expand'); api.shopBtn(api.POIS[id], api.NPC[api.OWNER[id]]); api.shopMenu(api.POIS[id], api.NPC[api.OWNER[id]]); if (!click('Use the shop')) errs.push('no use button ' + id); if (![...doc.querySelectorAll('#sheet #actions button')].length) errs.push('empty shop menu ' + id); flush(); });
+    ['clinic', 'barber', 'tailor'].forEach(id => { if (!api.OWNER[id] || !api.NPC[api.OWNER[id]]) errs.push('no owner for ' + id) });
+    delete G().npcs.kofi; delete G().npcs.priya; api.migrate(); if (!G().npcs.kofi || !G().npcs.priya) errs.push('migrate did not add new npc state');
     stats.levels = ids.map(id => G().shops[id].level);
-    stats.perks = [api.shopMul('market', .75), api.shopMul('garage', .6)];
+    stats.perks = [api.shopMul('market', .75), api.shopMul('garage', .6), api.shopMul('tailor', .75)];
     api.bizOverview(); api.monthlyBills();
     if (!api.monthlyBills().some(l => /tax/.test(l[0]) && /Market|Diner|Gull|Garage|Mack/i.test(l[0]))) stats.billNote = 'no shop tax line (check names)';
     api.save(); api.migrate(); if (Object.keys(G().shops).length !== ids.length) errs.push('shops lost on migrate');
