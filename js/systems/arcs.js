@@ -46,7 +46,7 @@ function arcSummaryHtml(){
 function arcMenu(msg){
   const A=G.arc;if(!A)return phone();
   const D=ARCS[A.id],ph=D.phases[A.i],left=Math.max(0,ph.days-(day()-A.start));
-  ui(`<h2>${esc(D.title)}</h2><p class="muted">${esc(ph.name)}, about ${left} day${left===1?'':'s'} left in this phase. ${esc(ph.blurb||'')}</p>${msgP(msg)}<p class="small muted">${esc(D.status(A))}</p>`,[
+  ui(`<h2>${esc(D.title)}</h2><p class="muted">${esc(ph.name)}, about ${left} day${left===1?'':'s'} left in this phase. ${esc(ph.blurb||'')}</p>${msgP(msg)}${D.board?D.board(A):`<p class="small muted">${esc(D.status(A))}</p>`}`,[
     ...(ph.actions?ph.actions(A).map(a=>({label:a.label,sub:a.sub,off:a.off,cls:a.cls||'',fn:()=>{const r=a.fn(A);arcMenu(r)}})):[]),
     {label:'Back',cls:'quiet',fn:()=>phone()},leaveBtn]);
 }

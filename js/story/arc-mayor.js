@@ -11,6 +11,16 @@ const supLeader=(A,except)=>Object.keys(A.sup).filter(k=>k!==except).sort((a,b)=
 ARCS.mayor={
   title:'The Mayoral Election',district:'Grid',repeatAfter:60,
   can:()=>day()>=25,
+  board:A=>{
+    const ids=Object.keys(A.sup).sort((a,b)=>A.sup[b]-A.sup[a]),me=supTarget(A),pts=k=>Math.round(A.sup[k]);
+    let head='You have not backed anyone yet. Endorse a candidate or register to run.';
+    if(me){
+      const rank=ids.indexOf(me)+1,other=ids.find(k=>k!==me),gap=Math.abs(pts(me)-pts(other===undefined?me:(rank===1?other:ids[0])));
+      head=`${A.run?'You have':supName(me)+' has'} <b>${pts(me)} points</b>, ranked #${rank} of ${ids.length}. ${rank===1?`Leading by ${gap}.`:`Trailing the leader by ${gap}.`}`;
+    }
+    const rows=ids.map(k=>`<div class="kv" style="margin:6px 0 0"><div style="grid-column:1/3"><span>${esc(supName(k))}${k===me?' (yours)':''}</span><b>${pts(k)}</b></div></div><div class="meter" style="margin:2px 0 4px"><i style="width:${pts(k)}%${k===me?'':';opacity:.45'}"></i></div>`).join('');
+    return `<p>${head}</p>${rows}<p class="small muted">Actions you have used today are greyed out and come back tomorrow. The most points on election day usually wins, but the count has some luck in it.</p>`;
+  },
   status:A=>`Polls: ${Object.keys(A.sup).sort((a,b)=>A.sup[b]-A.sup[a]).map(k=>`${supName(k)} ${Math.round(A.sup[k])}`).join(', ')}.${A.run?' You are on the ballot.':A.endorse?` You back ${supName(A.endorse)}.`:' You have not picked anyone.'}`,
   phases:[
    {name:'Announcement',days:4,blurb:'Candidates are declaring. Everyone is a little too happy about it.',
