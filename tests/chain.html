@@ -37,7 +37,8 @@ f.addEventListener('load', () => {
     if (!(api.chainMod(G().biz[1], 'dem') < d0)) errs.push('scandal did not cut demand');
     if (!(G().rep.Dockside < rep0)) errs.push('scandal did not cost standing at the other location');
     G().biz = [mk('pies', 0, 'Grid'), mk('pies', 1, 'Dockside')];
-    api.advance(1440 * 7, false, true); flush();
+    const realRandom = win.Math.random; win.Math.random = () => .99; /* no new inspector fines while we wait */
+    api.advance(1440 * 7, false, true); flush(); win.Math.random = realRandom;
     if (api.chainScandal(G().biz[1])) errs.push('scandal did not fade');
     // managers
     G().biz = []; ['cafe', 'bar', 'workshop', 'farm', 'pies', 'cages', 'wellness'].forEach((t, i) => G().biz.push(mk(t, i, t === 'farm' ? 'Greenbelt' : 'Grid')));

@@ -18,7 +18,7 @@ function bag(msg){
   ui(`<h2>${esc(G.name)}</h2><p class="muted">${esc(b.n)}. ${G.quirk?esc(QUIRKS[G.quirk].n)+'. ':''}Day ${day()}. Home: ${esc(hp.name)}, ${money(homeBill())} a month.</p>${msgP(msg)}
   ${G.debt>0?`<p class="bad">Bank debt: ${money(G.debt)}</p>`:''}${G.arrears>0?`<p class="bad">Bills owed: ${money(G.arrears)}</p>`:''}
   <p><b>How people see you:</b> ${tg.map(esc).join(', ')}</p>
-  <h2>Standing</h2><div class="kv">${st}</div><h2>Bag</h2><div class="kv">${inv}</div>`,btns);
+  <h2>Standing</h2><div class="kv">${st}${dirtyRows()}</div><h2>Bag</h2><div class="kv">${inv}</div>`,btns);
 }
 function town(){
   const lv=(v,lo,hi)=>v<lo?'scarce':v>hi?'plentiful':'steady';

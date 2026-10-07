@@ -2,6 +2,8 @@
 /* Getting busted. */
 /* ================= CRIME / POLICE ================= */
 function bust(){
+  if((G.notor||0)>=25||G.heat>=4)return goToJail(sentenceDays());
+  notorAdd(5);
   const R=NPC.reyes,fine=50*Math.ceil(G.heat),pay=Math.min(G.cash,fine);
   G.cash-=pay;G.arrears+=fine-pay;G.inv.loot=0;G.heat=0;G.mission=null;R.chasing=false;
   Object.keys(G.veh.stolen).forEach(k=>{if(G.veh.stolen[k]){G.veh.owned[k]=false;G.veh.stolen[k]=false;if(G.veh.active===k)G.veh.active='none'}});

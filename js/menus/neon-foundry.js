@@ -4,12 +4,13 @@
 MENUS.pawn=(poi,n,msg)=>{
   const cold=G.heat>=2;
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">No questions, no receipts.</p>${msgP(msg)}${cold?'<p class="bad">The owner will not deal with you while police are on your tail.</p>':''}`,[
-    {label:'Fence hot goods',sub:`${G.inv.loot} items, $${fencePrice()} each${flackBand()>=2?'. Cameras make buyers nervous.':''}`,off:cold||G.inv.loot<1,fn:()=>{const t=G.inv.loot*fencePrice();G.cash+=t;G.inv.loot=0;advance(15);MENUS.pawn(poi,n,`You walk away with ${money(t)}.`)}},
+    {label:'Fence hot goods',sub:`${G.inv.loot} items, $${fencePrice()} each${flackBand()>=2?'. Cameras make buyers nervous.':''}`,off:cold||G.inv.loot<1,fn:()=>{const t=G.inv.loot*fencePrice();earnDirty(t);G.inv.loot=0;advance(15);MENUS.pawn(poi,n,`You walk away with ${money(t)} in dirty cash.`)}},
     {label:'Sell trinkets',sub:`${G.inv.trinkets} items, $32 each`,off:G.inv.trinkets<1,cls:'',fn:()=>{const t=G.inv.trinkets*32;G.cash+=t;G.inv.trinkets=0;advance(10);MENUS.pawn(poi,n,`Sold for ${money(t)}.`)}},
     {label:'Buy a scarf and glasses',sub:G.fx.mask?'You already have them':'$25. FLACK cameras log you as "unidentified."',off:G.cash<25||G.fx.mask,cls:'',fn:()=>{G.cash-=25;G.fx.mask=true;G.stance.evade++;MENUS.pawn(poi,n,'You look like a very average stranger.')}},
     {label:'Buy a burglar kit',sub:G.fx.kit?'You already have one':'$90. Improves pickpocketing and heists.',off:G.cash<90||G.fx.kit,cls:'',fn:()=>{G.cash-=90;G.fx.kit=true;MENUS.pawn(poi,n,'You pocket a roll of tools.')}},
     {label:'Fence a stolen vehicle',sub:Object.keys(G.veh.stolen).some(k=>G.veh.stolen[k])?'$600':'You have none',off:cold||!Object.keys(G.veh.stolen).some(k=>G.veh.stolen[k]),cls:'',fn:()=>{
-      const k=Object.keys(G.veh.stolen).find(x=>G.veh.stolen[x]);G.veh.owned[k]=false;G.veh.stolen[k]=false;if(G.veh.active===k)G.veh.active='none';G.cash+=600;MENUS.pawn(poi,n,'The car disappears and cash appears.')}},
+      const k=Object.keys(G.veh.stolen).find(x=>G.veh.stolen[x]);G.veh.owned[k]=false;G.veh.stolen[k]=false;if(G.veh.active===k)G.veh.active='none';earnDirty(600);MENUS.pawn(poi,n,'The car disappears and dirty cash appears.')}},
+    ...((G.dirty||0)>0?[{label:'Cash exchange',sub:`Swap ${money(G.dirty)} of dirty cash for clean at 60 cents on the dollar. Always open, never kind.`,off:cold,cls:'',fn:()=>{const d=G.dirty,c=Math.round(d*.6);G.dirty=0;G.cash+=c;advance(15);MENUS.pawn(poi,n,`The owner counts it twice and hands back ${money(c)} clean.`)}}]:[]),
     leaveBtn]);
 };
 MENUS.garage=(poi,n,msg)=>{

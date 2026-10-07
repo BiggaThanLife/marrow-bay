@@ -11,6 +11,7 @@ MENUS.cityhall=(poi,n,msg)=>{
     ...(P?COUNCIL.map(m=>({label:`Lobby ${NPC[m].name}`,sub:cur.lobbied>=2?'You have used both of your lunches this week':'$40 and a lunch. Costs standing if it fails.',off:cur.lobbied>=2,cls:'',fn:()=>lobbyMenu(poi,n,m)})):[]),
     ...(election?[{label:'Election desk',sub:'Candidates, endorsements, registration',cls:'primary',fn:()=>arcMenu()}]:[]),
     ...(mayor&&P?mayorPowers(poi,n,P):[]),
+    ...((G.notor||0)>=1?[{label:'Records office',sub:`Your police file: ${LAW_TIERS[lawTier()].n}`,cls:lawTier()>=2?'primary':'',fn:()=>recordsMenu(poi,n)}]:[]),
     leaveBtn]);
 };
 function lobbyMenu(poi,n,m){

@@ -1,0 +1,101 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay crime test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Dirty money, the police file and prison</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Dirty cash and laundering, notoriety tiers and lockouts, raids, arrest and prison (sentence, work, appeal, bribe, release, save in jail), the records office, the pawn exchange. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,POIS,GG,MENUS,start,closeMenu,popClear,advance,alertQ,openPOI,tick,bust,bag,bizOverview,bizMenu,blocks,district,save,migrate,day,phone,
+    earnDirty,launder,launderAll,washCap,washFee,canLaunder,lawTier,lawHourly,lawDaily,lawLocked,notorAdd,sentenceDays,goToJail,release,jailTime,jailMenu,recordsMenu,worldPanel,fencePrice,hud,LAW_TIERS,get popOpen(){return popOpen}})`);
+  const G = () => api.G, sheet = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], flush = () => { api.popClear(); api.alertQ.length = 0; };
+  const click = rx => { const b = btns().find(x => rx.test(x.innerText)); if (!b) return false; if (b.disabled) return 'disabled'; b.click(); return true };
+  const mk = (type, i, d) => { const b = api.blocks.filter(x => !x.poi && x.kind !== 'farmstead')[i]; return { key: b.key, d: d || api.district(b.x + 1, b.y + 1), price: 1, paid: 1, type, level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, auto: false, last: null, name: 'T' + i, nameFor: type } };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush(); G().cash = 5000; G().flags.onboarded = false;
+    // the prison exists and has a page
+    if (!api.POIS.prison || api.POIS.prison.kind !== 'prison') errs.push('no prison POI'); if (!api.GG.prison) errs.push('no Googull entry for prison'); if (!api.MENUS.prison) errs.push('no prison menu');
+    // dirty cash and laundering
+    G().biz = [mk('cafe', 0), mk('bar', 1), mk('workshop', 2), mk('farm', 3, 'Greenbelt')];
+    const [cafe, bar, shop, farm] = G().biz;
+    if (api.canLaunder(farm)) errs.push('farm can launder');
+    if (!(api.washFee(bar) < api.washFee(cafe))) errs.push('bar should be cheaper to launder through');
+    G().dirty = 0; api.earnDirty(500); if (G().dirty !== 500) errs.push('earnDirty');
+    const cash0 = G().cash, got = api.launder(cafe, 500); const cap = api.washCap(cafe);
+    if (got !== Math.round(Math.min(500, cap) * (1 - api.washFee(cafe)))) errs.push('launder amount ' + got + ' cap ' + cap);
+    if (G().cash !== cash0 + got) errs.push('cash not credited'); if (G().dirty !== 500 - Math.min(500, cap)) errs.push('dirty not debited');
+    const again = api.launder(cafe, 9999); if (again > got * 1.01 && cap < 500 && again > 0) errs.push('daily cap not enforced');
+    G().dirty = 100000; const all = api.launderAll(); stats.washedAll = all.used; if (!(all.used > 0) || all.used > 100000) errs.push('launderAll');
+    G().dirty = 400; cafe.mgr = true; G().biz.forEach(b => { b.washedDay = -1 }); api.advance(1440 * 2, false, true); flush(); if (G().dirty >= 400 && G().cash === cash0) errs.push('manager did not launder'); cafe.mgr = false;
+    // pawn: fence pays dirty, exchange converts
+    G().heat = 0; G().inv.loot = 3; G().dirty = 0; const p = api.POIS.pawn; const pn = win.eval('NPC.vex'); G().fx = G().fx || {};
+    api.MENUS.pawn(p, pn); click(/^Fence hot goods/); if (!(G().dirty > 0) || G().inv.loot !== 0) errs.push('fence did not pay dirty cash');
+    const d1 = G().dirty, c1 = G().cash; api.MENUS.pawn(p, pn); click(/^Cash exchange/); if (G().dirty !== 0 || G().cash !== c1 + Math.round(d1 * .6)) errs.push('exchange wrong');
+    // bag
+    api.bag(); if (!/Dirty cash/.test(sheet()) || !/Police file/.test(sheet())) errs.push('bag lacks dirty cash or police file rows'); api.closeMenu();
+    // notoriety
+    G().notor = 0; G().heat = 3; G().lawSeen = 0; const n0 = G().notor; api.lawHourly(); if (!(G().notor > n0)) errs.push('heat did not raise notoriety'); flush();
+    G().heat = 0; G().notor = 20; api.lawHourly(); if (!(G().notor < 20)) errs.push('notoriety did not fade'); flush();
+    G().notor = 30; if (api.lawTier() !== 1) errs.push('tier 1 at 30'); G().notor = 55; if (api.lawTier() !== 2) errs.push('tier 2 at 55'); G().notor = 80; if (api.lawTier() !== 3) errs.push('tier 3 at 80');
+    G().notor = 0; const f0 = api.fencePrice(); G().notor = 80; if (!(api.fencePrice() < f0)) errs.push('fence price did not drop');
+    // lockouts: bank etc closed at tier 3, but City Hall, clinic, diner stay open
+    G().heat = 0; G().notor = 80; G().home = G().home;
+    ['bank', 'estate', 'club', 'realty'].forEach(id => { if (!api.lawLocked(id)) errs.push(id + ' not locked at 3'); G().t = Math.floor(G().t / 1440) * 1440 + (id === 'club' ? 20 : 12) * 60; api.openPOI(api.POIS[id]); if (!/will not see you/.test(sheet())) errs.push('no lockout message ' + id); api.closeMenu() });
+    ['cityhall', 'clinic', 'diner', 'market', 'dock'].forEach(id => { if (api.lawLocked(id)) errs.push(id + ' must stay open') });
+    // bank tier 2: no loans or trading
+    G().notor = 55; G().t = Math.floor(G().t / 1440) * 1440 + 12 * 60; api.MENUS.bank(api.POIS.bank, win.eval('NPC.cordelia')); if (!/flagged/.test(sheet())) errs.push('no bank flag message'); const td = btns().find(x => /^Trading desk/.test(x.innerText)); if (!td || !td.disabled) errs.push('trading not barred'); const bl = btns().find(x => /^Borrow/.test(x.innerText)); if (!bl || !bl.disabled) errs.push('loan not barred'); api.closeMenu();
+    // raids
+    G().notor = 90; G().biz = [mk('cafe', 0), mk('bar', 1)]; G().dirty = 1000; let raided = 0;
+    for (let d = 0; d < 80; d++) { G().notor = 90; api.advance(1440, false, true); flush(); if (G().biz.some(b => b.shut > api.day())) raided++; }
+    stats.raidedDays = raided; if (!raided) errs.push('no raid in 80 days at public enemy');
+    if (G().biz.some(b => b.shut > api.day() && b.last && b.last.note !== 'Closed by police')) errs.push('shut business still trading');
+    // quick detain at low notoriety
+    G().notor = 0; G().heat = 3; G().cash = 500; G().inv.loot = 2; api.bust(); flush(); if (G().jail) errs.push('low notoriety went to prison'); if (G().notor < 4) errs.push('arrest did not add to file'); api.closeMenu();
+    // prison
+    G().notor = 60; G().heat = 4; G().dirty = 400; G().cash = 3000; G().flags.onboarded = true; G().biz = [mk('cafe', 0)]; G().biz[0].mgr = true;
+    const days = api.sentenceDays(); if (!(days >= 2 && days <= 14)) errs.push('sentence ' + days); stats.sentence = days;
+    const t0 = G().t; api.bust(); if (!G().jail) errs.push('no jail'); else {
+      const J = G().jail; if (J.days !== days) errs.push('sentence not applied'); if (G().dirty !== 200) errs.push('dirty cash not half seized ' + G().dirty);
+      if (G().p.x !== api.POIS.prison.ex || G().p.y !== api.POIS.prison.ey) errs.push('not placed at the prison');
+      if (!/Penitentiary/.test(sheet())) errs.push('no prison menu shown');
+      win.tick(1); if (G().t !== t0) errs.push('world ticked while jailed');
+      const t1 = G().t; click(/^Sit it out/); if (!(G().t >= t1 + 360)) errs.push('sit it out did not pass time');
+      const cash = G().cash, adv = win.advance; win.advance = () => {}; click(/^Work in the laundry/); win.advance = adv; if (G().cash !== cash + 12) errs.push('laundry did not pay ' + (G().cash - cash)); click(/^Work in the laundry/); const u0 = G().jail.until; click(/^Work in the laundry/); if (G().jail && G().jail.until >= u0 - 1440 + 240 + 1) { /* third shift shortens by a day */ }
+      if (G().jail.work !== 3) errs.push('work count ' + G().jail.work);
+      const lawyerBtn = btns().find(x => /^Hire a lawyer/.test(x.innerText)); if (!lawyerBtn || lawyerBtn.disabled) errs.push('lawyer unavailable'); else { lawyerBtn.click(); if (!G().jail.appeal) errs.push('appeal not recorded') }
+      if (!btns().find(x => /^Hire a lawyer/.test(x.innerText)).disabled) errs.push('could appeal twice');
+      flush(); api.phone(); if (!/Phone/.test(sheet())) errs.push('phone unavailable in jail'); doc.getElementById('xbtn').click(); if (!/Penitentiary/.test(sheet())) errs.push('closing the phone did not return to jail menu');
+      // a popup that closes while jailed brings the prison menu back
+      win.eval('popup("x","y")'); api.worldPanel(); win.eval('popNext()'); if (!/Penitentiary/.test(sheet())) errs.push('prison menu not restored after a popup');
+      // save while jailed and load back
+      api.save(); const raw = JSON.parse(win.localStorage.getItem('marrowbay_v3')); if (!raw.jail) errs.push('jail not saved'); win.eval('continueSave(JSON.parse(localStorage.getItem("marrowbay_v3")))'); if (!G().jail) errs.push('jail lost on load'); if (!/Penitentiary/.test(sheet())) errs.push('jail menu not restored on load');
+      // bribe
+      G().dirty = 2000; const bb = btns().find(x => /^Bribe a guard/.test(x.innerText)); if (!bb || bb.disabled) errs.push('bribe unavailable'); else { const rnd = win.Math.random; win.Math.random = () => .1; bb.click(); win.Math.random = rnd; flush(); if (G().jail) errs.push('bribe did not free'); }
+    }
+    // serve a full sentence
+    G().jail = null; G().notor = 50; G().heat = 3; G().dirty = 0; api.goToJail(3); flush(); let guard = 0; while (G().jail && guard++ < 40) api.jailTime(360); flush();
+    if (G().jail) errs.push('sentence never ended'); if (!(G().t - t0 >= 3 * 1440)) errs.push('time did not pass'); if (G().heat !== 0) errs.push('heat not cleared on release'); if (!(G().notor < 50)) errs.push('time served did not reduce file'); if (api.popOpen) api.popClear();
+    // records office
+    G().notor = 100; G().cash = 2000; G().dirty = 0; G().csDay = -1; G().informDay = -99; const hall = api.POIS.cityhall; const lou = win.eval('NPC.ashgrove');
+    api.MENUS.cityhall(hall, lou); if (!btns().some(x => /^Records office/.test(x.innerText))) errs.push('no records office button'); click(/^Records office/);
+    const nA = G().notor; click(/^Community service/); if (!(G().notor < nA)) errs.push('community service did nothing'); api.recordsMenu(hall, lou); if (click(/^Community service/) !== 'disabled') errs.push('community service not limited to once a day');
+    const nB = G().notor, cB = G().cash; click(/^Pay a fixer/); if (!(G().notor < nB) || !(G().cash < cB)) errs.push('fixer did nothing');
+    const nC = G().notor; const rnd = win.Math.random; win.Math.random = () => .1; click(/^Bribe the clerk/); win.Math.random = rnd; if (!(G().notor < nC)) errs.push('bribe did nothing');
+    const nD = G().notor, vm = win.eval('npcS(NPC.vex).m'); click(/^Inform on/); if (!(G().notor < nD) || !(win.eval('npcS(NPC.vex).m') < vm)) errs.push('informing did nothing'); api.recordsMenu(hall, lou); if (click(/^Inform on/) !== 'disabled') errs.push('informing not limited');
+    // overview
+    G().dirty = 300; G().biz = [mk('cafe', 0)]; api.bizOverview(); if (!/Dirty cash/.test(sheet()) || !btns().some(x => /^Launder dirty cash/.test(x.innerText))) errs.push('overview missing launder'); click(/^Launder dirty cash/); if (G().dirty >= 300) errs.push('overview launder did nothing');
+    api.bizMenu(G().biz[0]); if (!btns().some(x => /^Launder dirty cash/.test(x.innerText)) && G().dirty > 0) errs.push('no launder button on building');
+    // save, migrate defaults
+    api.save(); delete G().dirty; delete G().notor; delete G().lawSeen; delete G().jail; api.migrate(); if (G().dirty !== 0 || G().notor !== 0 || G().jail !== null) errs.push('migrate did not default law fields');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

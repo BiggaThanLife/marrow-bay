@@ -27,7 +27,7 @@ function goTalk(n){
   walkTo(Math.round(n.x),Math.round(n.y),()=>talk(n));
 }
 cv.addEventListener('pointerdown',e=>{
-  if(!G)return;
+  if(!G||G.jail)return;
   e.preventDefault();
   if(modal){if(!dismissable)return;worldPanel()}
   const r=cv.getBoundingClientRect();

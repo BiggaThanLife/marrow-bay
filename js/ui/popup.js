@@ -4,7 +4,7 @@ let popQ=[],popOpen=false;
 function popup(title,text,extra){popQ.push({title,text,extra});if(!popOpen)popNext()}
 function popNext(){
   const p=popQ.shift();
-  if(!p){popOpen=false;$('#pop').hidden=true;return}
+  if(!p){popOpen=false;$('#pop').hidden=true;if(G&&G.jail&&$('#sheet').hidden)jailMenu();return}
   popOpen=true;sfx('alert');
   $('#pop-t').textContent=p.title;$('#pop-x').textContent=p.text;
   $('#pop-e').textContent=p.extra||'';$('#pop-e').hidden=!p.extra;

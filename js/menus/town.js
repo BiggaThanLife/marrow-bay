@@ -51,13 +51,13 @@ MENUS.club=(poi,n,msg)=>{
     leaveBtn]);
 };
 MENUS.bank=(poi,n,msg)=>{
-  const t=tier(att(n)),can=t>=2&&G.debt===0&&!has('known-thief'),biz=G.biz.some(b=>b.type);
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} watches from behind glass.</p>${msgP(msg)}${G.debt>0?`<p class="bad">You owe ${money(G.debt)}.</p>`:''}`,[
+  const t=tier(att(n)),barred=lawTier()>=2,can=t>=2&&G.debt===0&&!has('known-thief')&&!barred,biz=G.biz.some(b=>b.type);
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} watches from behind glass.</p>${msgP(msg)}${G.debt>0?`<p class="bad">You owe ${money(G.debt)}.</p>`:''}${barred?'<p class="bad">The bank has you flagged. No loans or trading until you clear your name at City Hall.</p>':''}`,[
     {label:'Borrow $150',sub:can?'Repay $180 within 10 days or word gets out.':G.debt>0?'Repay what you owe first':'Your standing is too low for a loan',off:!can,fn:()=>ask('Take the loan?','You will owe $180 within 10 days. Missing the deadline damages your name.','Take it',()=>{G.cash+=150;G.debt=180;G.loanDay=day();G.loanTerm=10;G.flags.defRum=0;advance(20);quip('loan');MENUS.bank(poi,n,'The loan is approved. Do not forget it.')},()=>MENUS.bank(poi,n))},
     {label:'Business loan, $800',sub:can&&biz?'Repay $960 within 20 days. Needs a business.':!biz?'Open a business first':'Your standing is too low',off:!(can&&biz),cls:'',fn:()=>ask('Take the business loan?','You will owe $960 within 20 days. Missing the deadline damages your name.','Take it',()=>{G.cash+=800;G.debt=960;G.loanDay=day();G.loanTerm=20;G.flags.defRum=0;advance(30);quip('loan');MENUS.bank(poi,n,'The business loan is approved.')},()=>MENUS.bank(poi,n))},
     {label:'Repay debt',sub:G.debt>0?`Pay up to ${money(Math.min(G.cash,G.debt))}`:'You owe nothing',off:G.debt<=0||G.cash<1,cls:'',fn:()=>{const p=Math.min(G.cash,G.debt);G.cash-=p;G.debt-=p;if(G.debt<=0)G.flags.defRum=0;advance(10);MENUS.bank(poi,n,G.debt>0?`You paid ${money(p)}.`:'Debt cleared.')}},
     {label:'Investment loan, $1000',sub:G.mkt&&G.mkt.noCreditUntil>day()?'The bank is not lending this month':can?'Repay $1250 within 25 days. For the trading desk.':'Pay off debt and build standing first',off:!can||(G.mkt&&G.mkt.noCreditUntil>day()),cls:'',fn:()=>ask('Take the investment loan?','You will owe $1250 within 25 days. If the market turns, that is a lot of money to owe.','Take it',()=>{G.cash+=1000;G.debt=1250;G.loanDay=day();G.loanTerm=25;G.flags.defRum=0;advance(30);MENUS.bank(poi,n,'The loan is approved. Cordelia wishes you luck.')},()=>MENUS.bank(poi,n))},
-    {label:'Trading desk',sub:`Portfolio ${money(portfolio())}`,cls:'',fn:()=>tradingMenu(poi,n)},
+    {label:'Trading desk',sub:barred?'Barred. Clear your name at City Hall.':`Portfolio ${money(portfolio())}`,off:barred,cls:'',fn:()=>tradingMenu(poi,n)},
     {label:'FLACK contract',sub:fact('flack_contract_player')?'You are an installer':'Subcontract work for the Trust',cls:'',fn:()=>flackContractMenu(poi,n)},
     leaveBtn]);
 };

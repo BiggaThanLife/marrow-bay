@@ -28,6 +28,8 @@ f.addEventListener('load', () => {
       hungry: () => { G().hunger = 20 },
       money: () => { G().cash = 5 },
       bills: () => { win.eval('G.t=24*1440+8*60') },
+      dirty: () => { G().dirty = 50 },
+      law: () => { G().notor = 30; G().lawSeen = 1 },
       heat: () => { G().heat = 2 },
       biz: () => { G().biz.push({ key: '16,13', d: 'Grid', price: 1, type: 'cafe', level: 1, workers: [], till: 0 }) },
       cameras: () => {},
@@ -45,7 +47,7 @@ f.addEventListener('load', () => {
       if (!h.t || !h.b || !h.q) errs.push('incomplete hint ' + h.id);
       api.popClear(); api.hintsCheck(); if (shown() && title() === h.t) errs.push('hint repeated ' + h.id);
     });
-    stats.fired = Object.keys(G().tips).length;
+    stats.fired = Object.keys(G().tips).length; G().dirty = 0; G().notor = 0; G().lawSeen = 0; G().heat = 0;
     // switched off
     G().tips = {}; api.popClear(); api.SET.hints = false; G().hunger = 10; api.hintsCheck(); if (shown()) errs.push('hint shown while switched off');
     api.SET.hints = true;

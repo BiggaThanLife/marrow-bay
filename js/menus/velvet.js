@@ -31,12 +31,12 @@ function missionTick(){
   m.i++;
   if(m.i<m.stops.length){notify(`Package picked up. Deliver it to ${POIS[m.stops[m.i]].name}.`);return}
   G.mission=null;const vex=npcS(NPC.vex);threadMissionEnd(m,true);
-  if(m.type==='courier'){G.cash+=m.reward;vex.m+=5;G.rep['Neon Mile']=clamp(G.rep['Neon Mile']+3,-100,100);notify(`Delivered. You earn ${money(m.reward)}.`);quip('job')}
+  if(m.type==='courier'){earnDirty(m.reward);vex.m+=5;G.rep['Neon Mile']=clamp(G.rep['Neon Mile']+3,-100,100);notify(`Delivered. You earn ${money(m.reward)}, in cash nobody asks about.`);quip('job')}
   else if(m.type==='collect'){
-    if(Math.random()<.7){G.cash+=m.reward;G.heat=Math.min(5,G.heat+1);vex.m+=6;G.rep[poi.d]=clamp(G.rep[poi.d]-6,-100,100);const o=OWNER[poi.id]&&NPC[OWNER[poi.id]];if(o)npcS(o).m-=15;{news(`Shakedown reported at ${poi.name}.`,2);notify(`They pay up. You earn ${money(m.reward)}, and made an enemy.`)}}
+    if(Math.random()<.7){earnDirty(m.reward);G.heat=Math.min(5,G.heat+1);vex.m+=6;G.rep[poi.d]=clamp(G.rep[poi.d]-6,-100,100);const o=OWNER[poi.id]&&NPC[OWNER[poi.id]];if(o)npcS(o).m-=15;{news(`Shakedown reported at ${poi.name}.`,2);notify(`They pay up. You earn ${money(m.reward)} in dirty cash, and made an enemy.`)}}
     else{G.heat=Math.min(5,G.heat+2.2);notify('They call the police. Run!')}
   }else if(m.type==='heist'){
-    if(Math.random()<m.odds){const c=ri(180,320);G.cash+=c;G.inv.loot+=ri(1,3);G.heat=Math.min(5,G.heat+2);vex.m+=10;{news(`Overnight break-in at ${poi.name}. Police are investigating.`,3);notify(`You are in and out. ${money(c)} and some goods. Police are alerted.`)}}
+    if(Math.random()<m.odds){const c=ri(180,320);earnDirty(c);G.inv.loot+=ri(1,3);G.heat=Math.min(5,G.heat+2);vex.m+=10;{news(`Overnight break-in at ${poi.name}. Police are investigating.`,3);notify(`You are in and out. ${money(c)} in dirty cash and some goods. Police are alerted.`)}}
     else{G.heat=Math.min(5,G.heat+3.5);news(`Alarm at ${poi.name}: an attempted break-in.`,3);notify('Alarm! You bolt with nothing. Run!')}
   }else if(m.type==='boost'){
     if(Math.random()<m.odds){G.veh.owned.sedan=true;G.veh.stolen.sedan=true;G.veh.fuel.sedan=60;G.veh.active='sedan';G.heat=Math.min(5,G.heat+2);{news(`A sedan was stolen near ${poi.name}.`,2);notify('Hotwired. The sedan is yours, but it is hot.')}}

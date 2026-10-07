@@ -13,6 +13,7 @@ function openPOI(poi){
   if(poi.id==='foundry'&&fact('foundry_closed'))return ui(`<h2>${esc(poi.name)}</h2><p>Boarded up. A sign says CLOSED PENDING INQUIRY. Someone has added a second sign that says FOREVER.</p>`,[leaveBtn]);
   if(poi.id!==G.home&&!isOpen(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>Closed. Opens at ${fmtHr(OPEN[poi.id][0])}.</p>`,[leaveBtn]);
   if(n&&poi.id!==G.home&&tier(att(n))===0&&!OPEN_TO_ALL.includes(poi.id))return refuse(poi,n);
+  if(poi.id!==G.home&&lawLocked(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>${n?esc(n.name.split(' ')[0]):'The doorman'} will not see you. Your name is on a list.</p><p class="muted">The records office at City Hall can help, for a price or some honest work.</p>`,[leaveBtn]);
   engageAdd(poi.d,1);
   if(arcHook(poi))return;
   (MENUS[poi.id]||info)(poi,n);

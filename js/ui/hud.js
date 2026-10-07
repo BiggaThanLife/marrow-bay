@@ -49,7 +49,7 @@ function ui(html,btns=[],isModal=true,dismiss=true){
   if(sheet.hidden)sfx('open');
   sheet.hidden=false;sheet.scrollTop=0;
 }
-function worldPanel(){ui('',[],false);if(G)hud()}
+function worldPanel(){ui('',[],false);if(G){hud();if(G.jail&&!popOpen)jailMenu()}}
 const closeMenu=()=>{save();worldPanel()};
 const leaveBtn={label:'Leave',cls:'quiet',fn:closeMenu};
 $('#xbtn').addEventListener('click',()=>{if(dismissable)closeMenu()});
@@ -58,9 +58,10 @@ const msgP=m=>m?`<p class="amber">${esc(m)}</p>`:'';
 $('#b-bag').addEventListener('click',()=>{if(G){placing=null;bag()}});
 $('#b-phone').addEventListener('click',()=>{if(G){placing=null;phone()}});
 $('#b-biz').addEventListener('click',()=>{if(G){placing=null;bizOverview()}});
-$('#b-go').addEventListener('click',()=>{if(G){placing=null;goMenu()}});
+$('#b-go').addEventListener('click',()=>{if(G){placing=null;if(G.jail)return notify('You are in prison.');goMenu()}});
 $('#b-build').addEventListener('click',()=>{
   if(!G)return;
+  if(G.jail)return notify('You are in prison.');
   if(placing){placing=null;notify('');hud();return}
   buildMenu();
 });

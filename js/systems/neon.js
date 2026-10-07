@@ -13,8 +13,8 @@ function neonDaily(){
   const mine=playerRackets();
   if(!mine.length)return;
   const pay=mine.reduce((t,r)=>t+racketPay(r),0);
-  G.cash+=pay;meterAdd('Neon Mile',mine.length);G.heat=Math.min(5,G.heat+.2*mine.length);
-  news(`Your ${mine.length} racket${mine.length>1?'s':''} paid ${money(pay)} this week.`,1);
+  earnDirty(pay);meterAdd('Neon Mile',mine.length);G.heat=Math.min(5,G.heat+.2*mine.length);
+  news(`Your ${mine.length} racket${mine.length>1?'s':''} paid ${money(pay)} in dirty cash this week.`,1);
 }
 function takeRacket(id,how){
   const r=RACKETS.find(x=>x.id===id),was=G.turf[id];

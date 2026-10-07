@@ -37,6 +37,7 @@ function bizTraffic(b){
 }
 function runBiz(b){
   const t=BT[b.type];if(!t)return;
+  if(b.shut>day()){b.last={units:0,rev:0,cost:0,wages:0,theft:0,profit:0,note:'Closed by police'};pushHist(b.hist=b.hist||[],0);return}
   if(b.type!=='rental'&&b.tenants){delete b.tenants;delete b.applicants;delete b.issues;delete b.manager}
   const dist=b.d,rep=G.rep[dist];
   const appeal=bizAppeal(b);
@@ -72,6 +73,7 @@ function runBiz(b){
     const fee=Math.round(r.rev*.1);r.wages+=fee;payOut(b,fee);
     if(!b.workers.length&&G.pool.length){const w=G.pool.slice().sort((x,y)=>(y.skill/y.wage)-(x.skill/x.wage))[0];b.workers.push(w);G.pool=G.pool.filter(x=>x!==w);notify(`${bizName(b)}'s manager hires ${w.name}.`)}
     const take=Math.max(0,b.till);if(take){G.cash+=take;b.till=0;r.banked=take}
+    if(G.dirty>0&&canLaunder(b)){const got=launder(b,G.dirty);if(got)r.washed=got}
   }
   r.profit=r.rev-r.cost-r.wages-r.theft;b.last=r;pushHist(b.hist=b.hist||[],r.profit);
 }

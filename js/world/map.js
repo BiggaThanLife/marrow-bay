@@ -34,7 +34,7 @@ const SPEC={
  '4,4':['dock','Dock Office'],'5,4':['bunk','Bunkhouse'],'3,5':['gull','The Rusty Gull'],'1,5':['lot'],'4,5':['lot'],
  '7,0':['casino','Lucky Tide Casino'],'8,1':['velvet','The Velvet Room'],'9,0':['pawn','Pawn and Loan'],'7,2':['loft','Neon Lofts'],
  '7,4':['garage',"Mack's Garage"],'8,4':['foundry','Iron Works'],
- '4,1':['barber','Clip Joint'],'5,2':['tailor','Hand-Me-Ups']
+ '4,1':['barber','Clip Joint'],'5,2':['tailor','Hand-Me-Ups'],'9,4':['prison','Marrow Bay Penitentiary']
 };
 /* Every block in the road lattice, and what it holds by default (the classic layout, seed 0). */
 const CELLS=[];

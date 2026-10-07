@@ -2,7 +2,7 @@
 /* Game tick, frame loop and startup. */
 let hudT=0,missT=0;
 function tick(dt){
-  if(popOpen)return;
+  if(popOpen||G.jail)return;
   if(alertQ.length){showAlert();return}
   const p=G.p;
   advance(dt*6,false,true);
