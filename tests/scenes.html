@@ -20,8 +20,8 @@ f.addEventListener('load', async () => {
     api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; api.SET.hints = false;
     // every rule has a type with a drawing and a length
     api.SCENE_RULES.forEach(r => { if (!api.SCENE_DRAW[r[1]] || !api.SCENE_MS[r[1]]) errs.push('no drawing or length for ' + r[0]) });
-    ['Haul cargo', 'Work a kitchen shift', 'Tend the gardens', 'Repair shift', 'Foundry shift', 'Collect till', 'Collect all tills', 'Sleep until morning', 'Nap for 2 hours', 'Get treated', 'Pay union dues'].forEach(l => { if (!api.sceneFor(l)) errs.push('no scene for ' + l) });
-    ['Collect a debt', 'Sell goods', 'Buy 10 scrap', 'Back', 'Leave'].forEach(l => { if (api.sceneFor(l)) errs.push('unexpected scene for ' + l) });
+    ['Haul cargo', 'Work a kitchen shift', 'Tend the gardens', 'Repair shift', 'Foundry shift', 'Collect till', 'Collect all tills', 'Sleep until morning', 'Nap for 2 hours', 'Get treated', 'Pay union dues', 'Fish from the pier', 'Fish the exposed channel', 'Take the boat out', 'Scavenge the mudflats', 'Plant a seed', 'Harvest', 'Order a meal', 'Eat a meal', 'Buy a round for the bar', 'Cook a meal', 'Cook fish stew'].forEach(l => { if (!api.sceneFor(l)) errs.push('no scene for ' + l) });
+    ['Collect a debt', 'Sell goods', 'Takeaway meals', 'Buy 10 scrap', 'Back', 'Leave'].forEach(l => { if (api.sceneFor(l)) errs.push('unexpected scene for ' + l) });
     // draw every rule at several moments with no errors
     const cv = doc.getElementById('sc-cv'), g = cv.getContext('2d');
     api.SCENE_RULES.forEach(r => { [0, 300, 900, 1400].forEach(t => api.SCENE_DRAW[r[1]](g, t, Math.min(1, t / api.SCENE_MS[r[1]]), r[2])) });
