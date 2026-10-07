@@ -2,6 +2,8 @@
 /* Velvet Room crime jobs and missions. */
 /* ----- Velvet Room: crime jobs ----- */
 const JOB_POIS=['market','diner','dock','gull','bank','clinic','workshop','garage','foundry','pawn','casino','estate','club','realty'];
+/* game minutes allowed for a courier run: the walk to the pickup plus the delivery, on foot, with half again for corners and a 20 minute cushion */
+function courierMinutes(j){const a=POIS[j.a];return Math.round((man(Math.round(G.p.x),Math.round(G.p.y),a.ex,a.ey)+j.d)*(TIME_RATE/4.8)*1.5+20)}
 function startMission(m){G.mission=m;notify(`Job accepted: ${m.title}.`);closeMenu()}
 MENUS.velvet=(poi,n,msg)=>{
   if(G.mission)return ui(`<h2>${esc(poi.name)}</h2><p>${esc(n.name)} says: "Finish what you started."</p><p class="muted">${esc(missionText())}</p>`,[{label:'Drop the job',cls:'quiet',fn:()=>ask('Drop this job?','Vex will remember that you walked away.','Drop it',()=>{G.mission=null;npcS(NPC.vex).m-=4;closeMenu()},()=>MENUS.velvet(POIS.velvet,NPC.vex))},leaveBtn]);
@@ -15,7 +17,7 @@ MENUS.velvet=(poi,n,msg)=>{
   const boostT=pick(['garage','foundry','dock']);
   const tools=G.fx.kit?.18:0;
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${fact('vex_jailed')?'Dagny Salt has taken the corner table. Vex is not here.':esc(n.name)+' slides a note across the table.'}</p>${msgP(msg)}`,[
-    {label:'Courier run',sub:`${POIS[j.a].name} to ${POIS[j.b].name}. ${money(50+j.d*.8)}, ${Math.round(j.d*.9+25)} min. A bike helps.`,fn:()=>startMission({type:'courier',title:'Courier run',stops:[j.a,j.b],i:0,deadline:G.t+j.d*.9+25,reward:Math.round(50+j.d*.8)})},
+    {label:'Courier run',sub:`${POIS[j.a].name} to ${POIS[j.b].name}. ${money(50+j.d*.8)}, ${courierMinutes(j)} min. A bike helps.`,fn:()=>startMission({type:'courier',title:'Courier run',stops:[j.a,j.b],i:0,deadline:G.t+courierMinutes(j),reward:Math.round(50+j.d*.8)})},
     {label:'Collect a debt',sub:`Lean on ${POIS[target].name}. ${money(110)}. Raises heat.`,cls:'',fn:()=>startMission({type:'collect',title:'Debt collection',stops:[target],i:0,deadline:G.t+420,reward:110})},
     {label:'Smash and grab',sub:`${POIS[heistT].name}, after dark. Big payout, big heat.`,cls:'',fn:()=>startMission({type:'heist',title:'Smash and grab',stops:[heistT],i:0,deadline:G.t+1200,reward:260,night:true,odds:.4+tools+(has('smooth')?.05:0)+(has('creative')?.05:0)+G.mod.heist})},
     {label:'Boost a car',sub:`Take a sedan from ${POIS[boostT].name}. A free ride, but hot.`,cls:'',fn:()=>startMission({type:'boost',title:'Boost a car',stops:[boostT],i:0,deadline:G.t+480,reward:0,odds:.55+tools})},

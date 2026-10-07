@@ -54,6 +54,12 @@ f.addEventListener('load', () => {
     for (let d = 0; d < 80; d++) { G().notor = 90; api.advance(1440, false, true); flush(); if (G().biz.some(b => b.shut > api.day())) raided++; }
     stats.raidedDays = raided; if (!raided) errs.push('no raid in 80 days at public enemy');
     if (G().biz.some(b => b.shut > api.day() && b.last && b.last.note !== 'Closed by police')) errs.push('shut business still trading');
+    // game time and courier deadlines
+    G().jail = null; G().t = Math.floor(G().t / 1440) * 1440 + 9 * 60; G().p.x = 22; G().p.y = 17; G().heat = 0; G().hunger = 100; G().energy = 100; const tBefore = G().t; win.tick(1); const per = G().t - tBefore;
+    if (Math.abs(per - win.eval('TIME_RATE')) > .5) errs.push('one second of play is ' + per + ' game minutes, expected ' + win.eval('TIME_RATE')); stats.minPerSecond = Math.round(per * 10) / 10;
+    const cm = win.eval('courierMinutes({a:"market",b:"diner",d:40})'); const pk = api.POIS.market, dd = Math.abs(22 - pk.ex) + Math.abs(17 - pk.ey);
+    const footMin = (dd + 40) * (win.eval('TIME_RATE') / 4.8); stats.courier = cm; if (cm < footMin * 1.3) errs.push('courier deadline ' + cm + ' too tight for ' + Math.round(footMin) + ' minutes on foot');
+    if (!(win.eval('courierMinutes({a:"market",b:"diner",d:60})') > cm)) errs.push('courier time does not grow with distance');
     // quick detain at low notoriety
     G().notor = 0; G().heat = 3; G().cash = 500; G().inv.loot = 2; api.bust(); flush(); if (G().jail) errs.push('low notoriety went to prison'); if (G().notor < 4) errs.push('arrest did not add to file'); api.closeMenu();
     // prison

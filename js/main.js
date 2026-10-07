@@ -5,7 +5,7 @@ function tick(dt){
   if(popOpen||G.jail)return;
   if(alertQ.length){showAlert();return}
   const p=G.p;
-  advance(dt*6,false,true);
+  advance(dt*TIME_RATE,false,true);
   const R=NPC.reyes;
   if(G.veh.active!=='none'&&G.veh.stolen[G.veh.active]){G.heat=Math.max(G.heat,1.2);if(!R.indoors&&Math.hypot(R.x-p.x,R.y-p.y)<7)G.heat=Math.max(G.heat,3)}
   if(G.heat>=2){

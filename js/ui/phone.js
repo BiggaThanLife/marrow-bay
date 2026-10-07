@@ -40,7 +40,7 @@ function gpsMenu(){
     {label:'Back',cls:'quiet',fn:()=>phone()}]);
 }
 function gpsDetail(d){
-  const v=VEH[G.veh.active],sp=vehSpeed(G.veh.active)*G.mod.vspeed,min=Math.round(d.dist/sp*6),walk=Math.round(d.dist/4.8*6);
+  const v=VEH[G.veh.active],sp=vehSpeed(G.veh.active)*G.mod.vspeed,min=Math.round(d.dist/sp*TIME_RATE),walk=Math.round(d.dist/4.8*TIME_RATE);
   const isFav=(G.favs||[]).includes(d.name);
   ui(`<h2>${esc(d.name)}</h2><p>${d.dist} tiles away. About ${min} minutes with your ${v.n.toLowerCase()}${G.veh.active==='none'?'':`, or ${walk} minutes on foot`}.</p>`,[
     {label:'Guide me on the map',sub:'Shows a dotted route. You walk it yourself.',fn:()=>{G.gps={x:d.x,y:d.y,name:d.name};gpsTick();closeMenu();notify('GPS route set.')}},

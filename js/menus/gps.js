@@ -173,7 +173,7 @@ function gvDraw(){
 }
 function gvEta(d){
   const sp=vehSpeed(G.veh.active)*G.mod.vspeed;
-  return Math.max(1,Math.round(d.dist/sp*6));
+  return Math.max(1,Math.round(d.dist/sp*TIME_RATE));
 }
 function gvCard(){
   const c=document.getElementById('gm-card'),d=GV.sel;
