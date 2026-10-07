@@ -49,8 +49,8 @@ function tickWalkers(dt){
     if(!w.path.length&&w.goHome){w.indoors=true;w.goHome=false}
   });
 }
-function walkerAt(fx,fy){
-  let best=null,bd=1.3;
+function walkerAt(fx,fy,reach=1.1){
+  let best=null,bd=reach;
   WALKERS.forEach(w=>{if(w.indoors)return;const d=Math.hypot(w.x+.5-fx,w.y+.5-fy);if(d<bd){bd=d;best=w}});
   return best;
 }

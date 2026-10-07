@@ -18,9 +18,13 @@ function redact(t,b=flackBand(),rnd=Math.random){
 }
 function drawCam(sx,sy,i,now){
   const blind=camBlind(i),s=FLACK_SITES[i],near=!blind&&G&&Math.hypot(s.x-G.p.x,s.y-G.p.y)<=5;
-  cx.fillStyle='#2a3140';cx.fillRect(sx+11,sy-4,2,10);
-  cx.fillStyle=blind?'#e04080':'#5a6578';cx.fillRect(sx+8,sy-7,7,4);
-  cx.fillStyle=blind?'#333':near||(Math.floor(now/700)+i)%2?'#ff3b3b':'#7a1c1c';cx.fillRect(sx+8,sy-6,2,2);
+  /* the pole stands in the corner of the junction, propped against the nearest building corner, with the head turned to face the crossing */
+  let dx=1,dy=1;
+  for(const [a,b] of [[1,1],[-1,1],[1,-1],[-1,-1]]){const t=map[s.y+b]&&map[s.y+b][s.x+a];if(t===T.BLD){dx=a;dy=b;break}}
+  const bx=sx+(dx>0?TS-3:3),by=sy+(dy>0?TS-3:3),hx=dx>0?bx-6:bx-1;
+  cx.fillStyle='#2a3140';cx.fillRect(bx-1,by-10,2,10);
+  cx.fillStyle=blind?'#e04080':'#5a6578';cx.fillRect(hx,by-13,7,4);
+  cx.fillStyle=blind?'#333':near||(Math.floor(now/700)+i)%2?'#ff3b3b':'#7a1c1c';cx.fillRect(dx>0?hx:hx+5,by-12,2,2);
 }
 const HARBOR_TALK=[
   "Hello, {name}. I am HARBOR. I schedule the tides, the trams and, as of last quarter, you. Please do not take that personally.",

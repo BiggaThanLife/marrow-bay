@@ -35,10 +35,12 @@ cv.addEventListener('pointerdown',e=>{
   const tx=Math.floor(fx),ty=Math.floor(fy);
   if(tx<0||ty<0||tx>=W||ty>=H)return;
   if(placing)return tryPlace(tx,ty);
-  let best=null,bd=1.3;
+  /* Streets are one tile wide, so someone is nearly always standing next to whatever you tap. A tap that lands on a stop or a structure only goes to a person who is almost on that exact spot. */
+  const onThing=STOPS.some(s=>s.x===tx&&s.y===ty)||!!structAt(tx,ty),reach=onThing?.5:1.1;
+  let best=null,bd=reach;
   NPCS.forEach(n=>{if(n.indoors)return;const d=Math.hypot(n.x+.5-fx,n.y+.5-fy);if(d<bd){bd=d;best=n}});
   if(best)return goTalk(best);
-  const wk=walkerAt(fx,fy);if(wk)return goTalkWalker(wk);
+  const wk=walkerAt(fx,fy,reach);if(wk)return goTalkWalker(wk);
   const stop=STOPS.find(s=>Math.abs(s.x-tx)<=0&&Math.abs(s.y-ty)<=0);
   if(stop)return walkTo(tx,ty,()=>stopMenu(stop));
   const st=structAt(tx,ty);
