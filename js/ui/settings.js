@@ -2,6 +2,8 @@
 /* Settings (phone and title): sound, save and load, export and import, full screen, quit to title. */
 const VOLNAMES=['','Low','Medium','High'];
 const fsSupported=()=>{const e=document.documentElement;return !!(e.requestFullscreen||e.webkitRequestFullscreen)};
+const isIOS=()=>/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isStandalone=()=>!!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
 const isFull=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
 async function goFull(landscape){
   const el=document.documentElement;
@@ -59,6 +61,12 @@ function unstick(){
   if(!best)return false;
   p.x=best[0];p.y=best[1];p.path=[];p.onArrive=null;dest=null;gpsPath=[];save();return true;
 }
+/* Apple browsers have no full screen API, so the way to hide the browser bars is a home screen icon. */
+function installHelp(back){
+  ui(`<h2>Full screen on iPhone and iPad</h2><p class="muted">Safari cannot hide its bars from inside a game. A home screen icon opens Marrow Bay with no bars at all, and it turns sideways when you turn your phone.</p>
+  <ol class="small" style="margin:6px 0 8px 18px;line-height:1.5"><li>Open this page in <b>Safari</b> (not inside another app's browser).</li><li>Tap the <b>Share</b> button, the square with an arrow.</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>, then open Marrow Bay from the new icon.</li></ol>
+  <p class="small muted">Your save lives in the browser, so the icon starts with an empty game. To bring your game over: Export save here first, then Import save from the icon. Android phones: the Full screen buttons work directly.</p>`,[{label:'Back',cls:'quiet',fn:()=>back()}]);
+}
 function settingsMenu(msg){
   const inGame=!!G,full=isFull(),saved=loadSave();
   const back=m=>settingsMenu(m),leave=()=>inGame?phone():title();
@@ -71,8 +79,9 @@ function settingsMenu(msg){
     ]:[]),
     {label:'Export save',sub:'Download a backup file',off:!inGame&&!saved,cls:'',fn:()=>exportSave(back)},
     {label:'Import save',sub:'Load a backup file',cls:'',fn:()=>importSave(back)},
-    {label:full?'Leave full screen':'Full screen',sub:'Hides the browser bar so you do not tap it by accident',cls:'',fn:async()=>{if(full){leaveFull();return back('Full screen is off.')}back(await goFull(false))}},
-    ...(full?[]:[{label:'Full screen, landscape',sub:'Turns the game sideways and hides the browser bar',cls:'',fn:async()=>back(await goFull(true))}]),
+    {label:full?'Leave full screen':'Full screen',sub:'Hides the browser bar so you do not tap it by accident',cls:'',fn:async()=>{if(full){leaveFull();return back('Full screen is off.')}if(!fsSupported())return installHelp(back);back(await goFull(false))}},
+    ...(full?[]:[{label:'Full screen, landscape',sub:'Turns the game sideways and hides the browser bar',cls:'',fn:async()=>{if(!fsSupported())return installHelp(back);back(await goFull(true))}}]),
+    ...(isIOS()&&!isStandalone()?[{label:'Full screen on iPhone',sub:'How to hide the Safari bars',cls:'primary',fn:()=>installHelp(back)}]:[]),
     ...(inGame?[{label:'Stuck? Move me to the street',sub:'Puts you on the nearest open road',cls:'',fn:()=>back(unstick()?'You are back on the street.':'No open road found.')}]:[]),
     ...(inGame?[{label:'Quit to title',sub:'Saves first',cls:'warn',fn:()=>ask('Quit to title?','Your game is saved first. You can continue from the title screen.','Quit',()=>{save();title()},()=>back())}]:[]),
     {label:'Back',cls:'quiet',fn:leave}]);
