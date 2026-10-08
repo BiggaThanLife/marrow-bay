@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay feed test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Bay-Watch feed</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Suggestions are pinned, tick themselves off and make the next one unread; saved posts count as unread until the feed is opened; the feed is capped;
+   old Bay-Watch extras move across once and count as read; old posts drop out of view; the Phone shows the count; the feed survives a save. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,phone,baywatchMenu,feedAdd,feedInit,feedUnread,feedSuggestions,clBw,day,hud,SET,migrate,FEED_CAP})`);
+  const G = () => api.G, sheet = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')].map(b => b.innerText);
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; api.SET.hints = false;
+    G().met = {}; G().engage = {}; G().cash = 20; G().biz = [];
+    // suggestions are pinned posts, one new at the start
+    const s0 = api.feedSuggestions(); stats.suggestions = s0.length;
+    if (s0.length !== 2 || s0[0].id !== 's:meet' || s0[0].kind !== 'suggest') errs.push('suggestions wrong: ' + JSON.stringify(s0.map(x => x.id)));
+    if (api.feedUnread() !== 1) errs.push('first suggestion not unread: ' + api.feedUnread());
+    api.hud(); if (!/\u25CF/.test(doc.getElementById('b-phone').textContent)) errs.push('no dot on Phone for an unread post');
+    api.phone(); if (!btns().some(t => /Bay-Watch Feed\n1 new/.test(t))) errs.push('Phone row does not show the count: ' + btns().join('|'));
+    api.baywatchMenu(); if (!/Suggested/.test(sheet()) || !/Talk to someone/.test(sheet())) errs.push('feed lacks the pinned suggestion');
+    if (api.feedUnread() !== 0) errs.push('opening the feed did not clear unread');
+    // it ticks itself off and the next one is unread
+    G().met = { bell: 1 }; const s1 = api.feedSuggestions(); if (s1[0].id !== 's:enter') errs.push('suggestion did not tick off');
+    if (api.feedUnread() !== 1) errs.push('the next suggestion should be unread');
+    api.baywatchMenu(); if (/Talk to someone/.test(sheet())) errs.push('done suggestion still shown');
+    // saved posts
+    api.feedAdd({ kind: 'rumor', dist: 'Grid', t: 'Rumor test post' }); api.feedAdd({ kind: 'event', dist: 'Dockside', t: 'Event test post' }); api.clBw('Greenbelt', 'Callback test post');
+    if (api.feedUnread() !== 3) errs.push('three posts should be unread: ' + api.feedUnread());
+    api.baywatchMenu(); const t = sheet();
+    ['Rumor test post', 'Event test post', 'Callback test post', 'Rumor', 'Event', 'Chatter', 'Patrol watch'].forEach(x => { if (!t.includes(x)) errs.push('feed missing ' + x) });
+    if (!/New/.test(t)) errs.push('new posts not marked'); if (api.feedUnread() !== 0) errs.push('unread not cleared');
+    api.baywatchMenu(); if (/\bNew\b/.test(sheet())) errs.push('posts still marked new on a second look');
+    // the cap, oldest dropped, ids rising
+    for (let i = 0; i < 60; i++) api.feedAdd({ kind: 'event', t: 'filler ' + i });
+    if (G().feed.length !== api.FEED_CAP) errs.push('feed not capped: ' + G().feed.length);
+    if (G().feed.some((p, i, a) => i && p.id <= a[i - 1].id)) errs.push('ids not rising'); if (G().feed.some(p => p.t === 'Rumor test post')) errs.push('oldest not dropped');
+    // old posts leave the view
+    G().feed.push({ id: 999999, day: api.day() - 10, kind: 'event', dist: 'Grid', t: 'Ancient post', by: '' }); G().feedId = 999999; api.baywatchMenu(); if (sheet().includes('Ancient post')) errs.push('old post still shown');
+    // old Bay-Watch extras move across once and count as read
+    G().feed = []; G().feedId = 0; delete G().feedSeen; G().bwExtra = [{ day: api.day(), dist: 'Grid', t: 'Legacy extra' }]; api.feedInit();
+    if (G().bwExtra.length || !G().feed.some(p => p.t === 'Legacy extra')) errs.push('bwExtra did not move across'); if (api.feedUnread() > 1) errs.push('moved posts counted as unread');
+    // a save keeps the feed
+    api.feedAdd({ kind: 'rumor', dist: 'Grid', t: 'Survives a save' }); win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (!G().feed.some(p => p.t === 'Survives a save')) errs.push('feed lost on save and migrate');
+    win.eval('delete G.feed;delete G.feedId;delete G.feedSeen;delete G.sugSeen;migrate()');
+    if (!Array.isArray(G().feed) || G().feedSeen !== G().feedId || typeof G().sugSeen !== 'string') errs.push('old save not given feed fields');
+    stats.feedLen = G().feed.length;
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

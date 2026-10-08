@@ -5,8 +5,7 @@ function phone(msg){
   const un=G.news.filter(x=>x.id>G.newsRead).length;
   ui(`<h2>Phone</h2><p class="muted">Day ${day()}, ${timeStr()}. ${G.gps?`GPS route: ${esc(G.gps.name)}.`:'No GPS route.'}</p>${msgP(msg)}`,[
     {label:'GPS',sub:'A map of the whole city. Tap a place to go, or to Googull it.',fn:gpsMap},
-    ...(leadNext()?[{label:'Leads',sub:leadUnseen()?'New: '+leadNext().t:'Things worth trying',cls:leadUnseen()?'primary':'',fn:leadsMenu}]:[]),
-    {label:'Bay-Watch Feed',sub:'Neighbours, complaints, patrol sightings',cls:'',fn:baywatchMenu},
+    {label:'Bay-Watch Feed',sub:feedUnread()?`${feedUnread()} new`:'Neighbours, rumors, patrol sightings',cls:feedUnread()?'primary':'',fn:baywatchMenu},
     {label:'Marrowlist',sub:clUnread()?`${clUnread()} new repl${clUnread()>1?'ies':'y'}`:'Classified ads. Buy, sell, regret.',cls:clUnread()?'primary':'',fn:()=>marrowlist()},
     {label:'News',sub:un?`${un} new`:'Today and earlier days',cls:'',fn:newsMenu},
     {label:'Contacts',sub:`${Object.keys(G.met).length} people`,cls:'',fn:contactsMenu},

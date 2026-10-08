@@ -42,7 +42,7 @@ function clGive(g){
   if(g.decor){if(G.decor[g.decor])clGive(g.alt);else G.decor[g.decor]=true}
   if(g.veh){if(G.veh.owned[g.veh])clGive(g.alt);else{G.veh.owned[g.veh]=true;G.veh.fuel[g.veh]=100}}
 }
-function clBw(dist,t){G.bwExtra.push({day:day(),dist,t});if(G.bwExtra.length>8)G.bwExtra.shift()}
+function clBw(dist,t){feedAdd({kind:'event',dist,t})}
 function clEnd(ad,th,type){
   const npc=ad.npc&&NPC[ad.npc];
   if(type==='block'||type==='spot'){th.blocked=true;th.done=type==='spot'?'spotted':'block';G.cl.blocks=(G.cl.blocks||0)+1;if(type==='block')clBw(ad.d,ad.bw);return}

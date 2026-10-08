@@ -37,12 +37,12 @@ f.addEventListener('load', () => {
     const pathTo = (ad, end) => { const q = [['start', []]], seen = new Set(['start']); while (q.length) { const [k, p] = q.shift(); const n = nodeOf(ad, k); for (let i = 0; i < n.r.length; i++) { const r = n.r[i]; if (r.end === end) return p.concat(i); if (r.to && !seen.has(r.to)) { seen.add(r.to); q.push([r.to, p.concat(i)]) } } } return null };
     api.CL_ADS.forEach(ad => ENDS.forEach(end => {
       reset(ad.id); const p = pathTo(ad, end); if (!p) return;
-      const before = { cash: G().cash, inv: JSON.stringify(G().inv), decor: JSON.stringify(G().decor), bike: !!G().veh.owned.bike, mood: ad.npc ? api.npcS(api.NPC[ad.npc]).m : 0, blocks: G().cl.blocks, bw: G().bwExtra.length, rep: G().rep[ad.d] };
+      const before = { cash: G().cash, inv: JSON.stringify(G().inv), decor: JSON.stringify(G().decor), bike: !!G().veh.owned.bike, mood: ad.npc ? api.npcS(api.NPC[ad.npc]).m : 0, blocks: G().cl.blocks, bw: G().feed.length, rep: G().rep[ad.d] };
       let spent = 0;
       p.forEach(i => { const r = api.clReplies(ad.id)[i]; if (!r) { errs.push(ad.id + ' path broke'); return } if (r.price) spent += r.price; api.clSend(ad.id, i); if (api.clTh(ad.id).wait && api.clReplies(ad.id).length) errs.push('could reply while waiting'); later() });
       const th = api.clTh(ad.id); stats.paths[ad.id + ':' + end] = th.done;
       if (th.done !== end) return errs.push(ad.id + ' ' + end + ' ended as ' + th.done);
-      if (end === 'block' && (G().cl.blocks !== before.blocks + 1 || G().bwExtra.length <= Math.min(before.bw, 7) && before.bw < 8)) errs.push(ad.id + ' block did not count or post');
+      if (end === 'block' && (G().cl.blocks !== before.blocks + 1 || G().feed.length <= Math.min(before.bw, 39) && before.bw < 40)) errs.push(ad.id + ' block did not count or post');
       if (end === 'deal') { const changed = G().cash !== before.cash - spent || JSON.stringify(G().inv) !== before.inv || JSON.stringify(G().decor) !== before.decor || !!G().veh.owned.bike !== before.bike; if (!changed) errs.push(ad.id + ' deal gave nothing') }
       if (end === 'convert') { if (ad.npc ? !(api.npcS(api.NPC[ad.npc]).m > before.mood) : !(G().rep[ad.d] > before.rep)) errs.push(ad.id + ' convert did not help') }
       if (end === 'backfire') { const r = G().rumors.find(x => x.type === 'crank'); const who = ad.knows || [ad.npc]; if (!r || !who.every(w => r.knows.includes(w))) errs.push(ad.id + ' backfire rumour missing'); if (ad.npc && !(api.npcS(api.NPC[ad.npc]).m < before.mood)) errs.push(ad.id + ' backfire mood') }

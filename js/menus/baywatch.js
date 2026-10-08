@@ -1,5 +1,5 @@
 "use strict";
-/* Phone > Bay-Watch Feed. A made-up neighbourhood app: a few petty posts a day, plus a line on where the patrols are thin. Pure flavor, nothing is saved. */
+/* Phone > Bay-Watch Feed. A made-up neighbourhood app and the one place the city talks to the player: HARBOR's pinned suggestions, saved rumor and event posts (js/sim/feed.js), a few petty posts a day and a line on where the patrols are thin. */
 function baywatchPosts(){
   const d=day(),out=[];
   for(let i=0;i<5;i++){
@@ -14,9 +14,16 @@ function baywatchIntel(){
   if(G.heat>=2)return `Watchers say the constables are chasing someone and have forgotten about ${dist}.`;
   return BW_QUIET[h%BW_QUIET.length].replace('{d}',dist);
 }
+const feedWhen=d=>{const n=day()-d;return n<=0?'today':n===1?'yesterday':n+' days ago'};
 function baywatchMenu(){
-  const posts=(G.bwExtra||[]).filter(p=>day()-p.day<=2).slice().reverse().concat(baywatchPosts());
-  ui(`<h2>Bay-Watch Feed</h2><p class="muted">Posts from your neighbours. Nobody here has anything better to do.</p>
+  const seen=G.feedSeen||0,sugSeen=G.sugSeen;
+  const saved=(G.feed||[]).filter(p=>day()-p.day<=6).slice().reverse().slice(0,12);
+  const sug=feedSuggestions(),chat=baywatchPosts().map(p=>({kind:'chatter',dist:p.dist,t:p.t,day:day()}));
+  const row=(p,isNew)=>`<p><span class="muted small">${isNew?'<b class="amber">New</b> · ':''}${FEED_KINDS[p.kind]||'Post'}${p.by?' · '+esc(p.by):''}${p.dist?' · '+esc(p.dist):''}${p.kind==='suggest'?'':' · '+feedWhen(p.day)}</span><br>${esc(p.t)}</p>`;
+  feedMarkRead();
+  ui(`<h2>Bay-Watch Feed</h2><p class="muted">What the city is saying. Nobody here has anything better to do.</p>
+  ${sug.map(p=>row(p,p.id!==sugSeen&&p===sug[0])).join('')}
+  ${saved.map(p=>row(p,p.id>seen)).join('')}
   <p class="amber"><b>Patrol watch:</b> ${esc(baywatchIntel())}</p>
-  ${posts.map(p=>`<p><span class="muted small">${esc(p.dist)}</span><br>${esc(p.t)}</p>`).join('')}`,[{label:'Back',fn:()=>phone()}]);
+  ${chat.map(p=>row(p,false)).join('')}`,[{label:'Back',fn:()=>phone()}]);
 }

@@ -48,8 +48,6 @@ input.txt{display:block;width:100%;min-height:44px;margin:4px 0 8px;padding:8px 
 #note{white-space:pre-line;position:absolute;left:6px;right:6px;top:6px;pointer-events:none;font-size:.85rem;font-weight:700;color:#fff;text-shadow:0 1px 3px #000,0 0 6px #000}
 #mission{position:absolute;left:6px;top:30px;max-width:80%;pointer-events:none;font-size:.78rem;font-weight:700;background:rgba(10,20,30,.78);color:#ffd88a;padding:2px 7px;border:1px solid #ffd88a}
 #mission[hidden]{display:none}
-#lead{position:absolute;left:6px;bottom:6px;max-width:78%;pointer-events:none;font-size:.78rem;font-weight:700;background:rgba(10,20,30,.78);color:#9ee6c8;padding:2px 7px;border:1px solid #5fcfa6}
-#lead[hidden]{display:none}
 #b-comp{position:absolute;right:6px;top:6px;font-size:.78rem;font-weight:700;background:rgba(10,20,30,.78);color:#e6efe9;padding:3px 8px;border:1px solid #8fb4c8;z-index:2}
 #b-comp[hidden]{display:none}
 #sheet{position:absolute;left:0;right:0;bottom:0;max-height:45%;overflow-y:auto;overscroll-behavior:contain;background:var(--panel);border-top:3px solid var(--accent);padding:12px 12px 14px;touch-action:pan-y}
