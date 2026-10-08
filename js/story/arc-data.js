@@ -65,9 +65,9 @@ THREADS.picket={title:'The Picket Line',from:'Gus',hook:()=>false,
     {label:'Leak the FLACK-7 photo',need:()=>!!G.flags.sawFlack7,fx:()=>{arcPower(8);flackAdd(-2);facAdd('trust',-3)},next:'END:whistle'},
     {label:'Walk away',next:'END:walkaway'}]}},
  endings:{
-  solidarity:{name:'Solidarity',text:'You stand at the gate with the others until the sun comes up. Nobody says anything. It is enough.',fx:()=>{memAdd('gus',10)},harbor:'HARBOR has noted a rise in standing near gates.'},
-  scab:{name:'Crossed the line',text:'The gate opens and you walk through it. The pickets watch you go. Duarte says "good", which is somehow worse.',fx:()=>{memAdd('gus',-15);memAdd('duarte',8)},harbor:'HARBOR has logged your shift as "voluntary."'},
-  martyr:{name:'Chained to the gate',text:'The bolt cutters take twenty minutes. The Gazette takes a photo. Gus puts it on the wall of the Gull.',fx:()=>{memAdd('gus',12);memAdd('reyes',-8)},harbor:'HARBOR has added you to a list that is not a list.'},
+  solidarity:{name:'Solidarity',text:'You stand at the gate with the others until the sun comes up. Nobody says anything. It is enough.',fx:()=>{memAdd('gus',10);addRumor('picketHero',['gus','duarte'],{dist:'Dockside'})},harbor:'HARBOR has noted a rise in standing near gates.'},
+  scab:{name:'Crossed the line',text:'The gate opens and you walk through it. The pickets watch you go. Duarte says "good", which is somehow worse.',fx:()=>{memAdd('gus',-15);memAdd('duarte',8);addRumor('scab',['gus','duarte'],{dist:'Dockside'})},harbor:'HARBOR has logged your shift as "voluntary."'},
+  martyr:{name:'Chained to the gate',text:'The bolt cutters take twenty minutes. The Gazette takes a photo. Gus puts it on the wall of the Gull.',fx:()=>{memAdd('gus',12);memAdd('reyes',-8);addRumor('picketHero',['gus','reyes'],{dist:'Dockside'})},harbor:'HARBOR has added you to a list that is not a list.'},
   whistle:{name:'Whistleblower',text:'The photo is on three desks by noon. Nobody knows who sent it. Everybody has a theory, and one of them is correct.',fx:()=>{memAdd('gus',8);memAdd('cordelia',-6)},harbor:'HARBOR did not see the photo. HARBOR saw it twice.'},
   walkaway:{name:'Walked away',text:'You go home. The gate closes without you. History rarely asks who was absent.',harbor:'HARBOR admires your commitment to staying indoors.'}}};
 /* Start a thread now if there is room, otherwise it will start as soon as one finishes. */

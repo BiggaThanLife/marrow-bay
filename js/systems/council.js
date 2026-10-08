@@ -21,7 +21,7 @@ function lobby(mid,dir){
   if(G.cash<40)return 'You cannot afford the lunch.';
   G.cash-=40;C.cur.lobbied++;advance(30);
   const chance=.4+tier(att(n))*.12+(G.companion==='ashgrove'?.1:0);
-  if(Math.random()<chance){C.cur.sway[mid]=dir;memAdd(mid,2);return `${n.name} will vote ${dir>0?'yes':'no'}. The lunch was excellent, they say.`}
+  if(Math.random()<chance){C.cur.sway[mid]=dir;memAdd(mid,2);addRumor('lobbyist',[mid,...knowersNear('Grid',1)],{dist:'Grid'});return `${n.name} will vote ${dir>0?'yes':'no'}. The lunch was excellent, they say.`}
   memAdd(mid,-6);return `${n.name} takes the lunch and keeps the vote. Word gets around.`;
 }
 function resolveProposal(){

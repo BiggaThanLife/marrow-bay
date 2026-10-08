@@ -28,7 +28,7 @@ function addIssue(b,t,k){b.issues.push({k,t:t.id,d:day()});notify(`${t.name} in 
 function moveIn(b,a){b.tenants.push(a);b.applicants=b.applicants.filter(x=>x!==a);a.since=day();a.mood=60}
 function evictTenant(b,t,why){
   b.tenants=b.tenants.filter(x=>x!==t);b.issues=b.issues.filter(i=>i.t!==t.id);
-  if(why==='evict'){G.rep[b.d]=clamp(G.rep[b.d]-2,-100,100);if(Math.random()<.4)news(`An eviction notice goes up on a flat in ${b.d}.`,1)}
+  if(why==='evict'){addRumor('evictor',knowersNear(b.d,2),{dist:b.d});G.rep[b.d]=clamp(G.rep[b.d]-2,-100,100);if(Math.random()<.4)news(`An eviction notice goes up on a flat in ${b.d}.`,1)}
   else G.rep[b.d]=clamp(G.rep[b.d]-.5,-100,100);
 }
 /* one day of landlord life for a rental building; fills r (rev, units, cost, wages) */

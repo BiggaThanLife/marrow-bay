@@ -27,7 +27,7 @@ function offerMenu(poi,n,msg){
   const def=SHOP_DEFS[poi.id],price=shopPrice(poi.id,n);
   ui(`<h2>Buy ${esc(poi.name)}</h2><p>${esc(n.name)} looks around the place for a long moment. "I would stay on and run it for you, if the wage is fair."</p><p class="muted">${esc(def.perk)} About ${money(def.base*(TR[poi.d]/20))} a day in takings before ${esc(n.name.split(' ')[0])}'s wage. Monthly tax about ${money(def.price*.008)}.</p>${msgP(msg)}`,[
     {label:`Buy for ${money(price)}`,off:G.cash<price,fn:()=>ask(`Buy ${poi.name}?`,`It costs ${money(price)}. ${n.name} stays on as manager.`,'Yes, buy',()=>{
-      G.cash-=price;G.shops[poi.id]={level:1,till:0,paid:price,since:day(),last:null};npcS(n).m+=8;
+      G.cash-=price;G.shops[poi.id]={level:1,till:0,paid:price,since:day(),last:null};npcS(n).m+=8;addRumor('owner',[n.id,...knowersNear(poi.d,1)],{dist:poi.d,shop:poi.name,owner:n.name.split(' ')[0]});
       news(`${n.name} sells ${poi.name} to a newcomer.`,2);G.rep[poi.d]=clamp(G.rep[poi.d]+3,-100,100);advance(30);quip('buy');shopMenu(poi,n,'It is yours. The staff look at you, then at each other.')},()=>offerMenu(poi,n))},
     {label:'Not now',cls:'quiet',fn:()=>openPOI(poi)}]);
 }

@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay rumors test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Rumors in the feed</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Every rumor kind has a delta, a bio line, wording and a line; a second knower posts it to the feed; bad news stays vague until about four know and then
+   uses your name, good news names you straight away, a vague-only rumor never does; at most three rumor posts a day; the real acts (eviction, release, collapse) start them;
+   people say a line to your face; a shop owner who has heard moves prices. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], stats = {};
+  const api = win.eval(`({get G(){return G},BG,NPC,NPCS,RUM,RUM_WHO,RUMOR_INFO,start,closeMenu,popClear,addRumor,rumorPost,rumorLine,rumorPriceBias,rumorDelta,day,talk,mealPrice,evictTenant,release,collapse,knowersNear,att,feedAdd,migrate})`);
+  const G = () => api.G, doc = win.document, sheet = () => doc.getElementById('sheet').innerText;
+  const reset = () => { G().rumors = []; G().feed = []; G().feedId = 0 };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; G().name = 'Stranger';
+    // every kind is complete
+    const kinds = Object.keys(api.RUMOR_INFO); stats.kinds = kinds.length;
+    kinds.forEach(k => { const i = api.RUMOR_INFO[k]; if (!api.RUM[k]) errs.push('no RUM for ' + k); else if (!api.RUM[k].t || typeof api.RUM[k].d !== 'number') errs.push('RUM incomplete ' + k);
+      if (!i.line) errs.push('no line for ' + k); if (!(i.named || i.vague)) errs.push('no wording for ' + k); if (!i.good && !i.vagueOnly && !(i.named && i.vague)) errs.push('needs both wordings ' + k); if (i.vagueOnly && !i.vague) errs.push('vague-only without vague ' + k) });
+    Object.keys(api.RUM_WHO).forEach(k => Object.keys(api.RUM_WHO[k]).forEach(id => { if (!api.NPC[id]) errs.push('RUM_WHO names unknown NPC ' + id) }));
+    // one knower is not enough, two posts
+    reset(); api.addRumor('evictor', ['halloran'], { dist: 'Grid' }); if (G().feed.length) errs.push('posted with one knower');
+    api.addRumor('evictor', ['halloran', 'mina'], { dist: 'Grid' }); let p = G().feed[0];
+    if (!p || p.kind !== 'rumor' || p.dist !== 'Grid' || !/Grid/.test(p.t) || /Stranger/.test(p.t) || /\{/.test(p.t)) errs.push('vague post wrong: ' + JSON.stringify(p));
+    if (!p || !/Mina Okafor, Market vendor/.test(p.by)) errs.push('by-line wrong: ' + (p && p.by));
+    // it gets your name once about four know, and only posts that stage once
+    api.rumorPost(G().rumors[0]); if (G().feed.length !== 1) errs.push('vague post repeated');
+    G().rumors[0].knows.push('teo', 'duarte'); api.rumorPost(G().rumors[0]);
+    if (G().feed.length !== 2 || !/Stranger/.test(G().feed[1].t)) errs.push('named post missing once four know'); api.rumorPost(G().rumors[0]); if (G().feed.length !== 2) errs.push('named post repeated');
+    // good news names you straight away, vague-only never does
+    reset(); api.addRumor('softLandlord', ['halloran', 'mina'], { dist: 'Grid' }); if (!/Stranger/.test(G().feed[0].t)) errs.push('good news not named');
+    reset(); api.addRumor('collapse', ['teo', 'bell']); G().rumors[0].knows.push('mina', 'duarte', 'pip'); api.rumorPost(G().rumors[0]); if (G().feed.length !== 1 || /Stranger/.test(G().feed[0].t)) errs.push('vague-only rumor got a name');
+    // owner and heister fill in the shop
+    reset(); api.addRumor('owner', ['mina', 'teo'], { dist: 'Grid', shop: 'Market Hall', owner: 'Mina' }); if (!/Market Hall/.test(G().feed[0].t) || /\{/.test(G().feed[0].t)) errs.push('owner placeholders: ' + G().feed[0].t);
+    reset(); api.addRumor('heister', ['reyes', 'mina'], { dist: 'Grid', shop: 'Highline Bank' }); G().rumors[0].knows.push('teo', 'duarte'); api.rumorPost(G().rumors[0]); if (!/Highline Bank job/.test(G().feed[1].t)) errs.push('heister named wording: ' + G().feed[1].t);
+    // at most three a day
+    reset(); ['evictor', 'excon', 'vandal', 'saboteur', 'heister'].forEach(k => api.addRumor(k, ['reyes', 'mina'], { dist: 'Grid', shop: 'X' })); if (G().feed.length !== 3) errs.push('daily cap broken: ' + G().feed.length);
+    // all kinds make clean posts
+    kinds.forEach(k => { reset(); api.addRumor(k, ['reyes', 'mina'], { dist: 'Grid', shop: 'The Shop', owner: 'Mina' }); const q = G().feed[0]; if (!q || !q.t || /\{|undefined/.test(q.t)) errs.push('bad post for ' + k + ': ' + (q && q.t)) });
+    // real acts start rumors
+    reset(); const b = { d: 'Grid', tenants: [{ id: 't1', name: 'A B' }], issues: [] }; api.evictTenant(b, b.tenants[0], 'evict'); if (!G().rumors.some(r => r.type === 'evictor')) errs.push('evicting did not start a rumor');
+    reset(); G().jail = { start: G().t - 1440, until: G().t }; api.release(false); api.popClear(); if (!G().rumors.some(r => r.type === 'excon')) errs.push('release did not start a rumor');
+    reset(); api.collapse(); api.popClear(); if (!G().rumors.some(r => r.type === 'collapse')) errs.push('collapse did not start a rumor');
+    // people say it to your face, and the delta is per person
+    reset(); api.addRumor('vandal', ['reyes', 'gus'], { dist: 'Grid' }); if (!/pink/.test(api.rumorLine(api.NPC.reyes))) errs.push('no line for a knower'); if (api.rumorLine(api.NPC.mina)) errs.push('line for someone who has not heard');
+    api.talk(api.NPC.reyes); if (!/pink/.test(sheet())) errs.push('talk menu lacks the line');
+    const dReyes = api.rumorDelta(api.NPC.reyes), dGus = api.rumorDelta(api.NPC.gus); if (!(dReyes < -10 && dGus > 0)) errs.push('per-person delta wrong: ' + dReyes + ' ' + dGus);
+    // a shop owner's prices move, good and bad
+    reset(); const base = api.mealPrice(); api.addRumor('evictor', ['teo', 'mina']); const up = api.mealPrice(); if (up < base) errs.push('bad news did not raise the meal price');
+    reset(); api.addRumor('generous', ['teo', 'mina']); const down = api.mealPrice(); if (down > base) errs.push('good news did not lower the meal price'); stats.meal = [base, up, down];
+    if (api.rumorPriceBias('teo') < -.06 || api.rumorPriceBias('teo') > .1) errs.push('price bias out of range');
+    // rumors survive a save
+    reset(); api.addRumor('excon', ['reyes', 'mina']); win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (!G().rumors.length || G().rumors[0].posted !== 1) errs.push('rumor state lost in save');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

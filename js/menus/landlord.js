@@ -57,7 +57,7 @@ function issueMenu(biz,i,msg){
     btns.push({label:'Talk to them',sub:'Free. It might work.',fn:()=>{advance(10);if(Math.random()<.6){t.mood-=1;closeIssue(biz,i);back('They promise to keep it down, and mostly do.')}else issueMenu(biz,i,'They nod and carry on as before.')}});
     btns.push({label:'Formal warning',sub:'Settles it, but they will not like it',cls:'',fn:()=>{t.mood-=8;closeIssue(biz,i);advance(10);back('A written warning goes on the door. The noise stops.')}});
   }else if(i.k==='late'){
-    btns.push({label:'Waive what they owe',sub:`Forgive ${money(t.owed)}. Goodwill in the district.`,fn:()=>{t.owed=0;t.mood=Math.min(100,t.mood+10);G.rep[biz.d]=clamp(G.rep[biz.d]+1,-100,100);closeIssue(biz,i);back('You wave it off. They look relieved.')}});
+    btns.push({label:'Waive what they owe',sub:`Forgive ${money(t.owed)}. Goodwill in the district.`,fn:()=>{t.owed=0;t.mood=Math.min(100,t.mood+10);G.rep[biz.d]=clamp(G.rep[biz.d]+1,-100,100);addRumor('softLandlord',knowersNear(biz.d,2),{dist:biz.d});closeIssue(biz,i);back('You wave it off. They look relieved.')}});
     btns.push({label:'Payment plan',sub:`Take half now (${money(t.owed/2)}), forgive the rest`,cls:'',fn:()=>{biz.till+=Math.round(t.owed/2);t.owed=0;t.mood=Math.min(100,t.mood+2);closeIssue(biz,i);back('They pay what they can.')}});
     btns.push({label:'Evict',sub:'$30. The neighbours notice',cls:'warn',off:G.cash<30,fn:()=>ask(`Evict ${t.name}?`,'It costs $30 and your standing in the district dips.','Yes, evict',()=>{G.cash-=30;evictTenant(biz,t,'evict');back(`${t.name} is gone.`)},()=>issueMenu(biz,i))});
   }else if(i.k==='secret'){

@@ -46,7 +46,7 @@ function goToJail(days){
   const R=NPC.reyes,fine=50*Math.ceil(G.heat),pay=Math.min(G.cash,fine),seized=Math.round((G.dirty||0)*(days>=2?.5:0));
   G.cash-=pay;G.arrears+=fine-pay;G.inv.loot=0;G.dirty=Math.max(0,(G.dirty||0)-seized);G.heat=0;G.mission=null;R.chasing=false;
   Object.keys(G.veh.stolen).forEach(k=>{if(G.veh.stolen[k]){G.veh.owned[k]=false;G.veh.stolen[k]=false;if(G.veh.active===k)G.veh.active='none'}});
-  addRumor('thief',['reyes']);notorAdd(8);
+  addRumor('arrested',['reyes',...knowersNear(district(Math.round(G.p.x),Math.round(G.p.y)),1)]);notorAdd(8);
   const pr=POIS.prison||POIS.plaza;G.p.x=pr.ex;G.p.y=pr.ey;G.p.path=[];G.p.onArrive=null;assign(R,true);
   G.jail={start:G.t,until:G.t+days*1440,days,work:0,appeal:false,fine,seized};
   news(`Constable Reyes made an arrest. The court gave ${G.name} ${days} day${days>1?'s':''}.`,3);quip('bust');
@@ -54,7 +54,7 @@ function goToJail(days){
 }
 function release(early){
   const J=G.jail;if(!J)return;
-  G.jail=null;G.heat=0;notorAdd(early?-8:-20);
+  G.jail=null;G.heat=0;notorAdd(early?-8:-20);addRumor('excon',['reyes',...knowersNear('Grid',1)]);
   const pr=POIS.prison||POIS.plaza;G.p.x=pr.ex;G.p.y=pr.ey;G.p.path=[];
   news(`${G.name} walks out of the Penitentiary after ${Math.max(1,Math.round((G.t-J.start)/1440))} day${Math.round((G.t-J.start)/1440)>1?'s':''}.`,2);
   hud();worldPanel();

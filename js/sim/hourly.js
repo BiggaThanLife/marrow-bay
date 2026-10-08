@@ -14,6 +14,7 @@ function hourly(h){
     const a=out[i],b=out[j];if(Math.hypot(a.x-b.x,a.y-b.y)>3.5)continue;
     G.rumors.forEach(r=>{const ka=r.knows.includes(a.id),kb=r.knows.includes(b.id);if(ka!==kb&&Math.random()<.45)r.knows.push(ka?b.id:a.id)});
   }
+  G.rumors.forEach(rumorPost);
   const strike=G.ev&&G.ev.id==='strike';
   NPCS.forEach(n=>{
     const s=npcS(n);

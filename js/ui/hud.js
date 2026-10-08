@@ -49,7 +49,15 @@ function ui(html,btns=[],isModal=true,dismiss=true){
   });
   if(sheet.hidden)sfx('open');
   sheet.hidden=false;sheet.scrollTop=0;shield(250);
+  /* a menu that would scroll at the short height gets the taller one, and a fade and an arrow say there is more below */
+  sheet.classList.remove('tall');if(sheet.scrollHeight>sheet.clientHeight+2)sheet.classList.add('tall');sheetCue();
 }
+function sheetCue(){
+  const more=sheet.scrollTop+sheet.clientHeight<sheet.scrollHeight-6;
+  $('#sdown').hidden=!more;$('#sup').hidden=sheet.scrollTop<150;
+}
+sheet.addEventListener('scroll',sheetCue);
+$('#sup').addEventListener('click',()=>sheet.scrollTo({top:0,behavior:'smooth'}));
 function worldPanel(){ui('',[],false);shield(300);if(G){hud();if(G.jail&&!popOpen)jailMenu()}}
 const closeMenu=()=>{save();worldPanel()};
 const leaveBtn={label:'Leave',cls:'quiet',fn:closeMenu};
