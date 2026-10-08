@@ -22,6 +22,8 @@ const CAREERS=[
   text:'They put your face on a mural by the fish stalls. The artist is not good. Everyone loves it anyway.'},
  {id:'shark',n:'Shark',need:'Hold $5,000 in shares.',test:()=>portfolio()>=5000,
   text:'The trading desk goes quiet when you arrive and loud when you leave. Cordelia sends over a coffee. You do not drink it.'},
+ {id:'nuisance',n:'Professional Nuisance',need:'Get blocked five times on Marrowlist.',test:()=>!!G.cl&&(G.cl.blocks||0)>=5,
+  text:'Five sellers have blocked you, some of them more than once. The Bay-Watch Feed has a pinned post about you. It has more likes than anything else on there.'},
  {id:'ghost',n:'Ghost in the Machine',need:'Settle HARBOR\u2019s fate: free it, hide it, merge with it, or tear FLACK out.',test:()=>fact('harbor_ghost')||fact('harbor_free')||fact('harbor_merged')||fact('flack_removed'),
   text:'Somewhere in the walls of Marrow Bay a very polite machine remembers your name and has agreed, mostly, to keep it to itself.'}
 ];

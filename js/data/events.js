@@ -10,5 +10,6 @@ const RUM={
  thief:{d:-30,t:'They say you robbed the Market Hall.'},
  defaulter:{d:-25,t:'They say you skipped out on a bank loan.'},
  generous:{d:14,t:'They say you feed strangers for free.'},
- successful:{d:10,t:'They say your business is doing well.'}
+ successful:{d:10,t:'They say your business is doing well.'},
+ crank:{d:-8,t:'They say you send strange messages to people selling things.'}
 };

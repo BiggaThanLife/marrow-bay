@@ -135,3 +135,8 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .sc-track{height:8px;background:var(--bg);border:2px solid var(--line)}
 .sc-track i{display:block;height:100%;width:0;background:var(--accent)}
 #sc-hint{margin-top:6px;font-size:.8rem;color:var(--muted);visibility:hidden}
+
+/* Marrowlist threads */
+.cl-ad{border:2px dashed var(--line);padding:6px 8px;margin:6px 0 10px}
+.cl-msg{padding:6px 0;border-top:1px solid var(--line)}
+.cl-msg.them{padding-left:12px}

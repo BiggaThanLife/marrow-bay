@@ -6,6 +6,7 @@ function phone(msg){
   ui(`<h2>Phone</h2><p class="muted">Day ${day()}, ${timeStr()}. ${G.gps?`GPS route: ${esc(G.gps.name)}.`:'No GPS route.'}</p>${msgP(msg)}`,[
     {label:'GPS',sub:'A map of the whole city. Tap a place to go, or to Googull it.',fn:gpsMap},
     {label:'Bay-Watch Feed',sub:'Neighbours, complaints, patrol sightings',cls:'',fn:baywatchMenu},
+    {label:'Marrowlist',sub:clUnread()?`${clUnread()} new repl${clUnread()>1?'ies':'y'}`:'Classified ads. Buy, sell, regret.',cls:clUnread()?'primary':'',fn:()=>marrowlist()},
     {label:'News',sub:un?`${un} new`:'Today and earlier days',cls:'',fn:newsMenu},
     {label:'Contacts',sub:`${Object.keys(G.met).length} people`,cls:'',fn:contactsMenu},
     {label:'Threads',sub:G.threads.active.some(t=>t.pending)?'New message':`${G.threads.active.length} active`,cls:G.threads.active.some(t=>t.pending)?'primary':'',fn:()=>threadsMenu()},

@@ -15,7 +15,7 @@ function baywatchIntel(){
   return BW_QUIET[h%BW_QUIET.length].replace('{d}',dist);
 }
 function baywatchMenu(){
-  const posts=baywatchPosts();
+  const posts=(G.bwExtra||[]).filter(p=>day()-p.day<=2).slice().reverse().concat(baywatchPosts());
   ui(`<h2>Bay-Watch Feed</h2><p class="muted">Posts from your neighbours. Nobody here has anything better to do.</p>
   <p class="amber"><b>Patrol watch:</b> ${esc(baywatchIntel())}</p>
   ${posts.map(p=>`<p><span class="muted small">${esc(p.dist)}</span><br>${esc(p.t)}</p>`).join('')}`,[{label:'Back',fn:()=>phone()}]);

@@ -29,7 +29,7 @@ function cityInit(){
   G.engage=G.engage||{};G.hookCool=G.hookCool||{};G.hookBusy=G.hookBusy||{};
   G.favs=G.favs||[];if(G.veh)G.veh.paint=G.veh.paint||{};
   G.turf=G.turf||{door:'vex',pawn:'vex',casino:'vex',loft:'vex'};
-  G.sat=G.sat||{};G.crew=G.crew||[];G.crew.forEach(m=>{if(m.id==='lou')m.id='moe'});G.rival=G.rival||{str:35,truce:0,hits:0,held:0};if(G.heist===undefined)G.heist=null;G.heistsDone=G.heistsDone||0;G.heistCool=G.heistCool||{};
+  G.sat=G.sat||{};G.cl=G.cl||{start:typeof day==='function'&&G.t!=null?day():1,th:{},blocks:0,burnDay:-1,burnIdx:0,harbor:0,hlog:[]};G.bwExtra=G.bwExtra||[];G.crew=G.crew||[];G.crew.forEach(m=>{if(m.id==='lou')m.id='moe'});G.rival=G.rival||{str:35,truce:0,hits:0,held:0};if(G.heist===undefined)G.heist=null;G.heistsDone=G.heistsDone||0;G.heistCool=G.heistCool||{};
   G.biz.forEach(b=>{if(b.type==='rental')ensureRental(b)});
   G.shops=G.shops||{};
   G.arc=G.arc||null;G.arcsDone=G.arcsDone||[];G.arcLast=G.arcLast||0;

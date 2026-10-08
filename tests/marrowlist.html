@@ -1,0 +1,84 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay Marrowlist test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Marrowlist</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Thread data is whole (every link exists, every thread can reach all four endings); every ending plays out with its effect;
+   replies arrive after a delay; patience runs out into a block; new accounts (one a day, caught on the second); HARBOR's auto-replies;
+   ads unlock over days; the phone, menus, Bay-Watch Feed, career title, save and load. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = { paths: {} };
+  const api = win.eval(`({get G(){return G},BG,NPC,start,closeMenu,popClear,alertQ,advance,day,save,migrate,phone,baywatchMenu,careerDaily,npcS,
+    CL_ADS,CL_HARBOR_AUTO,clAds,clTh,clReplies,clSend,clDeliver,clNewAccount,clHarbor,clUnread,marrowlist,clThreadMenu,clHarborMenu,clFinished})`);
+  const G = () => api.G, sheet = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], flush = () => { api.popClear(); api.alertQ.length = 0; };
+  const click = rx => { const b = btns().find(x => rx.test(x.innerText)); if (!b) return false; if (b.disabled) return 'disabled'; b.click(); return true };
+  const ENDS = ['block', 'convert', 'deal', 'backfire'];
+  const nodeOf = (ad, k) => k === 'start' ? ad.start : k === 'again' ? ad.again : ad.nodes[k];
+  const reset = id => { delete G().cl.th[id] };
+  const later = () => { G().t += 120; api.clDeliver(); flush() };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush(); G().flags.onboarded = true; G().cash = 5000;
+    // data: links exist, endings reachable
+    api.CL_ADS.forEach(ad => {
+      const all = ['start', 'again', ...Object.keys(ad.nodes)], seen = new Set();
+      all.forEach(k => { const n = nodeOf(ad, k); if (!n) return errs.push(ad.id + ' missing node ' + k); if (k !== 'start' && !n.s) errs.push(ad.id + ' node without a line ' + k); n.r.forEach(r => { if (r.to && !nodeOf(ad, r.to)) errs.push(ad.id + ' bad link ' + r.to); if (!r.to && !r.end) errs.push(ad.id + ' reply goes nowhere'); if (r.end) { seen.add(r.end); if (!ENDS.includes(r.end)) errs.push(ad.id + ' unknown end ' + r.end); if (!r.s) errs.push(ad.id + ' end without a line') } }) });
+      ENDS.forEach(e => { if (!seen.has(e)) errs.push(ad.id + ' cannot reach ' + e) });
+      if (!ad.spot || !ad.bw || !ad.give || !ad.dealTxt) errs.push(ad.id + ' missing spot, bw, give or dealTxt');
+    });
+    // ads unlock: two on day one, one more a day
+    G().cl.start = api.day(); if (api.clAds().length !== 2) errs.push('day one ads ' + api.clAds().length);
+    G().cl.start = api.day() - 10; if (api.clAds().length !== api.CL_ADS.length) errs.push('all ads not open after days');
+    // play every thread to every ending by the shortest path from the start
+    const pathTo = (ad, end) => { const q = [['start', []]], seen = new Set(['start']); while (q.length) { const [k, p] = q.shift(); const n = nodeOf(ad, k); for (let i = 0; i < n.r.length; i++) { const r = n.r[i]; if (r.end === end) return p.concat(i); if (r.to && !seen.has(r.to)) { seen.add(r.to); q.push([r.to, p.concat(i)]) } } } return null };
+    api.CL_ADS.forEach(ad => ENDS.forEach(end => {
+      reset(ad.id); const p = pathTo(ad, end); if (!p) return;
+      const before = { cash: G().cash, inv: JSON.stringify(G().inv), decor: JSON.stringify(G().decor), bike: !!G().veh.owned.bike, mood: ad.npc ? api.npcS(api.NPC[ad.npc]).m : 0, blocks: G().cl.blocks, bw: G().bwExtra.length, rep: G().rep[ad.d] };
+      let spent = 0;
+      p.forEach(i => { const r = api.clReplies(ad.id)[i]; if (!r) { errs.push(ad.id + ' path broke'); return } if (r.price) spent += r.price; api.clSend(ad.id, i); if (api.clTh(ad.id).wait && api.clReplies(ad.id).length) errs.push('could reply while waiting'); later() });
+      const th = api.clTh(ad.id); stats.paths[ad.id + ':' + end] = th.done;
+      if (th.done !== end) return errs.push(ad.id + ' ' + end + ' ended as ' + th.done);
+      if (end === 'block' && (G().cl.blocks !== before.blocks + 1 || G().bwExtra.length <= Math.min(before.bw, 7) && before.bw < 8)) errs.push(ad.id + ' block did not count or post');
+      if (end === 'deal') { const changed = G().cash !== before.cash - spent || JSON.stringify(G().inv) !== before.inv || JSON.stringify(G().decor) !== before.decor || !!G().veh.owned.bike !== before.bike; if (!changed) errs.push(ad.id + ' deal gave nothing') }
+      if (end === 'convert') { if (ad.npc ? !(api.npcS(api.NPC[ad.npc]).m > before.mood) : !(G().rep[ad.d] > before.rep)) errs.push(ad.id + ' convert did not help') }
+      if (end === 'backfire') { const r = G().rumors.find(x => x.type === 'crank'); const who = ad.knows || [ad.npc]; if (!r || !who.every(w => r.knows.includes(w))) errs.push(ad.id + ' backfire rumour missing'); if (ad.npc && !(api.npcS(api.NPC[ad.npc]).m < before.mood)) errs.push(ad.id + ' backfire mood') }
+    }));
+    // replies come after a delay, with a notification and an unread mark
+    const id = 'carb'; reset(id); api.clSend(id, 0); if (api.clTh(id).log.length !== 1) errs.push('send not logged'); api.clDeliver(); if (api.clTh(id).log.length !== 1) errs.push('reply came instantly');
+    G().t += 120; api.clDeliver(); flush(); if (api.clTh(id).log.length !== 2 || !api.clTh(id).unread || api.clUnread() < 1) errs.push('reply did not arrive or mark unread');
+    // patience runs out into a block, whatever you say
+    reset('lamp'); api.clTh('lamp').fr = 95; api.clSend('lamp', 0); later(); if (api.clTh('lamp').done !== 'block') errs.push('patience did not run out: ' + api.clTh('lamp').done);
+    // new accounts: one a day, then caught on the second
+    const t = api.clTh('lamp'); const r1 = api.clNewAccount('lamp'); if (!t.persona || t.blocked || !/You are now/.test(r1)) errs.push('new account failed');
+    later(); if (t.node !== 'again' || !api.clReplies('lamp').length) errs.push('new account did not reach again');
+    api.clSend('lamp', 1); later(); api.clSend('lamp', 0); later(); if (t.done !== 'block') errs.push('second block ' + t.done);
+    if (!/one new account a day/i.test(api.clNewAccount('lamp'))) errs.push('two new accounts in one day');
+    G().t += 1440; api.clNewAccount('lamp'); later(); if (t.done !== 'spotted' || !t.blocked) errs.push('not caught on second new account: ' + t.done);
+    if (api.clNewAccount('lamp')) errs.push('new account after being caught');
+    // HARBOR answers with every auto-reply in turn, then starts over
+    const got = []; for (let i = 0; i < api.CL_HARBOR_AUTO.length + 1; i++)got.push(api.clHarbor()); if (new Set(got).size !== api.CL_HARBOR_AUTO.length || got[0] !== got[got.length - 1]) errs.push('HARBOR replies');
+    // menus
+    api.phone(); if (!/Marrowlist/.test(sheet())) errs.push('no Marrowlist on the phone'); click(/^Marrowlist/); if (!/Buy, sell, regret/.test(sheet())) errs.push('Marrowlist did not open');
+    api.clThreadMenu('carb'); if (!/From .* to Mack/.test(sheet())) errs.push('thread not shown as email chain');
+    api.clHarborMenu(); if (!/automatic reply/.test(sheet())) errs.push('HARBOR menu'); api.clFinished(); if (!/Finished threads/.test(sheet())) errs.push('finished list');
+    // reply through the menu
+    reset('scrap'); api.clThreadMenu('scrap'); const n0 = api.clTh('scrap').log.length; click(/^Hello, I'd like the scrap/); if (api.clTh('scrap').log.length !== n0 + 1) errs.push('menu reply not sent'); click(/^Wait for a reply/); api.clThreadMenu('scrap'); if (!/Bring a cart/.test(sheet())) errs.push('wait button did not bring the reply');
+    // Bay-Watch shows a callback post
+    api.baywatchMenu(); if (!api.CL_ADS.some(a => sheet().includes(a.bw))) errs.push('no Bay-Watch callback');
+    api.closeMenu();
+    // career title for being blocked five times
+    G().cl.blocks = 5; api.careerDaily(); flush(); if (!G().titles.some(x => x.id === 'nuisance')) errs.push('no Professional Nuisance title');
+    // save and load, and an old save
+    const keep = JSON.stringify(G().cl); api.save(); win.eval('G=JSON.parse(localStorage.getItem("marrowbay_v3"));migrate();'); if (JSON.stringify(G().cl) !== keep) errs.push('Marrowlist not saved');
+    win.eval('delete G.cl;delete G.bwExtra;migrate();'); if (!G().cl || !G().cl.th || !Array.isArray(G().bwExtra)) errs.push('migrate defaults');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 30).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>
