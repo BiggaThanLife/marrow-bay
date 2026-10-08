@@ -24,7 +24,7 @@ function arm(g,x,y,fx,fy,o){
 }
 /* ----- over the shoulder: the back of the player's head and shoulders, bottom of the frame ----- */
 function backView(g,x,y,o){
-  o=o||{};const L=o.look||scLook(),st=L.style,hy=y-50;
+  o=o||{};const L=o.look||scLook(),st=L.style,hy=y-50+(o.nod||0);
   R(g,OUT,x-23,y-25,47,27);R(g,L.cloth,x-22,y-24,45,26);R(g,L.clothDk,x-22,y-24,6,26);R(g,L.clothDk,x+17,y-24,6,26);R(g,L.clothHi,x-12,y-24,24,2);R(g,L.clothDk,x,y-21,1,21);
   R(g,OUT,x-5,y-32,11,9);R(g,L.skinDk,x-4,y-31,9,8);
   R(g,OUT,x-11,hy+8,23,9);R(g,L.skin,x-10,hy+9,21,7);R(g,OUT,x-10,hy-1,21,22);R(g,L.skin,x-9,hy,19,20);R(g,L.skinDk,x-9,hy+16,19,4);

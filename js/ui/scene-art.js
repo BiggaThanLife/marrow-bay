@@ -219,3 +219,5 @@ const SCENE_DRAW={
   },
   eat(g,t,p,kit){viewDraw('eat',kit,g,t,p)}
 };
+/* the other action types are all drawn in scene-views-more.js */
+['purchase','gamble','sneaky','travel','paper','build','social','jail'].forEach(ty=>{SCENE_DRAW[ty]=(g,t,p,kit)=>{viewDraw(ty,kit,g,t,p)}});
