@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay depth and lighting test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Depth and lighting</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* The map draws without errors with depth on and off at every time of day, on the title screen, in landscape, in build mode, with a GPS route and a mission;
+   the switch is in Settings; with depth off nothing from the depth layer runs; trees and lamps exist; the player stays visible at night; a frame stays cheap. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,POIS,SET,start,closeMenu,popClear,alertQ,drawWorld,depthOn,DP_LAMPS,settingsMenu,saveSettings,
+    get dpTrees(){return dpTrees},setCam(){camX=Math.round(clamp(G.p.x*TS+8-VW/2,0,W*TS-VW));camY=Math.round(clamp(G.p.y*TS+8-VH/2,0,Math.max(0,H*TS-VH)))},
+    setView(w,h){VW=w;VH=h;cv.width=w;cv.height=h},get VW(){return VW},get VH(){return VH},cx,TS,startGps:typeof gpsStart==='function'?gpsStart:null})`);
+  const G = () => api.G, sheet = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], flush = () => { api.popClear(); api.alertQ.length = 0; };
+  const click = rx => { const b = btns().find(x => rx.test(x.innerText)); if (!b) return false; b.click(); return true };
+  const ce = win.console.error, logged = []; win.console.error = (...a) => { logged.push(String(a[0] && a[0].stack || a[0])) };
+  const draw = label => { try { api.drawWorld(win.performance.now()) } catch (e) { errs.push(label + ': ' + e.message) } };
+  try {
+    // the title screen draws with no game yet
+    api.SET.depth = true; draw('title depth'); api.SET.depth = false; draw('title classic');
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush(); G().flags.onboarded = true; api.SET.hints = false;
+    const view0 = [api.VW, api.VH];
+    const at = (hour, x, y) => { G().t = Math.floor(G().t / 1440) * 1440 + hour * 60; G().p.x = x; G().p.y = y; G().p.path = []; api.setCam() };
+    const spots = [[26, 22], [49, 7], [22, 32], [5, 18], [56, 30], [11, 2.6]];
+    [true, false].forEach(dep => { api.SET.depth = dep; [3, 6.5, 9, 12.75, 17, 19.2, 20.5, 23].forEach(h => spots.forEach(([x, y]) => { at(h, x, y); draw(`depth ${dep} hour ${h} at ${x},${y}`) })) });
+    // landscape and a tall view
+    api.SET.depth = true; api.setView(300, 128); at(23, 30, 20); draw('landscape'); api.setView(176, 260); at(12, 30, 20); draw('tall'); api.setView(view0[0], view0[1]);
+    // build mode, GPS route, a mission marker
+    win.eval('placing="stall"'); at(12, 26, 22); draw('placing'); win.eval('placing=null');
+    G().gps = { x: 50, y: 30 }; win.eval('gpsPath=[[26,22],[27,22],[28,22]]'); at(23, 26, 22); draw('gps'); G().gps = null;
+    G().mission = { type: 'courier', title: 'x', stops: ['market', 'dock'], i: 0, deadline: G().t + 600, reward: 1 }; draw('mission'); G().mission = null;
+    // trees and lamps exist; trees only collected with depth on
+    if (api.DP_LAMPS.length < 20) errs.push('few lamps ' + api.DP_LAMPS.length);
+    api.SET.depth = true; at(12, 5, 18); draw('trees'); const nTrees = api.dpTrees.length; api.SET.depth = false; draw('trees off'); stats.trees = nTrees;
+    if (!nTrees) errs.push('no trees collected in Greenbelt'); if (api.dpTrees.length) errs.push('trees collected with depth off');
+    // the player stays visible at night: the area around them is not darker than the classic map
+    const lum = () => { const s = api.TS, px = Math.round(G().p.x * s + 8 - win.eval('camX')), py = Math.round(G().p.y * s + 2 - win.eval('camY')); const d = api.cx.getImageData(px - 4, py - 6, 9, 14).data; let t = 0; for (let i = 0; i < d.length; i += 4) t += d[i] + d[i + 1] + d[i + 2]; return t / (d.length / 4) };
+    api.SET.depth = false; at(23.5, 30, 22); draw('lum classic'); const lc = lum(); api.SET.depth = true; draw('lum depth'); const ld = lum(); stats.playerLum = { classic: Math.round(lc), depth: Math.round(ld) };
+    if (ld < lc * .95) errs.push('player darker at night with depth on');
+    // cost of a frame
+    const time = dep => { api.SET.depth = dep; at(23, 49, 7); const t0 = win.performance.now(); for (let i = 0; i < 40; i++) draw('time'); return (win.performance.now() - t0) / 40 };
+    stats.ms = { classic: +time(false).toFixed(2), depth: +time(true).toFixed(2) }; if (stats.ms.depth > 8) errs.push('depth frame too slow ' + stats.ms.depth + 'ms');
+    // the setting
+    api.SET.depth = true; api.settingsMenu(); if (!/Depth and lighting: On/.test(sheet())) errs.push('no depth setting'); click(/^Depth and lighting/); if (api.SET.depth !== false || api.depthOn()) errs.push('setting did not switch off');
+    api.settingsMenu(); click(/^Depth and lighting/); if (api.SET.depth !== true) errs.push('setting did not switch back on'); api.closeMenu();
+    // nothing went to the console from the frame loop either
+    if (logged.length) errs.push('console errors: ' + logged.slice(0, 3).join(' | '));
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  win.console.error = ce;
+  try { win.localStorage.removeItem('marrowbay_settings') } catch (e) {}
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 30).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

@@ -34,7 +34,7 @@ function drawTile(tx,ty,now){
   }else{
     cx.fillStyle=GROUND[d];cx.fillRect(sx,sy,TS,TS);
     cx.fillStyle='rgba(0,0,0,.08)';if(h%5===0)cx.fillRect(sx+(h>>3)%12,sy+(h>>5)%12,2,1);
-    if(t===T.PARK?h%3===0:(h%9===0&&(d==='Highline'||d==='Greenbelt')))tree(sx,sy);
+    if(t===T.PARK?h%3===0:(h%9===0&&(d==='Highline'||d==='Greenbelt'))){if(depthOn())depthTree(tx,ty);else tree(sx,sy)}
   }
 }
 function drawBlock(b,lit,now){

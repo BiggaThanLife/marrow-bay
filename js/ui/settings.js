@@ -74,6 +74,7 @@ function settingsMenu(msg){
     {label:`Sound: ${SET.mute?'Off':'On'}`,sub:'Tap to switch',cls:'primary',fn:()=>{SET.mute=!SET.mute;saveSettings();sfx('open');back()}},
     {label:`Volume: ${VOLNAMES[SET.vol]}`,sub:'Tap to change',off:SET.mute,cls:'',fn:()=>{SET.vol=SET.vol%3+1;saveSettings();sfx('good');back()}},
     {label:`Action scenes: ${SET.scenes===false?'Off':'On'}`,sub:'Short pixel scenes for work, money and rest',cls:'',fn:()=>{SET.scenes=SET.scenes===false;saveSettings();sfx('open');back()}},
+    {label:`Depth and lighting: ${SET.depth===false?'Off':'On'}`,sub:'Shadows, roofs, trees you can walk behind, and lamp light at night. Off is the classic flat map.',cls:'',fn:()=>{SET.depth=SET.depth===false;saveSettings();sfx('open');back()}},
     {label:`Hints: ${SET.hints===false?'Off':'On'}`,sub:'Short notes the first time something matters',cls:'',fn:()=>{SET.hints=SET.hints===false;saveSettings();sfx('open');back()}},
     ...(inGame?[
       {label:'Save now',sub:'Write your game to this device',cls:'',fn:()=>{save();back('Game saved.')}},

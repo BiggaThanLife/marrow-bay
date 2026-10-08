@@ -1,18 +1,19 @@
 "use strict";
 /* Draws the whole world each frame. */
 function drawWorld(now){
-  const x0=Math.floor(camX/TS),y0=Math.floor(camY/TS);
+  const x0=Math.floor(camX/TS),y0=Math.floor(camY/TS),deep=depthOn();dpTrees=[];
   for(let ty=y0;ty<=y0+Math.ceil(VH/TS);ty++)for(let tx=x0;tx<=x0+Math.ceil(VW/TS);tx++){
     if(tx<0||ty<0||tx>=W||ty>=H)continue;
-    drawTile(tx,ty,now);
+    drawTile(tx,ty,now);if(deep)depthTileFx(tx,ty,now);
     if(placing&&canBuild(tx,ty)){const sx=tx*TS-camX,sy=ty*TS-camY;cx.fillStyle='rgba(79,209,181,.28)';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='rgba(79,209,181,.9)';cx.fillRect(sx,sy,3,1);cx.fillRect(sx,sy,1,3);cx.fillRect(sx+TS-3,sy+TS-1,3,1);cx.fillRect(sx+TS-1,sy+TS-3,1,3)}
   }
   const n=night(),lit=n>.2;
+  if(deep)depthShadows(now);
   const issByKey={};if(G)G.biz.forEach(b=>{if(b.type==='rental'&&b.issues&&b.issues.length)issByKey[b.key]=b.issues.length});
   blocks.forEach(b=>{
     const sx=b.x*TS-camX,sy=b.y*TS-camY;
     if(sx>VW||sy>VH||sx<-64||sy<-64)return;
-    drawBlock(b,lit,now);
+    if(deep)drawBlockDepth(b,lit,now);else drawBlock(b,lit,now);
     const bz=G&&issByKey[b.key];
     if(bz){const bx=sx+TS*2,by=sy+3;cx.fillStyle='#fff';cx.beginPath();cx.arc(bx,by,7,0,7);cx.fill();cx.fillStyle='#d33a2c';cx.beginPath();cx.arc(bx,by,6,0,7);cx.fill();cx.fillStyle='#fff';cx.font='bold 9px sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(String(bz),bx,by+.5);cx.textAlign='left';cx.textBaseline='alphabetic'}
   });
@@ -22,8 +23,10 @@ function drawWorld(now){
   cx.fillStyle='#8aa6b5';cx.beginPath();cx.arc(fx,fy,10,0,7);cx.fill();
   cx.fillStyle='#4f86a6';cx.beginPath();cx.arc(fx,fy,7,0,7);cx.fill();
   cx.fillStyle='#cfe3ee';cx.fillRect(fx-1,fy-3+Math.sin(now*.005),2,4);
+  if(deep&&!G){dpTrees.forEach(([tx,ty])=>drawTreeDepth(tx,ty));DP_LAMPS.forEach(l=>drawLampDepth(l,n>.1))}
   if(G){
     const ents=[];
+    if(deep){dpTrees.forEach(([tx,ty])=>ents.push({y:ty+.4,f:()=>drawTreeDepth(tx,ty)}));DP_LAMPS.forEach(l=>ents.push({y:l.y/TS+.1,f:()=>drawLampDepth(l,n>.1)}))}
     G.structs.forEach(s=>ents.push({y:s.y-.5,f:()=>drawStruct(s,now)}));
     NPCS.forEach(n=>{if(!n.indoors)ents.push({y:n.y,f:()=>person(n.x,n.y,n.col,false,n.path.length>0,now,false,NPC_LOOK[n.id])})});
     WALKERS.forEach(w=>{if(!w.indoors)ents.push({y:w.y,f:()=>person(w.x,w.y,w.col,false,w.path.length>0,now,false,w.look)})});
@@ -39,6 +42,10 @@ function drawWorld(now){
       }else person(G.p.x,G.p.y,'#2f6fb3',true,mv,now);
     }});
     ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
+  }
+  /* with depth on, the night light map and the vignette go under the markers so the markers stay bright */
+  if(deep){depthLight(n,now);depthAtmos()}
+  if(G){
     if(dest&&G.p.path.length){
       const dx=dest[0]*TS-camX,dy=dest[1]*TS-camY;
       cx.strokeStyle='#4fd1b5';cx.lineWidth=1;cx.strokeRect(dx+1.5,dy+1.5,TS-3,TS-3);
@@ -63,6 +70,6 @@ function drawWorld(now){
     if(gx<0||gy<0||gx>VW||gy>VH){cx.beginPath();cx.arc(clamp(gx,6,VW-6),clamp(gy,6,VH-6),4,0,7);cx.fill()}
     else{cx.strokeStyle='#4fd1b5';cx.strokeRect(gx-7,gy-7,14,14)}
   }
-  if(n>0){cx.fillStyle=`rgba(12,18,48,${n})`;cx.fillRect(0,0,VW,VH)}
+  if(n>0&&!deep){cx.fillStyle=`rgba(12,18,48,${n})`;cx.fillRect(0,0,VW,VH)}
   if(G&&G.heat>=2&&NPC.reyes.chasing){const f=Math.floor(now/180)%2;cx.fillStyle=f?'rgba(220,40,40,.35)':'rgba(50,90,230,.35)';cx.fillRect(0,0,VW,3);cx.fillRect(0,VH-3,VW,3)}
 }
