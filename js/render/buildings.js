@@ -5,7 +5,7 @@
 /* which look a block gets: the place it is, the business you run in it, or the filler kind */
 function bKey(b){if(b.poi)return b.kind;const biz=G&&bizOf(b.key);return biz&&biz.type?biz.type:b.kind}
 /* roof: flat, pitched, slate, metal, glass or saw. wall: plaster, stone, brick, wood, metal, tudor, concrete or glass.
-   win: std, small, tall, shop, strip, listing, curtain, blue, barred, roll, furnace, slit, cage, grid or none. door: std, double, steel or barn. awn: an awning. kit: rooftop AC and hatch on a flat roof. */
+   win: std, small, tall, shop, strip, listing, curtain, blue, barred, roll, furnace, slit, cage, grid or none. door: std, double or steel. Briar Barn (barn) is drawn by drawBarnDepth instead. awn: an awning. kit: rooftop AC and hatch on a flat roof. */
 const BSTYLE={
   bank:{roof:'flat',wall:'stone',win:'none',door:'double',kit:0},estate:{roof:'slate',wall:'stone',win:'tall'},club:{roof:'flat',wall:'plaster',win:'curtain',door:'double',kit:0},
   flats:{roof:'pitched',wall:'brick',win:'small'},rental:{roof:'pitched',wall:'brick',win:'small'},realty:{roof:'flat',wall:'plaster',win:'listing',awn:1,kit:0},
@@ -15,7 +15,7 @@ const BSTYLE={
   casino:{roof:'flat',wall:'plaster',win:'none',door:'double',kit:0},velvet:{roof:'flat',wall:'plaster',win:'curtain',kit:0},pawn:{roof:'flat',wall:'brick',win:'barred'},
   loft:{roof:'flat',wall:'brick',win:'tall',kit:0},garage:{roof:'metal',wall:'metal',win:'roll'},foundry:{roof:'metal',wall:'brick',win:'furnace'},
   barber:{roof:'pitched',wall:'plaster',win:'shop',awn:1},tailor:{roof:'pitched',wall:'plaster',win:'shop',awn:1},prison:{roof:'flat',wall:'concrete',win:'slit',door:'steel',kit:0},
-  barn:{roof:'pitched',wall:'wood',win:'none',door:'barn'},farmstead:{roof:'pitched',wall:'wood',win:'std'},farm:{roof:'pitched',wall:'wood',win:'std'},home:{roof:'pitched',wall:'plaster',win:'std'},
+  barn:{roof:'pitched',wall:'wood',win:'none'},farmstead:{roof:'pitched',wall:'wood',win:'std'},farm:{roof:'pitched',wall:'wood',win:'std'},home:{roof:'pitched',wall:'plaster',win:'std'},
   tower:{roof:'flat',wall:'glass',win:'grid'},warehouse:{roof:'metal',wall:'metal',win:'roll'},
   cafe:{roof:'flat',wall:'plaster',win:'shop',awn:1,kit:0},bar:{roof:'flat',wall:'brick',win:'curtain',kit:0},pies:{roof:'pitched',wall:'brick',win:'shop',awn:1},
   cages:{roof:'flat',wall:'concrete',win:'cage'},wellness:{roof:'flat',wall:'plaster',win:'blue',awn:1,kit:0}
@@ -60,9 +60,8 @@ function bDoor(k,sx,sy,base,lit,c){
   const dx=sx+TS+3,dy=sy+52;
   if(k==='double'){bF('rgba(0,0,0,.55)',dx-3,dy-3,16,13);bF('#3a2616',dx-2,dy-2,14,12);bF('#5a3a20',dx-1,dy-1,5,10);bF('#5a3a20',dx+6,dy-1,5,10);bF('#d8b04a',dx+4,dy+4,1,1);bF('#d8b04a',dx+5,dy+4,1,1);bF('rgba(255,255,255,.22)',dx-4,base-1,18,1)}
   else if(k==='steel'){bF('rgba(0,0,0,.6)',dx-2,dy-2,14,12);bF('#6a7078',dx-1,dy-1,12,11);bF('#8a9098',dx-1,dy-1,12,1);for(const [x,y] of [[0,1],[9,1],[0,8],[9,8]])bF('#3a3e44',dx+x,dy+y,1,1);bF('#1e2128',dx+3,dy+2,4,2)}
-  else if(k==='barn'){bF('rgba(0,0,0,.55)',dx-4,sy+45,18,base-sy-45);bF('#8a3128',dx-3,sy+46,16,base-sy-47);bF('#f4efe2',dx-3,sy+46,16,1);bF('#f4efe2',dx-3,sy+46,1,base-sy-47);bF('#f4efe2',dx+12,sy+46,1,base-sy-47);ln(cx,'#f4efe2',dx-2,sy+47,dx+11,base-2,1);ln(cx,'#f4efe2',dx+11,sy+47,dx-2,base-2,1)}
   else{bF('rgba(0,0,0,.55)',dx-1,dy-1,12,11);bF('#2a1c12',dx,dy,10,10);bF('#45301f',dx+1,dy+1,8,1);bF('#d8b04a',dx+7,dy+5,1,1);bF('rgba(255,255,255,.2)',dx-2,base-1,14,1)}
-  if(lit&&k!=='barn')bF('rgba(255,216,138,.2)',dx,dy+1,10,8);
+  if(lit)bF('rgba(255,216,138,.2)',dx,dy+1,10,8);
 }
 /* ----- roofs ----- */
 function bRoof(k,s,sx,sy,L,ww,top,eave,c,hs){
@@ -166,9 +165,6 @@ function bLandmark(key,o){
       bF('#8a8f96',sx+2,top,60,3);bF('#8a8f96',sx+2,top,3,eave-top);bF('#8a8f96',sx+59,top,3,eave-top);for(let x=sx+2;x<sx+62;x+=4){bF('#3a3e44',x,top-2,2,1);bF('#3a3e44',x+2,top-1,2,1)}
       bF(OUT,sx+46,sy-9,13,22);bF('#6a7078',sx+47,sy-8,11,20);bF('#4a4f58',sx+45,sy-11,15,3);bWin(sx+49,sy-6,7,4,lit);
       if(lit){const a=Math.sin(now/1500)*.8;cx.fillStyle='rgba(255,250,210,.16)';cx.beginPath();cx.moveTo(sx+52,sy-4);cx.lineTo(sx+52+Math.cos(a+1.6)*60-12,sy+60);cx.lineTo(sx+52+Math.cos(a+1.6)*60+12,sy+60);cx.closePath();cx.fill()}break}
-    case 'barn':{
-      bF('#f4efe2',sx+2,eave-1,60,1);bF('#5a3a20',ex-4,top+10,8,8);bF('#f4efe2',ex-4,top+10,8,1);ln(cx,'#c9a46a',ex-3,top+11,ex+3,top+17,1);
-      bF(OUT,sx+49,top-6,13,sy+62-top+6);bF('#b8bec6',sx+50,top-5,11,sy+61-top+5);for(let y=top;y<sy+60;y+=5)bF('rgba(0,0,0,.12)',sx+50,y,11,1);dsc(cx,OUT,sx+55.5,top-6,6);dsc(cx,'#9aa0a8',sx+55.5,top-6,5);bF('#9aa0a8',sx+50,top-6,11,1);break}
     case 'farmstead':case 'farm':{
       bF('#5a4128',sx+14,sy+44,18,2);bF('#5a4128',sx+14,sy+44,1,base-sy-45);bF('#5a4128',sx+31,sy+44,1,base-sy-45);
       for(let x=sx+36;x<sx+60;x+=4){bF('#e8dcc0',x,base-5,2,5)}bF('#e8dcc0',sx+35,base-4,26,1);
@@ -198,13 +194,60 @@ function bLandmark(key,o){
 function bGlows(key){
   return({diner:[[49,12,18,'255,90,90',.5]],foundry:[[46,52,22,'255,140,50',.7],[11,-8,9,'255,140,50',.25]],club:[[24,58,14,'255,210,120',.5]],casino:[[32,24,30,'255,220,140',.55]],
     gull:[[32,51,10,'255,200,120',.55]],cityhall:[[32,1,10,'255,240,200',.5]],velvet:[[32,24,28,'255,80,200',.5]],loft:[[32,43,24,'150,130,255',.35]],prison:[[52,-4,10,'255,250,210',.6]],
-    pawn:[[8,50,8,'255,210,120',.35]],tower:[[32,52,22,'255,210,140',.3]]})[key]||[];
+    pawn:[[8,50,8,'255,210,120',.35]],barn:[[24,30,11,'255,200,120',.55],[24,55,7,'255,200,120',.3]],tower:[[32,52,22,'255,210,140',.3]]})[key]||[];
+}
+/* Briar Barn, the cheapest bed in town: a red gambrel barn with its gable end to the street, big sliding doors, a hayloft someone lives in
+   (open and lamp-lit at night), a stovepipe, a tarp over a leak, a mailbox, hay bales and a silo. It draws its own roof and front. */
+function drawBarnDepth(b,sx,sy,lit,now){
+  const L0=sx+2,R0=sx+46,mx=sx+24,top=sy+2,eave=sy+40,base=sy+62,RED='#a8382c',RDK='#8e2e25',RSH='#86291f',TRIM='#f4efe2';
+  const topAt=x=>{const d=Math.abs(x+.5-mx);return d<=15?sy+18+Math.round(d/15*9):sy+27+Math.round((d-15)/7*13)};
+  /* grass first: the curved back of the roof and the silo dome leave the block's ground showing (the old flat roof covered it) */
+  bF(GROUND[district(b.x+1,b.y+1)]||GROUND.Greenbelt,sx,sy,64,base-sy);for(const [x,y] of [[5,4],[58,9],[3,30],[41,6],[62,40]])bF('rgba(0,0,0,.08)',sx+x,sy+y,2,1);
+  /* the roof runs back from the front: the same gambrel outline raised by its depth, shingle rows that follow the curve,
+     the ridge and the two slope breaks running from front to back */
+  const D=16,band=(x,f,c)=>{bF(OUT,x,f-D-1,1,1);bF(c,x,f-D,1,D);for(let k=3;k<D;k+=3)bF('rgba(0,0,0,.13)',x,f-k,1,1)};
+  for(let x=L0;x<R0;x++){const left=x<mx,d=Math.abs(x+.5-mx);band(x,topAt(x),d>15?(left?'#7a4a3e':'#5a342c'):(left?'#8a5446':'#663a30'))}
+  bF(OUT,L0-1,eave-D-1,1,D+1);bF(OUT,R0,eave-D-1,1,D+1);
+  bF('#a86a58',mx-1,sy+18-D,2,D);bF('rgba(255,255,255,.16)',mx-16,topAt(mx-16)-D,1,D);bF('rgba(0,0,0,.22)',mx+15,topAt(mx+15)-D,1,D);
+  /* a blue tarp tied over a leak, lying on the curve of the roof */
+  for(let x=sx+8;x<sx+19;x++){const y=topAt(x)-D+5,edge=x===sx+8||x===sx+18;bF(OUT,x,y-1,1,9);if(!edge){bF((x-sx)%4===3?'#2a5a90':'#3a7ab8',x,y,1,7);bF('#5a9ad0',x,y,1,1)}}
+  ln(cx,'#e8dcc0',sx+4,topAt(sx+4)-D+3,sx+8,topAt(sx+8)-D+5,1);ln(cx,'#e8dcc0',sx+18,topAt(sx+18)-D+11,sx+22,topAt(sx+22)-D+14,1);
+  /* the stovepipe, with smoke */
+  bF(OUT,sx+31,sy+4,5,13);bF('#7a828c',sx+32,sy+5,3,11);bF('#9aa2ac',sx+32,sy+5,1,11);bF(OUT,sx+30,sy+3,7,2);
+  for(let i=0;i<3;i++){const k=((now/1900)+i/3)%1;dsc(cx,`rgba(170,170,175,${(.5*(1-k)*(1-k)).toFixed(2)})`,sx+33+k*10,sy+1-k*8,1.5+k*3)}
+  /* the gable end: upright boards, darker towards the shaded side, white trim along the gambrel line */
+  for(let x=L0;x<R0;x++){const y=topAt(x);bF(OUT,x,y-1,1,1);bF(x>=R0-4?RSH:(x-L0)%3===2?RDK:RED,x,y,1,base-y);if(y<eave)bF(TRIM,x,y,1,1)}
+  bF(OUT,L0-1,eave,1,base-eave);bF(OUT,R0,eave,1,base-eave);bF(TRIM,L0,eave,1,base-eave);bF(TRIM,R0-1,eave,1,base-eave);bF(TRIM,L0,eave,R0-L0,1);
+  bF('#bc4a3a',sx+6,sy+44,2,11);bF('#bc4a3a',sx+39,sy+31,2,8);
+  /* the hayloft: shut with an X and leaking hay by day; open and lamp-lit at night, because someone sleeps up there */
+  const hx=mx-5,hy=sy+25;bF(OUT,hx-1,hy-1,12,12);
+  if(lit){bF('#ffd88a',hx,hy,10,10);bF('#fff3c8',hx+1,hy+1,8,2);bF('#5a3a20',hx+4,hy,1,3);bF('#fff6d0',hx+3,hy+3,3,2);bF('#6a4a2a',hx+1,hy+7,6,3);bF('#e8e0f0',hx+1,hy+7,2,1)}
+  else{bF(RDK,hx,hy,10,10);bF(TRIM,hx,hy,10,1);bF(TRIM,hx,hy+9,10,1);bF(TRIM,hx,hy,1,10);bF(TRIM,hx+9,hy,1,10);ln(cx,TRIM,hx+1,hy+1,hx+8,hy+8,1);ln(cx,TRIM,hx+8,hy+1,hx+1,hy+8,1);for(let i=0;i<4;i++)bF('#e0c060',hx+1+i*2+(i%2),hy+10,1,2)}
+  bF(OUT,mx-2,sy+19,4,3);bF('#5a3a20',mx-1,sy+20,2,1);bF('#c9a46a',mx,sy+22,1,2);
+  /* the name, painted on a board over the doors */
+  bF(OUT,mx-14,sy+38,28,9);bF('#e8dcc0',mx-13,sy+39,26,7);bF('#c9b896',mx-13,sy+45,26,1);bText(SIGN[b.kind]||'BARN',mx,sy+45,'#7e2a22');
+  /* the big sliding doors on their track, with lamplight through the gap at night */
+  const dy=sy+49;bF('#3a3e44',mx-15,dy-2,30,1);
+  for(const dx of [mx-12,mx]){bF(OUT,dx-1,dy-1,14,base-dy+1);bF(RDK,dx,dy,12,base-dy-1);bF(TRIM,dx,dy,12,1);bF(TRIM,dx,base-2,12,1);bF(TRIM,dx,dy,1,base-dy-1);bF(TRIM,dx+11,dy,1,base-dy-1);ln(cx,TRIM,dx+1,dy+1,dx+10,base-3,1);ln(cx,TRIM,dx+10,dy+1,dx+1,base-3,1)}
+  if(lit)bF('#ffd88a',mx-1,dy,2,base-dy-1);
+  bF('rgba(255,255,255,.22)',mx-14,base-1,28,1);
+  /* the silo: a dome, banded metal, a ladder and a little rust */
+  const s0=sx+48,s1=sx+61,sm=(s0+s1)/2-.5;
+  dsc(cx,OUT,sm,top+5,7.5);dsc(cx,'#9aa2ac',sm,top+5,6.5);bF('#c9ced3',s0+3,top,4,1);
+  bF(OUT,s0-1,top+5,s1-s0+2,base-top-5);for(let x=s0;x<s1;x++)bF(x<s0+4?'#c9ced3':x>=s1-4?'#8a929c':'#aab0b8',x,top+5,1,base-top-6);
+  for(let y=top+10;y<base-2;y+=6)bF('rgba(0,0,0,.18)',s0,y,s1-s0,1);
+  bF('#5a5f68',s1-4,top+9,1,base-top-11);bF('#5a5f68',s1-2,top+9,1,base-top-11);for(let y=top+11;y<base-2;y+=3)bF('#5a5f68',s1-4,y,3,1);
+  bF('#a8603a',s0+2,base-13,2,3);bF('#a8603a',s0+6,top+16,1,2);
+  /* a mailbox by the path and hay bales against the silo */
+  bF('#5a3a20',sx+5,base-8,1,8);bF(OUT,sx+3,base-12,6,5);bF('#8a929c',sx+4,base-11,4,3);bF('#d33a2c',sx+8,base-14,1,3);
+  for(const [x,y] of [[s0-1,base-5],[s0+6,base-5],[s0+2,base-9]]){bF(OUT,x-1,y-1,8,6);bF('#e0c060',x,y,6,4);bF('#c9a040',x,y+2,6,1)}
 }
 /* the whole building */
 function drawBlockDepth(b,lit,now){
   const sx=b.x*TS-camX,sy=b.y*TS-camY,w=4*TS,hh=4*TS;
   const biz=G&&!b.poi?bizOf(b.key):null,bt=biz&&biz.type?BT[biz.type]:null,c=bt?bt.col:COL[b.kind];
   const key=bKey(b),s=BSTYLE[key]||{roof:'flat',wall:'plaster',win:'std'},hs=hash(b.x,b.y);
+  if(key==='barn')return drawBarnDepth(b,sx,sy,lit,now);
   const L=sx+2,ww=w-4,Rr=L+ww,top=sy+2,eave=sy+hh-22,base=sy+hh-2;
   /* front wall */
   bF(c[1],L,eave,ww,20);
