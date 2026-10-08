@@ -22,6 +22,6 @@ const SCENE_RULES=[
   [/^Buy a round/,'eat','drink','A round for the bar'],
   [/^(Cook a meal|Cook fish stew)/,'eat','cook','Cooking']
 ];
-const SCENE_MS={work:1600,cash:1200,rest:1800,nature:1900,eat:1500};
+const SCENE_MS={work:2000,cash:1600,rest:2200,nature:2200,eat:2000};
 const SCENE_SKIP_AFTER=400;
 const sceneFor=label=>{const r=SCENE_RULES.find(x=>x[0].test(label));return r?{type:r[1],kit:r[2],cap:r[3]}:null};

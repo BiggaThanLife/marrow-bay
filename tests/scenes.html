@@ -24,7 +24,7 @@ f.addEventListener('load', async () => {
     ['Collect a debt', 'Sell goods', 'Takeaway meals', 'Buy 10 scrap', 'Back', 'Leave'].forEach(l => { if (api.sceneFor(l)) errs.push('unexpected scene for ' + l) });
     // draw every rule at several moments with no errors
     const cv = doc.getElementById('sc-cv'), g = cv.getContext('2d');
-    api.SCENE_RULES.forEach(r => { [0, 300, 900, 1400].forEach(t => api.SCENE_DRAW[r[1]](g, t, Math.min(1, t / api.SCENE_MS[r[1]]), r[2])) });
+    api.SCENE_RULES.forEach(r => { for (let i = 0; i <= 40; i++) { const pp = i / 40; try { api.SCENE_DRAW[r[1]](g, pp * api.SCENE_MS[r[1]], pp, r[2]) } catch (e) { errs.push(r[1] + ':' + r[2] + ' at ' + pp + ' ' + e.message); break } } });
     // in a frame, scenes are skipped (so the other test pages stay fast)
     G().cash = 1000; const ran = []; api.ui('<p>x</p>', [{ label: 'Collect till', fn: () => ran.push(1) }]); btn(/^Collect till/).click(); if (ran.length !== 1 || shown()) errs.push('scene played inside a frame without being forced');
     // force scenes on

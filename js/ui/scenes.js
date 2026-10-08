@@ -1,6 +1,6 @@
 "use strict";
 /* Pixel scenes for actions (work, cash, rest), and the short tap shield that stops accidental double taps.
-   A scene is drawn on a 96x48 canvas, plays for about a second and a half, and then runs the action it was holding back.
+   A scene is drawn on a 160x80 canvas, plays for about two seconds, and then runs the action it was holding back.
    Tap after SCENE_SKIP_AFTER ms to skip. Settings can switch scenes off. Games embedded in a frame (the test pages) skip scenes. */
 let sceneBusy=false,sceneTimer=0,shieldTimer=0,SCENE_FORCE=false;
 const SC_W=160,SC_H=80;
