@@ -1,10 +1,13 @@
 "use strict";
 /* Phone > Bay-Watch Feed. A made-up neighbourhood app and the one place the city talks to the player: HARBOR's pinned suggestions, saved rumor and event posts (js/sim/feed.js), a few petty posts a day and a line on where the patrols are thin. */
 function baywatchPosts(){
-  const d=day(),out=[];
+  const d=day(),out=[],usedC=new Set(),usedD=new Set();
   for(let i=0;i<5;i++){
-    const h=hash(d,31+i)>>>0,dist=DISTS[h%DISTS.length];
-    out.push({dist,t:BW_COMPLAINTS[(h>>>3)%BW_COMPLAINTS.length].replace('{s}',BW_STREETS[(h>>>7)%BW_STREETS.length]).replace('{n}',String(2+(h>>>11)%48)).replace('{d}',dist)});
+    /* keep trying until the complaint and the district are both new, so the feed never says the same thing twice */
+    let h,c,dist,k=0;
+    do{h=hash(d,31+i+k*13)>>>0;c=(h>>>3)%BW_COMPLAINTS.length;dist=DISTS[h%DISTS.length];k++}while((usedC.has(c)||usedD.has(dist))&&k<40);
+    usedC.add(c);usedD.add(dist);
+    out.push({dist,t:BW_COMPLAINTS[c].replace('{s}',BW_STREETS[(h>>>7)%BW_STREETS.length]).replace('{n}',String(2+(h>>>11)%48)).replace('{d}',dist)});
   }
   return out;
 }

@@ -6,7 +6,7 @@ MENUS.dock=(poi,n,msg)=>{
   const done=G.flags.manifestDay===day();
   const nr=RODS[rodLevel()+1];
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the hiring line. Cargo is ${meterWord(G.meters.Dockside)}. ${G.fac.shipping>=15?'Harbor Freight knows your face.':''}</p>${strike||(G.mod.closed.includes('dock'))?'<p class="bad">The piers are shut.</p>':''}${dockFactsHtml()}${msgP(msg)}`,[
-    {label:'Haul cargo',sub:`4 hours, about ${money(26*mult*payF(n))}`,off:strike,fn:()=>{
+    {label:'Haul cargo',sub:`4 hours, about ${money(26*mult*payF(n))}`,off:strike,need:28,fn:()=>{
       const r=gig(n,{hrs:4,base:26,mult,rep:'Dockside',label:'hauling cargo'});
       if(r.startsWith('You worked')){facAdd('shipping',1);meterAdd('Dockside',1)}
       MENUS.dock(poi,n,r)}},

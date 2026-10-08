@@ -44,8 +44,9 @@ function ui(html,btns=[],isModal=true,dismiss=true){
     const el=document.createElement('button');el.type='button';
     const cls=b.cls??(i===0?'primary':'');
     el.className='btn'+(cls?' '+cls:'');
-    el.innerHTML='<span>'+esc(b.label)+'</span>'+(b.sub?'<small>'+esc(b.sub)+'</small>':'')+(b.badge?`<i class="badge" title="${b.badge} problem${b.badge>1?'s':''}">${b.badge}</i>`:'');
-    el.disabled=!!b.off;el.addEventListener('click',e=>runButton(b,e));a.appendChild(el);
+    const tired=b.need!=null&&G&&G.energy<b.need,sub=tired?'Too tired. Eat or rest first.':b.sub;
+    el.innerHTML='<span>'+esc(b.label)+'</span>'+(sub?'<small>'+esc(sub)+'</small>':'')+(b.badge?`<i class="badge" title="${b.badge} problem${b.badge>1?'s':''}">${b.badge}</i>`:'');
+    el.disabled=!!b.off||tired;el.addEventListener('click',e=>runButton(b,e));a.appendChild(el);
   });
   if(sheet.hidden)sfx('open');
   sheet.hidden=false;sheet.scrollTop=0;shield(250);

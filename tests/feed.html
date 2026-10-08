@@ -34,8 +34,8 @@ f.addEventListener('load', async () => {
     if (api.feedUnread() !== 3) errs.push('three posts should be unread: ' + api.feedUnread());
     api.baywatchMenu(); const t = sheet();
     ['Rumor test post', 'Event test post', 'Callback test post', 'Rumor', 'Event', 'Chatter', 'Patrol watch'].forEach(x => { if (!t.includes(x)) errs.push('feed missing ' + x) });
-    if (!/New/.test(t)) errs.push('new posts not marked'); if (api.feedUnread() !== 0) errs.push('unread not cleared');
-    api.baywatchMenu(); if (/\bNew\b/.test(sheet())) errs.push('posts still marked new on a second look');
+    if (!/New ·/.test(t)) errs.push('new posts not marked'); if (api.feedUnread() !== 0) errs.push('unread not cleared');
+    api.baywatchMenu(); if (/New ·/.test(sheet())) errs.push('posts still marked new on a second look');
     // the cap, oldest dropped, ids rising
     for (let i = 0; i < 60; i++) api.feedAdd({ kind: 'event', t: 'filler ' + i });
     if (G().feed.length !== api.FEED_CAP) errs.push('feed not capped: ' + G().feed.length);
@@ -49,6 +49,15 @@ f.addEventListener('load', async () => {
     api.feedAdd({ kind: 'rumor', dist: 'Grid', t: 'Survives a save' }); win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (!G().feed.some(p => p.t === 'Survives a save')) errs.push('feed lost on save and migrate');
     win.eval('delete G.feed;delete G.feedId;delete G.feedSeen;delete G.sugSeen;migrate()');
     if (!Array.isArray(G().feed) || G().feedSeen !== G().feedId || typeof G().sugSeen !== 'string') errs.push('old save not given feed fields');
+    // the daily chatter never repeats a complaint or a district within a day
+    for (let d = 1; d <= 80; d++) { G().t = (d - 1) * 1440 + 600; const ps = win.eval('baywatchPosts()'); if (new Set(ps.map(x => x.t)).size !== 5 || new Set(ps.map(x => x.dist)).size !== 5) { errs.push('chatter repeats on day ' + d); break } }
+    G().t = 1440 + 600;
+    // a button that needs energy greys out instead of playing a scene for nothing
+    win.eval('SCENE_FORCE=true'); G().energy = 5; win.eval('waterfront()');
+    ['Fish from the pier', 'Take the boat out'].forEach(l => { const b = [...doc.querySelectorAll('#sheet #actions button')].find(x => x.innerText.startsWith(l)); if (b && !b.disabled) errs.push(l + ' is not greyed out when tired'); });
+    const fp = [...doc.querySelectorAll('#sheet #actions button')].find(x => x.innerText.startsWith('Fish from the pier')); if (!fp || !fp.disabled || !/Too tired/.test(fp.innerText)) errs.push('tired fishing button wrong: ' + (fp && fp.innerText));
+    G().energy = 80; win.eval('waterfront()'); const fp2 = [...doc.querySelectorAll('#sheet #actions button')].find(x => x.innerText.startsWith('Fish from the pier')); if (!fp2 || fp2.disabled) errs.push('rested fishing button still disabled');
+    win.eval('SCENE_FORCE=false');
     stats.feedLen = G().feed.length;
   } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
   const v = document.getElementById('verdict');

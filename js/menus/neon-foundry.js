@@ -31,7 +31,7 @@ MENUS.foundry=(poi,n,msg)=>{
   const mult=(has('strong')?1.3:1)*(has('working-class')?1.1:1)*(G.companion==='ines'?1.1:1);
   const price=Math.round(60*buyF(n));
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the furnace line.</p>${msgP(msg)}`,[
-    {label:'Foundry shift',sub:`5 hours, about ${money(48*mult*payF(n))}`,fn:()=>MENUS.foundry(poi,n,gig(n,{hrs:5,base:48,mult,rep:'Foundry Row',label:'at the furnace'}))},
+    {label:'Foundry shift',sub:`5 hours, about ${money(48*mult*payF(n))}`,need:35,fn:()=>MENUS.foundry(poi,n,gig(n,{hrs:5,base:48,mult,rep:'Foundry Row',label:'at the furnace'}))},
     {label:'Buy 10 scrap',sub:`${money(price)}. Feeds workshops and projects.`,off:G.cash<price,cls:'',fn:()=>{G.cash-=price;G.inv.scrap+=10;advance(15);MENUS.foundry(poi,n,'Ten pieces loaded.')}},
     {label:'Crafting bench',sub:'Parts, jammers, and vehicle upgrades',cls:'',fn:()=>craftMenu(()=>MENUS.foundry(poi,n))},
     leaveBtn]);
