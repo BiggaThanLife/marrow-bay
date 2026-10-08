@@ -10,36 +10,65 @@ function burst(g,x,y,dt,n,cols,speed){if(dt<0||dt>.55)return;speed=speed||40;for
 /* a soft puff of steam or dust that grows and fades; k is 0 to 1 */
 function puff(g,x,y,k,c){if(k<=0||k>=1)return;const a=(.7*(1-k)).toFixed(2);for(let i=0;i<5;i++){const s=3+Math.round(k*5);R(g,'rgba('+(c||'240,244,248')+','+a+')',x+(i-2)*(3+k*6)-s/2,y-k*16-(i%2)*4,s,s)}}
 function glint(g,x,y,k){if(k<=0||k>=1)return;const s=1+Math.round(Math.sin(k*3.14)*3);R(g,'#fff',x-s,y,s*2+1,1);R(g,'#fff',x,y-s,1,s*2+1);R(g,'#ffe08a',x,y,1,1)}
+/* ----- round brushes: crisp pixel discs and capsules, so limbs and props have soft rounded shapes and no square-pen corners ----- */
+function dsc(g,c,cx,cy,r){const n=Math.ceil(r);for(let y=-n;y<=n;y++){const q=r*r-y*y;if(q<0)continue;const w=Math.round(Math.sqrt(q));R(g,c,Math.round(cx)-w,Math.round(cy)+y,w*2+1,1)}}
+function cap(g,c,x0,y0,x1,y1,r0,r1){if(r1==null)r1=r0;const n=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)));for(let i=0;i<=n;i++){const k=i/n;dsc(g,c,x0+(x1-x0)*k,y0+(y1-y0)*k,r0+(r1-r0)*k)}}
 /* ----- first person: the player's forearm comes in from outside the frame and ends in a hand ----- */
+/* A hand at wrist (x,y) pointing along angle a. o.fist, o.point (index finger out), o.s scale, o.thumb side (+1/-1), o.look */
 function hand(g,x,y,o){
-  o=o||{};const L=o.look||scLook();
-  if(o.fist){R(g,OUT,x-6,y-5,13,11);R(g,L.skin,x-5,y-4,11,9);R(g,L.skinHi,x-5,y-4,11,2);for(let i=0;i<4;i++)R(g,L.skinDk,x-4+i*3,y-2,1,3);R(g,OUT,x-7,y+2,4,6);R(g,L.skin,x-6,y+3,3,4)}
-  else{R(g,OUT,x-5,y-3,11,10);R(g,L.skin,x-4,y-2,9,8);R(g,L.skinHi,x-4,y-2,9,2);for(let i=0;i<4;i++){R(g,OUT,x-5+i*3,y-8,3,6);R(g,L.skin,x-4+i*3,y-7,2,6);R(g,L.skinHi,x-4+i*3,y-7,2,1)}R(g,OUT,x+5,y-1,4,5);R(g,L.skin,x+5,y,3,3)}
+  o=o||{};const L=o.look||scLook(),s=o.s||1,a=o.a==null?-Math.PI/2:o.a,ux=Math.cos(a),uy=Math.sin(a),vx=-uy,vy=ux;
+  const P=(f,q)=>[x+(ux*f+vx*q)*s,y+(uy*f+vy*q)*s];
+  let th=o.thumb;if(!th){const A=P(6,5),B=P(6,-5);th=Math.abs(A[0]-80)<Math.abs(B[0]-80)?1:-1}
+  const C=(c,f0,q0,f1,q1,r)=>{const A=P(f0,q0),B=P(f1,q1);cap(g,c,A[0],A[1],B[0],B[1],r*s)};
+  const fq=[-3.4,-1.15,1.15,3.4].map(q=>q*th);
+  C(OUT,1,0,6.5,0,5.4);C(L.skin,1,0,6.5,0,4.4);
+  if(o.fist||o.point){
+    fq.forEach((q,i)=>{if(o.point&&i===3)return;const K=P(9,q);dsc(g,OUT,K[0],K[1],2.7*s);dsc(g,L.skin,K[0],K[1],1.8*s)});
+    if(o.point){C(OUT,8,fq[3],16,fq[3]*1.1,2.3);C(L.skin,8,fq[3],16,fq[3]*1.1,1.3);const T=P(15.5,fq[3]*1.1);R(g,L.skinHi,T[0],T[1],1,1)}
+    C(L.skin,2,0,7,0,3.8);
+    fq.forEach((q,i)=>{if(o.point&&i===3)return;const K=P(9.6,q);R(g,L.skinHi,K[0],K[1],1,1)});
+    C(OUT,4,4.6*th,8.4,1.4*th,2.6);C(L.skin,4,4.6*th,8.4,1.4*th,1.6);
+  }else{
+    const len=[4.6,6.4,6.8,5.6];
+    fq.forEach((q,i)=>{C(OUT,8,q,8+len[i],q*1.18,2.3);C(L.skin,8,q,8+len[i],q*1.18,1.3);const T=P(7.6+len[i],q*1.18);R(g,L.skinHi,T[0],T[1],1,1)});
+    C(L.skin,1.5,0,7.2,0,3.9);
+    C(OUT,3,4.4*th,8,7.4*th,2.6);C(L.skin,3,4.4*th,8,7.4*th,1.6);
+  }
+  C(L.skinDk,2,-3.2*th,6,-3.2*th,.9);const H=P(6,0);R(g,L.skinHi,H[0]-1,H[1]-1,2,1);
 }
-/* source (fx,fy) is where the arm comes from, off screen */
+/* An arm from off screen (fx,fy) to a hand at (x,y): tapered forearm, rolled sleeve, shading on one side */
 function arm(g,x,y,fx,fy,o){
-  o=o||{};const L=o.look||scLook(),sx=lerp(x,fx,.45),sy=lerp(y,fy,.45);
-  ln(g,OUT,x,y+2,fx,fy,13);ln(g,L.skin,x,y+2,fx,fy,10);ln(g,L.cloth,sx,sy,fx,fy,12);ln(g,L.clothHi,sx,sy,sx,sy,12);ln(g,L.clothDk,lerp(sx,fx,.5),lerp(sy,fy,.5),fx,fy,6);
-  hand(g,x,y,o);
+  o=o||{};const L=o.look||scLook(),s=o.s||1,a=Math.atan2(y-fy,x-fx),d=Math.hypot(x-fx,y-fy),ux=(x-fx)/d,uy=(y-fy)/d,vx=-uy,vy=ux;
+  const sx=lerp(x,fx,.48),sy=lerp(y,fy,.48);
+  cap(g,OUT,x,y,fx,fy,4.6*s,7*s);cap(g,L.skin,x,y,sx,sy,3.6*s,5*s);
+  cap(g,L.skinDk,x+vx*2.8*s,y+vy*2.8*s,sx+vx*4.1*s,sy+vy*4.1*s,1*s,1.1*s);cap(g,L.skinHi,x-vx*1.8*s,y-vy*1.8*s,sx-vx*2.6*s,sy-vy*2.6*s,.4*s,.6*s);
+  const sl=o.sleeve||L.cloth;cap(g,OUT,sx,sy,fx,fy,6.4*s,7.4*s);cap(g,sl,sx,sy,fx,fy,5.4*s,6.6*s);
+  cap(g,o.sleeve?shade(o.sleeve,-.18):L.clothDk,sx+vx*3*s,sy+vy*3*s,fx+vx*4*s,fy+vy*4*s,1.6*s,2.2*s);
+  cap(g,o.sleeve?shade(o.sleeve,.15):L.clothHi,sx+ux*1.2,sy+uy*1.2,sx+ux*1.2+vx*.1,sy+uy*1.2,.1,.1);
+  const c0=[sx-vx*5*s,sy-vy*5*s],c1=[sx+vx*5*s,sy+vy*5*s];cap(g,o.sleeve?shade(o.sleeve,-.25):L.clothDk,c0[0],c0[1],c1[0],c1[1],.8*s);
+  hand(g,x+ux*0,y+uy*0,Object.assign({},o,{a}));
 }
 /* ----- over the shoulder: the back of the player's head and shoulders, bottom of the frame ----- */
 function backView(g,x,y,o){
-  o=o||{};const L=o.look||scLook(),st=L.style,hy=y-50+(o.nod||0);
-  R(g,OUT,x-23,y-25,47,27);R(g,L.cloth,x-22,y-24,45,26);R(g,L.clothDk,x-22,y-24,6,26);R(g,L.clothDk,x+17,y-24,6,26);R(g,L.clothHi,x-12,y-24,24,2);R(g,L.clothDk,x,y-21,1,21);
-  R(g,OUT,x-5,y-32,11,9);R(g,L.skinDk,x-4,y-31,9,8);
-  R(g,OUT,x-11,hy+8,23,9);R(g,L.skin,x-10,hy+9,21,7);R(g,OUT,x-10,hy-1,21,22);R(g,L.skin,x-9,hy,19,20);R(g,L.skinDk,x-9,hy+16,19,4);
-  const hc=L.hair,hh=L.hairHi;
-  if(st===3){R(g,L.skinHi,x-6,hy+1,8,2)}
-  else if(st===2){R(g,hc,x-9,hy,19,8);R(g,hh,x-6,hy+1,8,1)}
-  else if(st===1||st===5){R(g,OUT,x-11,hy+8,23,21);R(g,hc,x-10,hy,21,28);R(g,hh,x-7,hy+1,9,1);R(g,L.clothDk,x-10,hy+25,21,3)}
-  else if(st===4){R(g,OUT,x-5,hy-7,11,9);R(g,hc,x-4,hy-6,9,8);R(g,hc,x-10,hy,21,13);R(g,hh,x-7,hy+1,8,1)}
-  else if(st===6){R(g,hc,x-10,hy-3,5,5);R(g,hc,x-3,hy-5,6,7);R(g,hc,x+5,hy-3,5,5);R(g,hc,x-10,hy,21,12);R(g,hh,x-7,hy+1,8,1)}
-  else{R(g,hc,x-10,hy,21,14);R(g,hh,x-7,hy+1,8,1);R(g,hc,x-10,hy+14,4,3);R(g,hc,x+7,hy+14,4,3)}
-  return{sl:[x-19,y-14],sr:[x+19,y-14],head:[x,y-40]};
+  o=o||{};const L=o.look||scLook(),st=L.style,hy=y-41+(o.nod||0),hc=L.hair,hh=L.hairHi;
+  ell(g,OUT,x,y+2,26,22);ell(g,L.cloth,x,y+2,25,21);ell(g,L.clothDk,x-15,y+6,9,18);ell(g,L.clothDk,x+16,y+6,8,18);ell(g,L.cloth,x,y+4,12,22);ell(g,L.clothHi,x-3,y-17,10,2);
+  R(g,OUT,x-5,y-28,11,10);R(g,L.skinDk,x-4,y-28,9,9);ell(g,L.clothDk,x,y-19,8,2);
+  if(st===1||st===5){ell(g,OUT,x,hy+8,12,14);ell(g,hc,x,hy+8,11,13)}
+  for(const sd of [-1,1]){ell(g,OUT,x+sd*10,hy+2,2,4);ell(g,L.skinDk,x+sd*10,hy+2,1,3)}
+  ell(g,OUT,x,hy,11,12);ell(g,L.skin,x,hy,10,11);ell(g,L.skinDk,x,hy+8,8,3);
+  if(st===3){ell(g,L.skinHi,x-3,hy-6,3,2)}
+  else if(st===2){ell(g,hc,x,hy-4,10,7);R(g,hc,x-9,hy-1,19,4);R(g,hh,x-4,hy-9,6,1)}
+  else if(st===1||st===5){ell(g,hc,x,hy-1,10,11);R(g,hc,x-10,hy+2,21,14);R(g,hh,x-5,hy-9,7,1);R(g,shade(hc,-.2),x-1,hy-6,1,20)}
+  else if(st===4){ell(g,OUT,x,hy-12,5,5);ell(g,hc,x,hy-12,4,4);ell(g,hc,x,hy-2,10,9);R(g,hh,x-5,hy-9,7,1);R(g,hh,x-1,hy-14,2,1)}
+  else if(st===6){for(const dx of [-7,0,7]){cap(g,OUT,x+dx,hy-5,x+dx*1.3,hy-14,3,1);cap(g,hc,x+dx,hy-5,x+dx*1.3,hy-13,2,.5)}ell(g,hc,x,hy-2,10,8);R(g,hh,x-5,hy-8,7,1)}
+  else{ell(g,hc,x,hy-2,10,9);R(g,hc,x-10,hy,21,6);R(g,hc,x-8,hy+6,17,2);R(g,hh,x-5,hy-9,7,1);R(g,shade(hc,-.2),x+3,hy-6,1,8)}
+  return{sl:[x-17,y-12],sr:[x+17,y-12],head:[x,hy]};
 }
-/* a sleeved arm drawn from a shoulder to a hand, seen from behind */
-function oArm(g,s,h,L){
-  L=L||scLook();ln(g,OUT,s[0],s[1],h[0],h[1],8);ln(g,L.cloth,s[0],s[1],lerp(s[0],h[0],.72),lerp(s[1],h[1],.72),6);ln(g,L.skin,lerp(s[0],h[0],.7),lerp(s[1],h[1],.7),h[0],h[1],5);R(g,L.skinHi,h[0]-1,h[1]-2,3,1);
+/* a sleeved arm drawn from a shoulder to a hand, seen from behind (smaller, further away) */
+function oArm(g,s,h,L,o){
+  L=L||scLook();o=o||{};const mx=lerp(s[0],h[0],.62),my=lerp(s[1],h[1],.62);
+  cap(g,OUT,s[0],s[1],h[0],h[1],5.4,3.2);cap(g,L.cloth,s[0],s[1],mx,my,4.4,3.4);cap(g,L.clothDk,s[0]+2,s[1]+2,mx+1,my+2,1.4,1);cap(g,L.skin,mx,my,h[0],h[1],2.6,2.2);
+  hand(g,h[0],h[1],Object.assign({s:.62,a:Math.atan2(h[1]-s[1],h[0]-s[0])},o));
 }
 function woodTop(g,y0,c1,c2){R(g,c1,0,y0,160,80-y0);for(let y=y0+8;y<80;y+=10)R(g,c2,0,y,160,1);for(let y=y0;y<80;y+=10)for(let x=(y/10%2)*37+9;x<160;x+=74)R(g,c2,x,y,1,8)}
 function vignette(g,a){const s=(a||.35);R(g,'rgba(8,6,10,'+s+')',0,0,160,6);R(g,'rgba(8,6,10,'+s+')',0,74,160,6);R(g,'rgba(8,6,10,'+s*.8+')',0,0,6,80);R(g,'rgba(8,6,10,'+s*.8+')',154,0,6,80)}
@@ -100,7 +129,7 @@ const SCENE_KITS={
     if(ph>=.95||u>.9)puff(g,px,py-4,seg(u,.9,1),'240,244,248');
     if(u>.9&&u<.97)glint(g,px+8,py-6,seg(u,.9,.97));
     const L=scLook(),B=backView(g,24,82);
-    oArm(g,B.sr,[52,py+4],L);R(g,L.skin,50,py+2,5,5);
+    oArm(g,B.sr,[52,py+4],L,{fist:true});
     vignette(g,.25);
   },
   /* CASH: first person at a counter. Sweep the coins together, scoop them, fan them, flip one into the light. */

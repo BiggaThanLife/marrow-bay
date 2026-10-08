@@ -3,13 +3,14 @@
 <title>Marrow Bay scene contact sheet</title>
 <style>body{font:13px system-ui;margin:12px;background:#10202a;color:#e6efe9}.g{display:grid;grid-template-columns:repeat(auto-fill,320px);gap:10px}.c{width:320px}canvas{width:320px;height:160px;image-rendering:pixelated;display:block;border:2px solid #2f4a5b}</style>
 <h3>Scene contact sheet (a look at every scene, not a pass or fail test)</h3>
-<p>Add ?only=nature,eat to show some types. Add ?t=800&p=0.5 to pick the moment. Add ?skin=3&hair=1&style=4&outfit=rust to try another look.</p>
+<p>Add ?only=nature,eat to show some types, ?big=1 (or 2) for large views. Add ?t=800&p=0.5 to pick the moment. Add ?skin=3&hair=1&style=4&outfit=rust to try another look.</p>
 <div class="g" id="grid"></div>
 <iframe id="game" src="../index.html" style="display:none"></iframe>
 <script>
 const f = document.getElementById('game');
 f.addEventListener('load', () => {
   const win = f.contentWindow, q = new URLSearchParams(location.search);
+  if (q.get('big')) document.head.insertAdjacentHTML('beforeend', '<style>.g{grid-template-columns:repeat(' + (+q.get('big') || 1) + ',' + Math.floor(780 / (+q.get('big') || 1)) + 'px)}.c{width:auto}canvas{width:100%;height:auto;aspect-ratio:2}h3,p{display:none}</style>');
   const only = (q.get('only') || '').split(',').filter(Boolean), t = +(q.get('t') || 700), p = +(q.get('p') || .5);
   win.eval(`start(Object.keys(BG)[0]);G.look.skin=${+(q.get('skin') || 1)};G.look.hair=${+(q.get('hair') || 0)};G.look.style=${+(q.get('style') || 0)};G.look.outfit=${JSON.stringify(q.get('outfit') || 'blue')}`);
   const rules = win.eval('SCENE_RULES'), DRAW = win.eval('SCENE_DRAW'), seen = new Set(), grid = document.getElementById('grid');

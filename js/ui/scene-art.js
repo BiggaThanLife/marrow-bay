@@ -18,42 +18,42 @@ function scLook(){
 }
 /* a look for someone else in a scene: skin, hair and cloth colours and a hair style */
 function mkLook(skin,hair,style,cloth){return{skin,skinDk:shade(skin,-.22),skinHi:shade(skin,.18),hair,hairHi:shade(hair,.3),cloth,clothDk:shade(cloth,-.28),clothHi:shade(cloth,.2),style,pants:'#3a3a48',boot:'#2a2a30'}}
-/* A person standing with their feet at (x,y). o: d facing (1 right, -1 left), ph walk phase 0-1, crouch pixels,
+/* A person standing with their feet at (x,y), built from round capsules. o: d facing (1 right, -1 left), ph walk phase 0-1, crouch pixels,
    fh and bh the front and back hand relative to the shoulder. Returns where the hands, shoulder and head are. */
 function figure(g,x,y,o){
   o=o||{};
   const L=o.look||scLook(),d=o.d||1,cr=o.crouch||0,lean=o.lean||0,sw=o.ph==null?0:Math.sin(o.ph*Math.PI*2);
-  const X=(dx,w)=>d>0?x+dx:x-dx-w,parts=[],P=(c,dx,dy,w,h)=>parts.push([c,X(dx-(dy<-11?lean:0),w),y+dy,w,h]);
-  const lf=Math.round(sw*3),lb=-lf,hip=-11+Math.round(cr*.5),legH=-3-hip;
+  const lf=sw*3,hipY=y-11+cr*.6,bx=x-d*lean*.5;
   const S=[x-d*lean,y-19+cr],fh=o.fh||[2+Math.round(sw*2),9],bh=o.bh||[-2-Math.round(sw*2),9];
   const F=[S[0]+d*fh[0],S[1]+fh[1]],B=[S[0]+d*bh[0],S[1]+bh[1]];
-  const hY=-33+cr;
-  P(L.pants,-3+lb,hip,3,legH);P(L.boot,-3+lb,-3,4,3);
-  P(L.pants,1+lf,hip,3,legH);P(L.boot,1+lf,-3,4,3);
-  P(L.cloth,-4,-22+cr,9,11);P(L.clothDk,-4,-22+cr,2,11);P(L.clothHi,1,-21+cr,4,1);
-  P('#2b2118',-4,-13+cr,9,2);P('#d8b04a',0,-13+cr,2,2);
-  P(L.skinDk,-1,-24+cr,3,3);P(L.skin,-3,-32+cr,8,8);P(L.skinDk,-3,-29+cr,2,3);
-  const st=L.style,hc=L.hair,hh=L.hairHi;
-  if(st===1){P(hc,-4,hY,9,4);P(hc,-4,hY+3,3,13)}
-  else if(st===2){P(hc,-3,hY+1,8,2)}
-  else if(st===3){/* bald */}
-  else if(st===4){P(hc,-4,hY,9,4);P(hc,-3,hY-3,5,3);P(hc,-4,hY+4,2,2)}
-  else if(st===5){P(hc,-4,hY,9,4);P(hc,-6,hY+3,3,9)}
-  else if(st===6){P(hc,-4,hY+1,9,3);P(hc,-4,hY-1,3,3);P(hc,-1,hY-2,4,3);P(hc,3,hY-1,3,3)}
-  else{P(hc,-4,hY,9,4);P(hc,-4,hY+4,2,3)}
-  if(st!==3&&st!==2)P(hh,-2,hY,4,1);
-  /* arms: a thick line from the shoulder, sleeve then hand */
-  const arm=(H,sleeve,pass)=>{
-    if(pass===0){ln(g,OUT,S[0],S[1],H[0],H[1],5);return}
-    const mx=lerp(S[0],H[0],.7),my=lerp(S[1],H[1],.7);
-    ln(g,sleeve,S[0],S[1],mx,my,3);R(g,L.skin,H[0]-1,H[1]-1,3,3);
-  };
-  arm(B,0,0);parts.forEach(p=>R(g,OUT,p[1]-1,p[2]-1,p[3]+2,p[4]+2));arm(F,0,0);
-  arm(B,L.clothDk,1);parts.forEach(p=>R(g,p[0],p[1],p[2],p[3],p[4]));
-  /* the eye, nose and mouth go on after the fills */
-  R(g,OUT,X(2-lean,1),y-29+cr,1,2);R(g,L.skin,X(5-lean,1),y-28+cr,1,2);R(g,L.skinDk,X(3-lean,2),y-25+cr,2,1);
-  arm(F,L.cloth,1);
-  return{F,B,S,head:[x,y-32+cr]};
+  const hx=x-d*lean+d*.5,hy=y-28+cr,st=L.style,hc=L.hair,hh=L.hairHi,back=d>0?-1:1;
+  /* limbs are capsules: an outline pass, then a fill */
+  const limb=(A,Bp,r,c,cd)=>{cap(g,OUT,A[0],A[1],Bp[0],Bp[1],r+1);cap(g,c,A[0],A[1],Bp[0],Bp[1],r);if(cd)cap(g,cd,A[0]-d*.6,A[1]+1,Bp[0]-d*.6,Bp[1],r*.45)};
+  const leg=(off,k)=>{const top=[bx+off,hipY],kn=[bx+off+d*(cr*.5)+k*.5,lerp(hipY,y-2,.5)-cr*.2],ft=[x+off+k,y-2];limb(top,kn,1.9,L.pants);limb(kn,ft,1.7,L.pants);
+    R(g,OUT,Math.min(ft[0]-2,ft[0]-2+d*2),y-3,6,4);R(g,L.boot,Math.min(ft[0]-1,ft[0]-1+d*2),y-2,4,2);R(g,shade(L.boot,.25),Math.min(ft[0]-1,ft[0]-1+d*2),y-2,4,1)};
+  const armD=(H,c,isFront)=>{limb(S,H,1.5,c,isFront?null:null);dsc(g,OUT,H[0],H[1],2.4);dsc(g,L.skin,H[0],H[1],1.5);R(g,L.skinHi,H[0]-1,H[1]-1,1,1)};
+  armD(B,L.clothDk,false);
+  leg(-1.2*d,-lf);leg(1.2*d,lf);
+  /* torso */
+  const t0=[bx,hipY-1],t1=[x-d*lean,y-21+cr];cap(g,OUT,t0[0],t0[1],t1[0],t1[1],5.2);cap(g,L.cloth,t0[0],t0[1],t1[0],t1[1],4.2);
+  cap(g,L.clothDk,t0[0]+back*2.6,t0[1],t1[0]+back*2.6,t1[1]+1,1.3);R(g,L.clothHi,t1[0]+d*1-1,t1[1]-3,3,1);
+  R(g,'#2b2118',bx-4,hipY-2,9,2);R(g,'#d8b04a',bx+d*1,hipY-2,2,2);
+  /* neck and head */
+  R(g,OUT,hx-2,hy+3,5,4);R(g,L.skinDk,hx-1,hy+3,3,4);
+  if(st===1||st===5){const bkx=hx+back*3.5;if(st===1)cap(g,OUT,bkx,hy,bkx,hy+11,2.6);else cap(g,OUT,bkx,hy-1,bkx+back*3,hy+7,2.4)}
+  if(st===4)dsc(g,OUT,hx+back*3.6,hy-4.6,3.2);
+  dsc(g,OUT,hx,hy,5.4);dsc(g,L.skin,hx,hy,4.4);dsc(g,L.skinDk,hx+back*2.2,hy+1.6,2);R(g,L.skin,hx-1+d*1,hy-2,3,5);
+  if(st===1){const bkx=hx+back*3.5;cap(g,hc,bkx,hy,bkx,hy+11,1.6)}
+  if(st===5){const bkx=hx+back*3.5;cap(g,hc,bkx,hy-1,bkx+back*3,hy+7,1.4)}
+  if(st===4)dsc(g,hc,hx+back*3.6,hy-4.6,2.2);
+  if(st===2){ell(g,hc,hx+back*.6,hy-3,4,2)}
+  else if(st===3){R(g,L.skinHi,hx-1,hy-4,3,1)}
+  else{ell(g,hc,hx+back*.7,hy-2.5,4.4,2.5);R(g,hc,d>0?hx-5:hx+2,hy-2,3,st===0?5:4);if(st===6){for(const k of [-3,0,3]){cap(g,OUT,hx+k,hy-4,hx+k+back,hy-8,1.4,.5);cap(g,hc,hx+k,hy-4,hx+k+back,hy-7,.8,.3)}}}
+  if(st!==3&&st!==2)R(g,hh,hx-2+back,hy-5,4,1);
+  /* face: eye, nose bump, mouth */
+  R(g,OUT,hx+d*2,hy-1,1,2);R(g,L.skin,hx+d*4.6-(d>0?0:1),hy,1,2);R(g,OUT,hx+d*5-(d>0?0:1),hy,1,1);R(g,L.skinDk,hx+d*2,hy+2,2,1);
+  armD(F,L.cloth,true);
+  return{F,B,S,head:[hx,hy-4]};
 }
 /* ----- props and effects ----- */
 function crate(g,x,y,w,h){R(g,OUT,x-1,y-1,w+2,h+2);R(g,'#b8873f',x,y,w,h);R(g,'#8f6429',x,y+Math.floor(h/2),w,1);R(g,'#8f6429',x,y,1,h);R(g,'#8f6429',x+w-1,y,1,h);R(g,'#d6a45a',x+1,y+1,w-2,1);R(g,'#5a3f1a',x+2,y+2,1,1);R(g,'#5a3f1a',x+w-3,y+h-3,1,1)}
@@ -158,8 +158,8 @@ const SCENE_DRAW={
       const fh=p<.55?[7,4]:p<.8?[lerp(7,15,stop),lerp(4,-3,stop)]:[lerp(15,4,stand),lerp(-3,10,stand)];
       const bh=p<.8?[lerp(5,13,stop),lerp(5,-1,stop)]:[lerp(13,-2,stand),lerp(-1,9,stand)];
       const f=figure(g,x,66,{d:1,ph:moving?ph:null,crouch,lean,fh,bh});
-      if(!placed)crate(g,f.F[0]-3,f.F[1]-6+(moving?Math.round(Math.sin(t/190)):0),12,9);
-      else crate(g,112,39,11,9);
+      if(!placed)crate(g,f.F[0]-9,f.F[1]-9+(moving?Math.round(Math.sin(t/190)):0),15,12);
+      else crate(g,110,36,15,12);
       if(p>=.72&&p<.82)puff(g,117,43,seg(p,.72,.82),'210,190,150');
       if(p>=.72&&p<.8)glint(g,124,42,seg(p,.72,.8));
       return;
@@ -168,7 +168,7 @@ const SCENE_DRAW={
     bgGarden(g,t);
     const raking=p<.76,s=p/.76*3,idx=Math.min(2,Math.floor(s)),v=s%1;
     const pull=raking?(v<.7?ease(v/.7):1-ease((v-.7)/.3)):0,hasPull=raking&&v<.7;
-    for(let i=0;i<3;i++){const full=!raking||i<idx,len=full?34:(i===idx?Math.round(34*(hasPull?pull:1)):0);if(len>0){R(g,'#3f2a14',58+(i===idx&&!full?34-len:0),60+i*5,len,1);R(g,'#8a6a42',58+(i===idx&&!full?34-len:0),61+i*5,len,1)}}
+    for(let i=0;i<3;i++){const full=!raking||i<idx,len=full?34:(i===idx?Math.round(34*(hasPull?pull:1)):0);if(len>0){const x0=58+(i===idx&&!full?34-len:0);R(g,'#8a6a42',x0,59+i*5,len,1);R(g,'#2e1e0c',x0,60+i*5,len,2);for(let k=0;k<len;k+=7)R(g,'#7a5a38',x0+k,58+i*5,2,1)}}
     if(raking){
       const f=figure(g,38,68,{d:1,fh:[lerp(14,7,pull),7],bh:[lerp(10,4,pull),4]});
       const hx=f.F[0]+10,hy=70;ln(g,OUT,f.B[0],f.B[1],hx,hy,4);ln(g,'#8a6430',f.B[0],f.B[1],hx,hy,2);
@@ -178,7 +178,7 @@ const SCENE_DRAW={
       const k=ease(seg(p,.76,.84)),f=figure(g,44,68,{d:1,fh:[9,5],bh:[8,6],crouch:0});
       ln(g,OUT,f.F[0]+1,f.F[1],f.F[0]+1,70,4);ln(g,'#8a6430',f.F[0]+1,f.F[1],f.F[0]+1,70,2);
       R(g,OUT,f.F[0]-5,70-1,13,4);R(g,'#c9ced3',f.F[0]-4,70,11,2);
-      for(let i=0;i<3;i++)R(g,'#7ac46a',66+i*5,68-i%2,2,2);
+      ell(g,'#4a2e16',72,69,8,3);for(let i=0;i<7;i++)R(g,i%2?'#7ac46a':'#c4a24a',66+i*2,66+(i%3),2,2);
       if(k>.5&&p<.95)R(g,'#9ad8ff',f.head[0]+5,f.head[1]+((t/90)%6),1,2);
     }
   },
