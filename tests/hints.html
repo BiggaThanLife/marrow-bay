@@ -33,13 +33,14 @@ f.addEventListener('load', () => {
       heat: () => { G().heat = 2 },
       biz: () => { G().biz.push({ key: '16,13', d: 'Grid', price: 1, type: 'cafe', level: 1, workers: [], till: 0 }) },
       cameras: () => {},
+      backup: () => { win.eval('G.t=2*1440+8*60') },
       tenants: () => { G().biz[0].type = 'rental'; G().biz[0].tenants = [{ id: 1 }]; G().biz[0].applicants = [] }
     };
     const camOrig = win.camNear;
     api.HINTS.forEach(h => {
       win.camNear = h.id === 'cameras' ? () => true : camOrig;
       if (!cond[h.id]) return errs.push('no test for ' + h.id);
-      api.popClear(); cond[h.id]();
+      api.popClear(); delete G().tips[h.id]; cond[h.id]();
       // earlier hints may fire first; drain until this one has fired
       let guard = 0; while (!G().tips[h.id] && guard++ < 12) { api.popClear(); api.hintsCheck(); }
       if (!G().tips[h.id]) errs.push('hint did not fire ' + h.id);
