@@ -1,6 +1,6 @@
 "use strict";
-/* Pixel art for the action scenes. The canvas is 160x80. People are about 33 pixels tall, drawn from shaded parts with a dark outline,
-   in your own skin, hair and clothes. Each scene is a function (g,t,p,kit): t is milliseconds since it began, p is 0 to 1. */
+/* Pixel art for the action scenes. The canvas is 160x80. People are about 34 pixels tall and drawn like the people on the map (square head,
+   block body, short legs, dark outline) in your own skin, hair, hat and clothes. Each scene is a function (g,t,p,kit): t is milliseconds since it began, p is 0 to 1. */
 const OUT='#151720';
 const R=(g,c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(0,Math.round(w)),Math.max(0,Math.round(h)))};
 const ln=(g,c,x0,y0,x1,y1,th)=>{th=th||2;const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1);for(let i=0;i<=n;i++)R(g,c,x0+(x1-x0)*i/n-th/2,y0+(y1-y0)*i/n-th/2,th,th)};
@@ -18,42 +18,44 @@ function scLook(){
 }
 /* a look for someone else in a scene: skin, hair and cloth colours and a hair style */
 function mkLook(skin,hair,style,cloth){return{skin,skinDk:shade(skin,-.22),skinHi:shade(skin,.18),hair,hairHi:shade(hair,.3),cloth,clothDk:shade(cloth,-.28),clothHi:shade(cloth,.2),style,pants:'#3a3a48',boot:'#2a2a30'}}
-/* A person standing with their feet at (x,y), built from round capsules. o: d facing (1 right, -1 left), ph walk phase 0-1, crouch pixels,
-   fh and bh the front and back hand relative to the shoulder. Returns where the hands, shoulder and head are. */
+/* A person standing with their feet at (x,y), drawn like the people on the map: a square head, a block body and short legs, with a dark outline.
+   o: d facing (1 right, -1 left), ph walk phase 0-1, fh and bh the front and back hand relative to the shoulder, look someone else's look.
+   Returns where the hands, shoulder and head are. */
 function figure(g,x,y,o){
   o=o||{};
-  const L=o.look||scLook(),d=o.d||1,cr=o.crouch||0,lean=o.lean||0,sw=o.ph==null?0:Math.sin(o.ph*Math.PI*2);
-  const lf=sw*3,hipY=y-11+cr*.6,bx=x-d*lean*.5;
-  const S=[x-d*lean,y-19+cr],fh=o.fh||[2+Math.round(sw*2),9],bh=o.bh||[-2-Math.round(sw*2),9];
+  const L=o.look||scLook(),me=!o.look,d=o.d||1,sw=o.ph==null?0:Math.round(Math.sin(o.ph*Math.PI*2)*2);
+  const S=[x,y-19],fh=o.fh||[3+sw,10],bh=o.bh||[-3-sw,10];
   const F=[S[0]+d*fh[0],S[1]+fh[1]],B=[S[0]+d*bh[0],S[1]+bh[1]];
-  const hx=x-d*lean+d*.5,hy=y-28+cr,st=L.style,hc=L.hair,hh=L.hairHi,back=d>0?-1:1;
-  /* limbs are capsules: an outline pass, then a fill */
-  const limb=(A,Bp,r,c,cd)=>{cap(g,OUT,A[0],A[1],Bp[0],Bp[1],r+1);cap(g,c,A[0],A[1],Bp[0],Bp[1],r);if(cd)cap(g,cd,A[0]-d*.6,A[1]+1,Bp[0]-d*.6,Bp[1],r*.45)};
-  const leg=(off,k)=>{const top=[bx+off,hipY],kn=[bx+off+d*(cr*.5)+k*.5,lerp(hipY,y-2,.5)-cr*.2],ft=[x+off+k,y-2];limb(top,kn,1.9,L.pants);limb(kn,ft,1.7,L.pants);
-    R(g,OUT,Math.min(ft[0]-2,ft[0]-2+d*2),y-3,6,4);R(g,L.boot,Math.min(ft[0]-1,ft[0]-1+d*2),y-2,4,2);R(g,shade(L.boot,.25),Math.min(ft[0]-1,ft[0]-1+d*2),y-2,4,1)};
-  const armD=(H,c,isFront)=>{limb(S,H,1.5,c,isFront?null:null);dsc(g,OUT,H[0],H[1],2.4);dsc(g,L.skin,H[0],H[1],1.5);R(g,L.skinHi,H[0]-1,H[1]-1,1,1)};
-  armD(B,L.clothDk,false);
-  leg(-1.2*d,-lf);leg(1.2*d,lf);
-  /* torso */
-  const t0=[bx,hipY-1],t1=[x-d*lean,y-21+cr];cap(g,OUT,t0[0],t0[1],t1[0],t1[1],5.2);cap(g,L.cloth,t0[0],t0[1],t1[0],t1[1],4.2);
-  cap(g,L.clothDk,t0[0]+back*2.6,t0[1],t1[0]+back*2.6,t1[1]+1,1.3);R(g,L.clothHi,t1[0]+d*1-1,t1[1]-3,3,1);
-  R(g,'#2b2118',bx-4,hipY-2,9,2);R(g,'#d8b04a',bx+d*1,hipY-2,2,2);
-  /* neck and head */
-  R(g,OUT,hx-2,hy+3,5,4);R(g,L.skinDk,hx-1,hy+3,3,4);
-  if(st===1||st===5){const bkx=hx+back*3.5;if(st===1)cap(g,OUT,bkx,hy,bkx,hy+11,2.6);else cap(g,OUT,bkx,hy-1,bkx+back*3,hy+7,2.4)}
-  if(st===4)dsc(g,OUT,hx+back*3.6,hy-4.6,3.2);
-  dsc(g,OUT,hx,hy,5.4);dsc(g,L.skin,hx,hy,4.4);dsc(g,L.skinDk,hx+back*2.2,hy+1.6,2);R(g,L.skin,hx-1+d*1,hy-2,3,5);
-  if(st===1){const bkx=hx+back*3.5;cap(g,hc,bkx,hy,bkx,hy+11,1.6)}
-  if(st===5){const bkx=hx+back*3.5;cap(g,hc,bkx,hy-1,bkx+back*3,hy+7,1.4)}
-  if(st===4)dsc(g,hc,hx+back*3.6,hy-4.6,2.2);
-  if(st===2){ell(g,hc,hx+back*.6,hy-3,4,2)}
-  else if(st===3){R(g,L.skinHi,hx-1,hy-4,3,1)}
-  else{ell(g,hc,hx+back*.7,hy-2.5,4.4,2.5);R(g,hc,d>0?hx-5:hx+2,hy-2,3,st===0?5:4);if(st===6){for(const k of [-3,0,3]){cap(g,OUT,hx+k,hy-4,hx+k+back,hy-8,1.4,.5);cap(g,hc,hx+k,hy-4,hx+k+back,hy-7,.8,.3)}}}
-  if(st!==3&&st!==2)R(g,hh,hx-2+back,hy-5,4,1);
-  /* face: eye, nose bump, mouth */
-  R(g,OUT,hx+d*2,hy-1,1,2);R(g,L.skin,hx+d*4.6-(d>0?0:1),hy,1,2);R(g,OUT,hx+d*5-(d>0?0:1),hy,1,1);R(g,L.skinDk,hx+d*2,hy+2,2,1);
-  armD(F,L.cloth,true);
-  return{F,B,S,head:[hx,hy-4]};
+  const X=(dx,w)=>d>0?x+dx:x-dx-w,parts=[],P=(c,dx,dy,w,h)=>parts.push([c,X(dx,w),y+dy,w,h]);
+  const st=L.style,hc=L.hair,hat=me&&typeof G!=='undefined'&&G&&G.look?G.look.hat:null;
+  /* legs (they swap a little as you walk), body, head */
+  P(L.pants,-6-sw,-8+(sw>0?-1:0),5,8);P(L.pants,1+sw,-8+(sw<0?-1:0),5,8);
+  P(L.cloth,-7,-23,14,16);P(L.clothDk,-7,-23,3,16);P(L.clothDk,-7,-9,14,2);P(me?'#ffffff':L.clothHi,-7,-23,14,2);
+  P(L.skin,-4,-33,10,10);P(L.skinDk,-4,-33,2,10);
+  /* hair, by style, the same styles as the map */
+  if(st===1){P(hc,-4,-34,10,3);P(hc,-5,-34,3,13)}
+  else if(st===2){P(shade(hc,.35),-4,-34,10,2)}
+  else if(st===3){}
+  else if(st===4){P(hc,-4,-34,10,3);P(hc,-3,-38,5,4)}
+  else if(st===5){P(hc,-4,-34,10,3);P(hc,-6,-32,3,9)}
+  else if(st===6){P(hc,-5,-38,12,6);P(hc,-5,-32,3,4)}
+  else{P(hc,-4,-34,10,3);P(hc,-5,-34,3,6)}
+  if(hat==='cap'){P('#3a2a1c',-5,-36,11,4);P('#3a2a1c',5,-33,4,2)}
+  else if(hat==='beanie'){P('#b5453a',-4,-38,10,6);P('#d8665a',-4,-34,10,1)}
+  else if(hat==='sun'){P('#e0c060',-9,-34,19,2);P('#e0c060',-4,-39,10,5)}
+  else if(hat==='wool'){P('#8a929c',-4,-38,10,6);P('#d8dde4',-1,-41,4,3)}
+  else if(hat==='brim'){P('#5a4326',-8,-34,17,2);P('#5a4326',-4,-39,9,5)}
+  /* arms: a block line from the shoulder, ending in a square hand */
+  const arm=(H,c,pass)=>{
+    if(pass===0){ln(g,OUT,S[0],S[1],H[0],H[1],6);R(g,OUT,H[0]-2.5,H[1]-2.5,6,6);return}
+    ln(g,c,S[0],S[1],lerp(S[0],H[0],.75),lerp(S[1],H[1],.75),4);R(g,L.skin,H[0]-1.5,H[1]-1.5,4,4);
+  };
+  R(g,'rgba(0,0,0,.25)',x-8,y,17,2);
+  arm(B,0,0);parts.forEach(p=>R(g,OUT,p[1]-1,p[2]-1,p[3]+2,p[4]+2));
+  arm(B,L.clothDk,1);parts.forEach(p=>R(g,p[0],p[1],p[2],p[3],p[4]));
+  R(g,OUT,X(3,2),y-30,2,2);
+  arm(F,0,0);arm(F,L.cloth,1);
+  return{F,B,S,head:[x,y-34]};
 }
 /* ----- props and effects ----- */
 function crate(g,x,y,w,h){R(g,OUT,x-1,y-1,w+2,h+2);R(g,'#b8873f',x,y,w,h);R(g,'#8f6429',x,y+Math.floor(h/2),w,1);R(g,'#8f6429',x,y,1,h);R(g,'#8f6429',x+w-1,y,1,h);R(g,'#d6a45a',x+1,y+1,w-2,1);R(g,'#5a3f1a',x+2,y+2,1,1);R(g,'#5a3f1a',x+w-3,y+h-3,1,1)}
@@ -154,10 +156,9 @@ const SCENE_DRAW={
       crate(g,106,57,11,9);crate(g,118,57,11,9);crate(g,112,48,11,9);
       const walk=seg(p,0,.55),stop=ease(seg(p,.55,.72)),placed=p>=.72,stand=ease(seg(p,.8,1));
       const x=lerp(14,100,walk),moving=p<.55,ph=(t/380)%1;
-      const crouch=Math.round(stop*4*(1-stand)),lean=p<.72?(moving?2:Math.round(2*(1-stop))):0;
-      const fh=p<.55?[7,4]:p<.8?[lerp(7,15,stop),lerp(4,-3,stop)]:[lerp(15,4,stand),lerp(-3,10,stand)];
-      const bh=p<.8?[lerp(5,13,stop),lerp(5,-1,stop)]:[lerp(13,-2,stand),lerp(-1,9,stand)];
-      const f=figure(g,x,66,{d:1,ph:moving?ph:null,crouch,lean,fh,bh});
+      const fh=p<.55?[9,3]:p<.8?[lerp(9,15,stop),lerp(3,-3,stop)]:[4,10];
+      const bh=p<.8?[lerp(6,12,stop),lerp(3,-2,stop)]:[-3,10];
+      const f=figure(g,x,66,{d:1,ph:moving?ph:null,fh,bh});
       if(!placed)crate(g,f.F[0]-9,f.F[1]-9+(moving?Math.round(Math.sin(t/190)):0),15,12);
       else crate(g,110,36,15,12);
       if(p>=.72&&p<.82)puff(g,117,43,seg(p,.72,.82),'210,190,150');
@@ -175,7 +176,7 @@ const SCENE_DRAW={
       R(g,OUT,hx-1,hy-1,13,4);R(g,'#c9ced3',hx,hy,11,2);for(let i=0;i<4;i++)R(g,'#c9ced3',hx+i*3,hy+2,1,3);
       if(hasPull)for(let i=0;i<5;i++){const q=(pull+i*.2)%1;R(g,i%2?'#7a5a38':'#7ac46a',hx+4+i*2-q*6,hy-2-q*(6+i*2),2,2)}
     }else{
-      const k=ease(seg(p,.76,.84)),f=figure(g,44,68,{d:1,fh:[9,5],bh:[8,6],crouch:0});
+      const k=ease(seg(p,.76,.84)),f=figure(g,44,68,{d:1,fh:[9,5],bh:[8,6]});
       ln(g,OUT,f.F[0]+1,f.F[1],f.F[0]+1,70,4);ln(g,'#8a6430',f.F[0]+1,f.F[1],f.F[0]+1,70,2);
       R(g,OUT,f.F[0]-5,70-1,13,4);R(g,'#c9ced3',f.F[0]-4,70,11,2);
       ell(g,'#4a2e16',72,69,8,3);for(let i=0;i<7;i++)R(g,i%2?'#7ac46a':'#c4a24a',66+i*2,66+(i%3),2,2);
@@ -185,19 +186,18 @@ const SCENE_DRAW={
   cash(g,t,p,kit){viewDraw('cash',kit,g,t,p)},
   rest(g,t,p,kit){
     if(viewDraw('rest',kit,g,t,p))return;
-    /* walk to the bed, sit on the edge, lie down, pull the blanket up, lamp off, the clock races, morning */
+    /* resting in bed: the lamp clicks off, the clock races, the room goes dark and then warms to morning */
     bgBedroom(g,t,false);
-    const L=scLook(),lying=p>=.3,lampOn=p<.42;
+    const L=scLook(),lampOn=p<.22;
     R(g,OUT,36,41,80,22);R(g,'#6a4a2a',37,42,78,4);R(g,'#4a3320',37,56,5,12);R(g,'#4a3320',110,56,5,12);R(g,'#4a3320',37,36,5,24);R(g,'#e8e8f0',42,40,22,8);R(g,'#c8c8d8',42,46,22,2);
-    const bx=Math.round(lerp(92,56,ease(seg(p,.3,.44))));
-    R(g,L.cloth,bx,43,114-bx,12);R(g,L.clothDk,bx,52,114-bx,3);R(g,L.clothHi,bx,43,114-bx,2);for(let x=bx+8;x<112;x+=12)R(g,L.clothDk,x,45,1,8);
-    if(lying){R(g,L.skin,48,36,10,9);R(g,L.skinDk,48,40,2,4);R(g,L.hair,48,34,10,5);R(g,L.hairHi,50,34,4,1);R(g,OUT,54,39,2,1)}
+    const breathe=Math.round(Math.sin(t/500));
+    R(g,OUT,47,34,12,11);R(g,L.skin,48,35,10,9);R(g,L.skinDk,48,35,2,9);if(L.style!==3){R(g,L.hair,48,34,10,4);R(g,L.hairHi,50,34,4,1)}R(g,OUT,55,39,2,1);
+    R(g,OUT,55,42-breathe,61,14+breathe);R(g,L.cloth,56,43-breathe,59,12+breathe);R(g,L.clothDk,56,52,59,3);R(g,L.clothHi,56,43-breathe,59,2);for(let x=64;x<112;x+=12)R(g,L.clothDk,x,45-breathe,1,8+breathe);
     R(g,'#5a4128',120,48,16,3);R(g,'#4a3722',122,51,3,14);R(g,'#4a3722',131,51,3,14);
     R(g,'#d8b04a',124,36,8,12);if(lampOn){R(g,'#f6e08a',125,37,6,4);R(g,'rgba(255,220,120,.2)',112,26,40,30)}else R(g,'#6a5a2a',125,37,6,4);
-    if(p<.3){const w=p<.2,k=seg(p,0,.2);figure(g,w?lerp(4,28,k):28,68,{d:1,ph:w?(t/380)%1:null,crouch:w?0:Math.round(ease(seg(p,.2,.3))*7),fh:w?null:[5,12],bh:w?null:[3,12]})}
-    if(p>=.5)for(let i=0;i<3;i++){const zy=((t/110+i*14)%46);if(zy<34){const a=(1-zy/36).toFixed(2),zx=62+i*8+Math.sin(t/220+i)*2,y=34-zy*.6,s=4+i,c='rgba(230,238,255,'+a+')';R(g,c,zx,y,s,1);R(g,c,zx+s-1,y+1,1,1);R(g,c,zx+1,y+2,1,1);R(g,c,zx,y+3,s,1)}}
-    dialRing(g,20,22,9,'#f4f2e8','#151720');const a=p>=.42?t/60:0;for(let k=1;k<8;k++)R(g,'#151720',20+Math.round(Math.cos(a)*k),22+Math.round(Math.sin(a)*k),1,1);for(let k=1;k<5;k++)R(g,'#c24a3a',20+Math.round(Math.cos(a/12)*k),22+Math.round(Math.sin(a/12)*k),1,1);
-    const night=ease(seg(p,.42,.55))*(1-ease(seg(p,.8,.94)));R(g,'rgba(0,0,12,'+(.55*night).toFixed(2)+')',0,0,160,80);
+    if(p>=.28)for(let i=0;i<3;i++){const zy=((t/110+i*14)%46);if(zy<34){const a=(1-zy/36).toFixed(2),zx=62+i*8+Math.sin(t/220+i)*2,y=34-zy*.6,s=4+i,c='rgba(230,238,255,'+a+')';R(g,c,zx,y,s,1);R(g,c,zx+s-1,y+1,1,1);R(g,c,zx+1,y+2,1,1);R(g,c,zx,y+3,s,1)}}
+    dialRing(g,20,22,9,'#f4f2e8','#151720');const a=p>=.22?t/60:0;for(let k=1;k<8;k++)R(g,'#151720',20+Math.round(Math.cos(a)*k),22+Math.round(Math.sin(a)*k),1,1);for(let k=1;k<5;k++)R(g,'#c24a3a',20+Math.round(Math.cos(a/12)*k),22+Math.round(Math.sin(a/12)*k),1,1);
+    const night=ease(seg(p,.22,.36))*(1-ease(seg(p,.8,.94)));R(g,'rgba(0,0,12,'+(.55*night).toFixed(2)+')',0,0,160,80);
     const morn=ease(seg(p,.88,1));if(morn>0)R(g,'rgba(255,200,120,'+(.16*morn).toFixed(2)+')',0,0,160,80);
   },
   nature(g,t,p,kit){

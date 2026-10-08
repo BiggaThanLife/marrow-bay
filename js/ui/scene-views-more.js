@@ -195,7 +195,7 @@ Object.assign(SCENE_KITS,{
     R(g,OUT,92,32,40,5);R(g,'#8a6430',93,33,38,3);
     for(let i=0;i<n;i++){const y=60-i*8,fl=(i===n-1&&((p-.2*(i+1))*5)<.12);R(g,OUT,94,y-1,34,9);R(g,fl?'#f4d8a0':'#b8873f',95,y,32,7);R(g,'#8f6429',95,y+3,32,1);R(g,'#d6a45a',95,y,32,1)}
     if(done){for(let r=0;r<8;r++){const wdt=48-r*5;R(g,OUT,112-wdt/2-1,26-r*2-1,wdt+2,4);R(g,'#a83a2a',112-wdt/2,26-r*2,wdt,3)}R(g,'#c24a3a',92,32,40,1);R(g,OUT,106,50,12,16);R(g,'#6a4220',107,51,10,15);R(g,'#f2b84b',115,58,1,2)}
-    const x=done?lerp(60,34,ease(seg(p,.78,.92))):60,hit=p<.75&&((p/.0375)%2)>1.1,standing=p>=.78;
+    const x=60,hit=p<.75&&((p/.0375)%2)>1.1,standing=p>=.78;
     const f=figure(g,x,68,{d:1,fh:standing?[3,8]:hit?[10,5]:[8,-13],bh:standing?[3,8]:[5,4]});
     if(!standing){const hx=f.F[0],hy=f.F[1];ln(g,OUT,hx,hy,hx+9,hy-9,4);ln(g,'#8a6430',hx,hy,hx+9,hy-9,2);R(g,OUT,hx+6,hy-15,10,8);R(g,'#8a929c',hx+7,hy-14,8,6);R(g,'#c9ced3',hx+7,hy-14,8,2)}
     for(const [a,b] of [[.2,.3],[.4,.5],[.6,.7]])if(p>=a&&p<b)puff(g,110,62,seg(p,a,b),'210,190,150');

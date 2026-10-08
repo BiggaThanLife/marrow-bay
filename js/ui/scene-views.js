@@ -48,27 +48,27 @@ function arm(g,x,y,fx,fy,o){
   const c0=[sx-vx*5*s,sy-vy*5*s],c1=[sx+vx*5*s,sy+vy*5*s];cap(g,o.sleeve?shade(o.sleeve,-.25):L.clothDk,c0[0],c0[1],c1[0],c1[1],.8*s);
   hand(g,x+ux*0,y+uy*0,Object.assign({},o,{a}));
 }
-/* ----- over the shoulder: the back of the player's head and shoulders, bottom of the frame ----- */
+/* ----- over the shoulder: the back of the player's head and shoulders, drawn in the same blocky style as the map ----- */
 function backView(g,x,y,o){
-  o=o||{};const L=o.look||scLook(),st=L.style,hy=y-41+(o.nod||0),hc=L.hair,hh=L.hairHi;
-  ell(g,OUT,x,y+2,26,22);ell(g,L.cloth,x,y+2,25,21);ell(g,L.clothDk,x-15,y+6,9,18);ell(g,L.clothDk,x+16,y+6,8,18);ell(g,L.cloth,x,y+4,12,22);ell(g,L.clothHi,x-3,y-17,10,2);
-  R(g,OUT,x-5,y-28,11,10);R(g,L.skinDk,x-4,y-28,9,9);ell(g,L.clothDk,x,y-19,8,2);
-  if(st===1||st===5){ell(g,OUT,x,hy+8,12,14);ell(g,hc,x,hy+8,11,13)}
-  for(const sd of [-1,1]){ell(g,OUT,x+sd*10,hy+2,2,4);ell(g,L.skinDk,x+sd*10,hy+2,1,3)}
-  ell(g,OUT,x,hy,11,12);ell(g,L.skin,x,hy,10,11);ell(g,L.skinDk,x,hy+8,8,3);
-  if(st===3){ell(g,L.skinHi,x-3,hy-6,3,2)}
-  else if(st===2){ell(g,hc,x,hy-4,10,7);R(g,hc,x-9,hy-1,19,4);R(g,hh,x-4,hy-9,6,1)}
-  else if(st===1||st===5){ell(g,hc,x,hy-1,10,11);R(g,hc,x-10,hy+2,21,14);R(g,hh,x-5,hy-9,7,1);R(g,shade(hc,-.2),x-1,hy-6,1,20)}
-  else if(st===4){ell(g,OUT,x,hy-12,5,5);ell(g,hc,x,hy-12,4,4);ell(g,hc,x,hy-2,10,9);R(g,hh,x-5,hy-9,7,1);R(g,hh,x-1,hy-14,2,1)}
-  else if(st===6){for(const dx of [-7,0,7]){cap(g,OUT,x+dx,hy-5,x+dx*1.3,hy-14,3,1);cap(g,hc,x+dx,hy-5,x+dx*1.3,hy-13,2,.5)}ell(g,hc,x,hy-2,10,8);R(g,hh,x-5,hy-8,7,1)}
-  else{ell(g,hc,x,hy-2,10,9);R(g,hc,x-10,hy,21,6);R(g,hc,x-8,hy+6,17,2);R(g,hh,x-5,hy-9,7,1);R(g,shade(hc,-.2),x+3,hy-6,1,8)}
-  return{sl:[x-17,y-12],sr:[x+17,y-12],head:[x,hy]};
+  o=o||{};const L=o.look||scLook(),st=L.style,hy=y-50+(o.nod||0),hc=L.hair,hh=L.hairHi;
+  R(g,OUT,x-24,y-26,49,28);R(g,L.cloth,x-23,y-25,47,27);R(g,L.clothDk,x-23,y-25,5,27);R(g,L.clothDk,x+18,y-25,5,27);R(g,o.look?L.clothHi:'#ffffff',x-23,y-25,47,2);R(g,L.clothDk,x,y-21,1,21);
+  R(g,OUT,x-5,y-32,11,8);R(g,L.skinDk,x-4,y-31,9,7);
+  if(st===1||st===5){R(g,OUT,x-12,hy+9,24,20);R(g,hc,x-11,hy+10,22,18)}
+  for(const sx of [x-13,x+11]){R(g,OUT,sx,hy+7,3,7);R(g,L.skinDk,sx+(sx<x?1:0),hy+8,2,5)}
+  R(g,OUT,x-11,hy-1,22,22);R(g,L.skin,x-10,hy,20,20);R(g,L.skinDk,x-10,hy+16,20,4);
+  if(st===3){R(g,L.skinHi,x-6,hy+2,8,2)}
+  else if(st===2){R(g,shade(hc,.35),x-10,hy,20,6)}
+  else if(st===1||st===5){R(g,hc,x-10,hy,20,20);R(g,hh,x-6,hy+2,8,1)}
+  else if(st===4){R(g,OUT,x-5,hy-8,10,9);R(g,hc,x-4,hy-7,8,7);R(g,hc,x-10,hy,20,13);R(g,hh,x-6,hy+2,8,1)}
+  else if(st===6){R(g,OUT,x-13,hy-6,26,20);R(g,hc,x-12,hy-5,24,18);R(g,hh,x-7,hy-3,9,1)}
+  else{R(g,hc,x-10,hy,20,14);R(g,hh,x-6,hy+2,8,1)}
+  return{sl:[x-17,y-14],sr:[x+17,y-14],head:[x,hy]};
 }
-/* a sleeved arm drawn from a shoulder to a hand, seen from behind (smaller, further away) */
-function oArm(g,s,h,L,o){
-  L=L||scLook();o=o||{};const mx=lerp(s[0],h[0],.62),my=lerp(s[1],h[1],.62);
-  cap(g,OUT,s[0],s[1],h[0],h[1],5.4,3.2);cap(g,L.cloth,s[0],s[1],mx,my,4.4,3.4);cap(g,L.clothDk,s[0]+2,s[1]+2,mx+1,my+2,1.4,1);cap(g,L.skin,mx,my,h[0],h[1],2.6,2.2);
-  hand(g,h[0],h[1],Object.assign({s:.62,a:Math.atan2(h[1]-s[1],h[0]-s[0])},o));
+/* a sleeved arm from a shoulder to a square hand, seen from behind */
+function oArm(g,s,h,L){
+  L=L||scLook();const mx=lerp(s[0],h[0],.7),my=lerp(s[1],h[1],.7);
+  ln(g,OUT,s[0],s[1],h[0],h[1],7);R(g,OUT,h[0]-3.5,h[1]-3.5,8,8);
+  ln(g,L.cloth,s[0],s[1],mx,my,5);ln(g,L.skin,mx,my,h[0],h[1],3);R(g,L.skin,h[0]-2.5,h[1]-2.5,6,6);R(g,L.skinHi,h[0]-2.5,h[1]-2.5,6,1);
 }
 function woodTop(g,y0,c1,c2){R(g,c1,0,y0,160,80-y0);for(let y=y0+8;y<80;y+=10)R(g,c2,0,y,160,1);for(let y=y0;y<80;y+=10)for(let x=(y/10%2)*37+9;x<160;x+=74)R(g,c2,x,y,1,8)}
 function vignette(g,a){const s=(a||.35);R(g,'rgba(8,6,10,'+s+')',0,0,160,6);R(g,'rgba(8,6,10,'+s+')',0,74,160,6);R(g,'rgba(8,6,10,'+s*.8+')',0,0,6,80);R(g,'rgba(8,6,10,'+s*.8+')',154,0,6,80)}
