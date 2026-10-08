@@ -29,7 +29,7 @@ f.addEventListener('load', () => {
     const c1 = api.crewCandidates().map(c => c.id).join(), c2 = api.crewCandidates().map(c => c.id).join();
     if (api.crewCandidates().length !== 3 || c1 !== c2) errs.push('candidates not 3 and stable: ' + c1 + ' / ' + c2);
     // hire: fee from dirty first
-    G().dirty = 1000; const lou = 'lou', fee = api.crewWage(api.crewDef(lou)) * 3;
+    G().dirty = 1000; const lou = 'moe', fee = api.crewWage(api.crewDef(lou)) * 3;
     api.crewHire(lou); if (G().crew.length !== 1 || G().dirty !== 1000 - fee || G().cash !== 5000) errs.push('hire fee not paid from dirty cash');
     ['odette', 'june', 'rafi'].forEach(id => api.crewHire(id));
     if (G().crew.length !== 4) errs.push('could not hire four'); if (!/full/.test(api.crewHire('mei'))) errs.push('crew max not enforced');
@@ -45,14 +45,14 @@ f.addEventListener('load', () => {
     G().notor = 0;
     // hustle earns dirty cash; guards raise racket pay
     api.crewSetJob('rafi', 'hustle'); G().dirty = 500; const d0 = G().dirty; fix(.5); api.crewDaily(); unfix(); flush(); if (!(G().dirty > d0 - 200)) errs.push('hustle/wages math odd');
-    G().turf.door = 'player'; const r = api.RACKETS.find(x => x.id === 'door'), pay0 = api.racketPay(r); api.crewSetJob('lou', 'guard'); if (!(api.racketPay(r) > pay0)) errs.push('guards did not raise racket pay');
+    G().turf.door = 'player'; const r = api.RACKETS.find(x => x.id === 'door'), pay0 = api.racketPay(r); api.crewSetJob('moe', 'guard'); if (!(api.racketPay(r) > pay0)) errs.push('guards did not raise racket pay');
     // jail and bail
     const od = G().crew.find(m => m.id === 'odette'); api.crewJail(od, 3, 'test'); flush(); if (api.crewSkill('lock') !== 0) errs.push('jailed member still counted');
     G().cash = 5000; api.crewBailOut('odette'); if (api.crewSkill('lock') !== 3) errs.push('bail did not free');
     // rival: defended hit and lost hit
     G().rival.truce = 0; G().arc = null; G().turf.pawn = 'salt';
     fix(.0); api.rivalDaily(); unfix(); flush(); if (G().turf.door !== 'player' || !(G().rival.held >= 1)) errs.push('defended hit did not hold');
-    api.crewSetJob('lou', 'idle'); G().rival.str = 100; const def = api.rivalDefense(); stats.weakDefense = def;
+    api.crewSetJob('moe', 'idle'); G().rival.str = 100; const def = api.rivalDefense(); stats.weakDefense = def;
     let calls = 0; win.Math.random = () => { calls++; return calls === 1 ? 0 : .99 }; api.rivalDaily(); unfix(); flush();
     if (G().turf.door === 'player') errs.push('lost hit did not take the racket (' + def + ')');
     else if (G().turf.door !== api.rivalOwner()) errs.push('racket went to the wrong owner ' + G().turf.door);

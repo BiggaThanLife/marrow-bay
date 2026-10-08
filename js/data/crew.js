@@ -13,7 +13,7 @@ const CREW_POOL=[
   {id:'june',n:'June Okafor',role:'driver',skill:2,trait:'steady',look:{skin:4,hair:0,style:5},bio:'Calls the getaway car "Barbara" and apologises to it after hard turns.'},
   {id:'dario',n:'Dario Vance',role:'driver',skill:3,trait:'flashy',look:{skin:1,hair:1,style:0},bio:'Has outrun the constable twice and mentions it three times a day.'},
   {id:'teo_b',n:'Teodora Brask',role:'driver',skill:1,trait:'greedy',look:{skin:0,hair:3,style:1},bio:'Learned to drive in a hearse. Still signals like there is a coffin in the back.'},
-  {id:'lou',n:'Big Lou Fenwick',role:'muscle',skill:3,trait:'steady',look:{skin:2,hair:0,style:3},bio:'Has never once used a door handle. Doors simply stop being in the way.'},
+  {id:'moe',n:'Big Moe Fenwick',role:'muscle',skill:3,trait:'steady',look:{skin:2,hair:0,style:3},bio:'Has never once used a door handle. Doors simply stop being in the way.'},
   {id:'sully',n:'Sully Brandt',role:'muscle',skill:2,trait:'loose',look:{skin:1,hair:2,style:2},bio:'Owes money to people who own boats, and the boats are getting closer.'},
   {id:'ama',n:'Ama Mensah',role:'muscle',skill:1,trait:'steady',look:{skin:4,hair:0,style:4},bio:'Former pit fighter. Keeps a tiny notebook of everyone who has been rude to her.'},
   {id:'odette',n:'Odette Marsh',role:'lock',skill:3,trait:'greedy',look:{skin:0,hair:4,style:1},bio:'Hums hymns while picking locks. Says the safes like it.'},

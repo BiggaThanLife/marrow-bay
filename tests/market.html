@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay market test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Market saturation</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Selling lots of one good lowers its price per unit, other goods are untouched, the glut drains over hours, the sell screen and quantity picker agree with what you are paid,
+   and the fish stew loop is no longer a money printer when dumped in bulk. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,POIS,NPC,MENUS,start,closeMenu,popClear,alertQ,advance,sellScreen,saleTotal,satMul,satSold,satHourly,SAT_REF,save,migrate})`);
+  const G = () => api.G, sheet = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], flush = () => { api.popClear(); api.alertQ.length = 0; };
+  const click = rx => { const b = btns().find(x => rx.test(x.innerText)); if (!b) return false; if (b.disabled) return 'disabled'; b.click(); return true };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); flush(); G().flags.onboarded = true; G().sat = {};
+    // the multiplier falls with each unit and has a floor
+    if (api.satMul('meals') !== 1) errs.push('fresh market not at full price');
+    if (!(api.satMul('meals', 14) < .55 && api.satMul('meals', 14) > .45)) errs.push('half price after REF units ' + api.satMul('meals', 14));
+    if (api.satMul('meals', 999) !== .35) errs.push('floor');
+    // totals
+    const one = api.saleTotal('meals', 14, 1), ten = api.saleTotal('meals', 14, 10), forty = api.saleTotal('meals', 14, 40);
+    stats.meals = { one, ten, forty, flat40: 14 * 40 };
+    if (one !== 14) errs.push('first meal not full price'); if (!(ten < 140 && ten > 100)) errs.push('ten meals ' + ten); if (!(forty < 14 * 40 * .6)) errs.push('forty meals still too good ' + forty);
+    // other goods unaffected
+    api.satSold('meals', 30); if (api.satMul('fish') !== 1) errs.push('fish affected by meals');
+    // drains over the day
+    const m0 = api.satMul('meals'); for (let i = 0; i < 12; i++) api.satHourly(); const m12 = api.satMul('meals'); for (let i = 0; i < 12; i++) api.satHourly(); const m24 = api.satMul('meals');
+    stats.recover = { m0, m12, m24 }; if (!(m12 > m0 && m24 > .85)) errs.push('recovery too slow ' + JSON.stringify(stats.recover));
+    // through the real screen: selling all pays what the screen said and raises the glut
+    G().sat = {}; G().inv.meals = 20; const cash = G().cash; const mk = api.POIS.market, n = win.eval('NPC[OWNER.market]||Object.values(NPC)[0]');
+    api.MENUS.market(mk, n); click(/^Sell goods/); const b = btns().find(x => /^Sell all meals/.test(x.innerText)); const said = b && +((b.innerText.match(/\$([\d,]+) for the lot/) || [])[1] || '0').replace(/,/g, '');
+    click(/^Sell all meals/); const got = G().cash - cash; stats.screen = { said, got };
+    if (!said || got !== said) errs.push('paid ' + got + ' but the screen said ' + said);
+    if (G().inv.meals !== 0 || !(G().sat.meals >= 20)) errs.push('inventory or glut not updated');
+    // a second batch right after is worth less than the first
+    G().inv.meals = 20; const c2 = G().cash; api.MENUS.market(mk, n); click(/^Sell goods/); click(/^Sell all meals/); const got2 = G().cash - c2; stats.second = got2;
+    if (!(got2 < got)) errs.push('second batch not cheaper');
+    // the quantity picker shows the falling total
+    G().inv.fish = 30; api.MENUS.market(mk, n); click(/^Sell goods/); click(/^Sell some fish/); click(/^All/);
+    const qt = doc.getElementById('qtotal').innerText; stats.qty = qt; const shown = +((qt.match(/\$([\d,]+)/) || [])[1] || '0').replace(/,/g, '');
+    const c3 = G().cash; click(/^Sell this many/); if (G().cash - c3 !== shown) errs.push('quantity picker total ' + shown + ' vs paid ' + (G().cash - c3));
+    api.closeMenu();
+    // saved
+    api.save(); win.eval('G=JSON.parse(localStorage.getItem("marrowbay_v3"));migrate();'); if (!(G().sat.fish > 0)) errs.push('glut not saved');
+    win.eval('delete G.sat;migrate();'); if (!G().sat) errs.push('migrate default');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 30).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>
