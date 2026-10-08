@@ -52,5 +52,5 @@ function talk(n,extra){
   btns.push(leaveBtn);
   ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}, ${n.d}. Attitude: <span class="${cls}">${LAB[tr]}</span>${needsL.length?`. Seems ${needsL.join(' and ')}.`:'.'}</p>
   <p>${esc(n.tier[tr])}</p>${best?`<p>${esc(n.react[best])}</p>`:''}${heard.length?`<p class="amber">${esc(n.name.split(' ')[0])} has heard: ${esc(heard[0])}</p>`:''}${extra?`<p class="amber">${esc(extra)}</p>`:''}
-  ${why.length?`<p class="muted small">Shaped by: ${why.map(esc).join(', ')}.</p>`:''}`,btns);
+  ${why.length?`<p class="muted small">Shaped by: ${why.map(esc).join(', ')}.</p>`:''}`,btns);sceneCtx({who:n});
 }

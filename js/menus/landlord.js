@@ -25,7 +25,7 @@ function tenantMenu(biz,t,msg){
       if(t.trait==='nosy'&&Math.random()<.7)line+=` "${pick(worldLines())}"`;
       tenantMenu(biz,t,line)}},
     {label:'Ask them to leave',sub:'Costs $30 and the neighbours notice',cls:'warn',off:G.cash<30,fn:()=>ask(`Evict ${t.name}?`,'It costs $30 and your standing in the district dips.','Yes, evict',()=>{G.cash-=30;evictTenant(biz,t,'evict');tenantsMenu(biz,`${t.name} is gone.`)},()=>tenantMenu(biz,t))},
-    {label:'Back',cls:'quiet',fn:()=>tenantsMenu(biz)}]);
+    {label:'Back',cls:'quiet',fn:()=>tenantsMenu(biz)}]);sceneCtx({look:tenantScLook(t)});
 }
 function applicantsMenu(biz,msg){
   ui(`<h2>Applicants</h2><p class="muted">You only get what they tell you at the door. Who they really are comes out after they move in.</p>${msgP(msg)}`,[
@@ -64,7 +64,7 @@ function issueMenu(biz,i,msg){
     btns.push({label:'Look the other way',sub:'They will not forget it. Might draw attention.',fn:()=>{t.mood=Math.min(100,t.mood+6);if(Math.random()<.35)G.heat=Math.max(G.heat,1);closeIssue(biz,i);back('You say you saw nothing.')}});
     btns.push({label:'Help the visitors',sub:'Good with the Grid. The tenant will resent it.',cls:'',fn:()=>{t.mood-=12;G.rep.Grid=clamp(G.rep.Grid+2,-100,100);closeIssue(biz,i);back('You answer their questions. The tenant hears about it.')}});
   }
-  ui(head,[...btns,{label:'Back',cls:'quiet',fn:()=>issuesMenu(biz)}]);
+  ui(head,[...btns,{label:'Back',cls:'quiet',fn:()=>issuesMenu(biz)}]);sceneCtx({look:tenantScLook(t)});
 }
 function tenantsOverview(){
   const rs=G.biz.filter(b=>b.type==='rental');rs.forEach(ensureRental);

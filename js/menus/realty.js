@@ -71,7 +71,7 @@ function bizMenu(biz,msg){
   ui(`<h2>${t.n}, level ${biz.level}</h2><p class="muted">Known as <b>${esc(bizName(biz))}</b>. ${biz.d}. ${t.d}</p>${msgP(msg)}${chainLine(biz)}
   <div class="kv"><div><span>Till</span><b>${money(biz.till)}</b></div>${biz.type==='rental'?`<div><span>Tenants</span><b>${biz.tenants.length}/${rentalUnits(biz)}</b></div><div><span>Open problems</span><b>${biz.issues.length}</b></div>`:`<div><span>Supplies</span><b>${biz.supplies}</b></div><div><span>Staff</span><b>${biz.workers.length}</b></div>`}
   ${bizTraffic(biz)?`<div><span>Foot traffic</span><b>${bizTraffic(biz).dem} a day</b></div><div><span>Can serve</span><b>${bizTraffic(biz).cap} a day</b></div>`:''}
-  ${L?`<div><span>Last day</span><b>${L.profit>=0?'+':''}${money(L.profit)}</b></div><div><span>Sold</span><b>${L.units}</b></div><div><span>Wages</span><b>${money(L.wages)}</b></div>`:''}</div>${lineChart(biz.hist,{title:'Profit per day, last 30 days',zero:true})}${L&&L.theft?`<p class="bad small">Staff skimmed ${money(L.theft)}.</p>`:''}${L&&L.note?`<p class="bad small">${esc(L.note)}</p>`:''}`,btns);
+  ${L?`<div><span>Last day</span><b>${L.profit>=0?'+':''}${money(L.profit)}</b></div><div><span>Sold</span><b>${L.units}</b></div><div><span>Wages</span><b>${money(L.wages)}</b></div>`:''}</div>${lineChart(biz.hist,{title:'Profit per day, last 30 days',zero:true})}${L&&L.theft?`<p class="bad small">Staff skimmed ${money(L.theft)}.</p>`:''}${L&&L.note?`<p class="bad small">${esc(L.note)}</p>`:''}`,btns);sceneCtx({bkey:biz.type,level:biz.level});
 }
 /* manager for any business except apartments (they have their own property manager) */
 function managerButton(biz){

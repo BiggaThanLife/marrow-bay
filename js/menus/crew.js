@@ -61,7 +61,7 @@ function heistGo(){
   const h=heistDef(G.heist.id),tw=pick(h.twists);
   ui(`<h2>${esc(h.n)}</h2><p>You are in. Then: ${esc(tw.t)}</p><p class="small muted">Odds before this: ${oddsWord(heistOdds())}.</p>`,tw.a.map(a=>({label:a.l,sub:a.abort?'Leave clean. The plan stays for another night.':a.role?(crewHas(a.role)?`Your ${CREW_ROLES[a.role].n.toLowerCase()} handles it`:`You have no ${CREW_ROLES[a.role].n.toLowerCase()}. Risky.`):a.pay>1?'More money, worse odds':a.pay<1?'Safer, smaller':'',cls:a.abort?'quiet':'warn',fn:()=>{
     const show=()=>{const r=heistResolve(a);hud();ui(`<h2>${r.ok?'Clean getaway':r.ok===false?'It went wrong':'Called off'}</h2><p>${esc(r.text)}</p>`,[{label:'Continue',fn:closeMenu}],true,false)};
-    if(!a.abort&&!scenesOff())playScene({type:'sneaky',kit:'grab',cap:'Pulling the job'},show);else show();
+    if(!a.abort&&!scenesOff()){sceneCtx({where:district(POIS[h.poi].ex,POIS[h.poi].ey)});playScene({type:'sneaky',kit:'van',cap:'Pulling the job'},show)}else show();
   }})),true,false);
 }
 /* ----- rival crews (shown on the Territory page) ----- */

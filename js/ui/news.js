@@ -2,7 +2,7 @@
 /* Confirm dialog, news log, time string. */
 /* ================= CONFIRM / NEWS / EVENTS / PHONE ================= */
 function ask(title,text,label,fn,back){
-  ui(`<h2>${esc(title)}</h2><p>${esc(text)}</p>`,[{label:'Cancel',fn:back||closeMenu,keep:true},{label,cls:'warn',fn}]);
+  const c=SCENE_CTX;ui(`<h2>${esc(title)}</h2><p>${esc(text)}</p>`,[{label:'Cancel',fn:back||closeMenu,keep:true},{label,cls:'warn',fn}]);sceneCtx(c);
 }
 const SEVN=['','Minor','Local','Major','Chaos','Catastrophe'];
 let alertQ=[],bridgeOn=false,gpsPath=[];

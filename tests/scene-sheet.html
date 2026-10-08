@@ -14,6 +14,21 @@ f.addEventListener('load', () => {
   const only = (q.get('only') || '').split(',').filter(Boolean), t = +(q.get('t') || 700), p = +(q.get('p') || .5);
   win.eval(`start(Object.keys(BG)[0]);G.look.skin=${+(q.get('skin') || 1)};G.look.hair=${+(q.get('hair') || 0)};G.look.style=${+(q.get('style') || 0)};G.look.outfit=${JSON.stringify(q.get('outfit') || 'blue')}`);
   const rules = win.eval('SCENE_RULES'), DRAW = win.eval('SCENE_DRAW'), seen = new Set(), grid = document.getElementById('grid');
+  /* ?strip=social:friendly plays one scene as a filmstrip of eight moments */
+  /* ?ctx=who:mina;phone:1 or ctx=bkey:diner;level:2 or ctx=where:Dockside sets what the open menu would tell the scene */
+  if (q.get('ctx')) { const o = {}; q.get('ctx').split(';').forEach(kv => { const [k, v] = kv.split(':'); o[k] = k === 'who' ? win.eval('NPC')[v] : k === 'level' ? +v : k === 'phone' ? true : v }); win.eval('sceneCtx')(o) }
+  if (q.get('strip')) {
+    /* several scenes, four moments each: ?strip=sneaky:pry,sneaky:stash */
+    const list = q.get('strip').split(','), moments = list.length > 1 ? [.12, .4, .66, .92] : [.04, .17, .3, .43, .56, .69, .82, .95];
+    list.forEach(sk => { const [ty, kit] = sk.split(':'), dur = win.eval('SCENE_MS')[ty] || 2000;
+    moments.forEach(pp => {
+      const c = document.createElement('div'); c.className = 'c';
+      const cv = document.createElement('canvas'); cv.width = 160; cv.height = 80; c.appendChild(cv);
+      const lab = document.createElement('div'); lab.textContent = (list.length > 1 ? sk + ' ' : '') + 'p=' + pp.toFixed(2); c.appendChild(lab); grid.appendChild(c);
+      try { DRAW[ty](cv.getContext('2d'), pp * dur, pp, kit || '') } catch (e) { lab.textContent += ' ERROR ' + e.message }
+    }) });
+    window.__done = true; return;
+  }
   rules.forEach(r => {
     const key = r[1] + ':' + r[2]; if (seen.has(key)) return; if (only.length && !only.includes(r[1])) return; seen.add(key);
     const c = document.createElement('div'); c.className = 'c';

@@ -1,11 +1,11 @@
 "use strict";
-/* More camera-view scenes, added to SCENE_KITS: purchase, gamble, sneaky, travel, paper, build, social and jail bars.
+/* More camera-view scenes, added to SCENE_KITS: purchase, gamble, travel, paper and jail bars. Chat, build and crime are side-on, in scene-side.js.
    Same rule as scene-views.js: set up, anticipate, act, payoff frame, reset. Outcomes of a gamble are not known yet when the scene plays,
    so gambling ends on a charged still moment (lights, a settling ball, cards turning) and not on a win or a loss. */
 const NPC_LOOKS={
   merchant:()=>mkLook('#b07a50','#2a2018',0,'#6a8a52'),dealer:()=>mkLook('#e0b68a','#2a2118',2,'#22222c'),
   friend:()=>mkLook('#c88a60','#3a2418',1,'#a0603a'),stern:()=>mkLook('#6a4630','#d8d8d8',2,'#4a4f58'),
-  guard:()=>mkLook('#c09070','#2a2a2a',2,'#3a4a6a'),mark:()=>mkLook('#e0b68a','#6a4a2a',0,'#7a6a8a')
+  guard:()=>mkLook('#c09070','#2a2a2a',2,'#3a4a6a')
 };
 function sym(g,k,x,y){
   if(k===0){ln(g,'#3a7a2a',x-3,y+2,x,y-6,1);ln(g,'#3a7a2a',x+3,y+3,x,y-6,1);disc(g,OUT,x-3,y+3,3);disc(g,'#d33a2c',x-3,y+3,2);disc(g,OUT,x+3,y+4,3);disc(g,'#d33a2c',x+3,y+4,2);R(g,'#fff',x-4,y+2,1,1)}
@@ -109,39 +109,6 @@ Object.assign(SCENE_KITS,{
     if(p>.84&&p<.98)glint(g,92,16,seg(p,.84,.98));
     vignette(g,.3);
   },
-  /* SNEAKY: peeking round a corner. A passer-by crosses the street, you duck back, wait, peek again. */
-  'sneaky:peek'(g,t,p){
-    R(g,'#101a2c',0,0,160,36);R(g,'#1c2a44',0,36,160,22);
-    for(let i=0;i<8;i++){const h=18+((i*37)%26);R(g,'#0c1220',i*22-4,56-h,18,h);for(let k=0;k<4;k++)if(rn(i*9+k)>.5)R(g,'#f2d77a',i*22+((k%2)*7),56-h+4+Math.floor(k/2)*8,3,3)}
-    R(g,'#232a36',0,56,160,24);R(g,'#2e3644',0,56,160,3);R(g,OUT,120,18,3,40);R(g,'#4a4f58',121,18,1,40);R(g,'#ffe08a',116,14,12,5);R(g,'rgba(255,224,140,.14)',100,14,44,46);
-    const nx=lerp(-14,176,p);figure(g,nx,64,{d:1,ph:(t/420)%1,look:NPC_LOOKS.mark()});R(g,'rgba(10,14,28,.35)',0,0,160,80);
-    const peekK=p<.12?0:p<.4?ease(seg(p,.12,.4)):p<.55?1:p<.68?1-ease(seg(p,.55,.68)):p<.8?0:ease(seg(p,.8,.95));
-    const ex=Math.round(lerp(118,66,peekK));
-    g.save();g.beginPath();g.rect(0,0,ex,80);g.clip();bricks(g,'#5a4a44','#3a2e2a',0,80);R(g,'rgba(10,8,12,.25)',0,0,ex,80);g.restore();
-    R(g,OUT,ex-1,0,2,80);R(g,'#8a766a',ex-3,0,2,80);R(g,'#2a2220',ex-8,0,5,80);
-    const nerv=peekK<.1?Math.round(Math.sin(t/60)):0;
-    arm(g,ex-4+nerv,56,ex-30,96,{fist:true});arm(g,ex-6,68,ex-40,100,{fist:true});
-    R(g,'rgba(0,0,0,'+((1-peekK)*.3).toFixed(2)+')',0,0,160,80);vignette(g,.4);
-  },
-  /* SNEAKY: lifting something. The hand creeps in, freezes while the owner looks, grabs, and snatches back. */
-  'sneaky:grab'(g,t,p){
-    R(g,'#1c1822',0,0,160,80);for(let x=6;x<160;x+=22){R(g,'#2a2230',x,6,14,26);R(g,'#3a2f3a',x,6,14,2)}
-    const watching=p>=.44&&p<.6,own=NPC_LOOKS.merchant();
-    figure(g,126,60,{d:watching?-1:1,look:own});
-    woodTop(g,56,'#6a4a2a','#4a3220');R(g,'#8a6a4a',0,56,160,3);R(g,'rgba(8,6,12,.45)',0,0,160,80);
-    if(watching)R(g,'rgba(200,30,30,.10)',0,0,160,80);
-    const wx=84,wy=58;const taken=p>=.66;
-    if(!taken||p<.88){let hx,hy,fist=false;
-      if(p<.44){const k=ease(seg(p,0,.44));hx=lerp(60,wx,k);hy=lerp(96,wy+8,k)}
-      else if(p<.6){hx=wx+Math.round(Math.sin(t/50)*(watching?1:0));hy=wy+8}
-      else if(p<.68){hx=wx;hy=wy+8;fist=true}
-      else{const k=ease(seg(p,.68,.9));hx=lerp(wx,100,k);hy=lerp(wy+8,100,k);fist=true}
-      if(!taken||p<.88){if(!taken)R(g,OUT,wx-9,wy-6,18,11);if(!taken){R(g,'#6a3a22',wx-8,wy-5,16,9);R(g,'#8a5a3a',wx-8,wy-5,16,2);R(g,'#f2b84b',wx-1,wy-2,3,3)}
-        arm(g,hx,hy,hx-14,100,{fist});
-        if(taken){R(g,OUT,hx-9,hy-7,18,11);R(g,'#6a3a22',hx-8,hy-6,16,9);R(g,'#f2b84b',hx-1,hy-3,3,3)}}}
-    if(p>=.66&&p<.74)glint(g,wx,wy-2,seg(p,.66,.74));
-    vignette(g,.45);
-  },
   /* TRAVEL: on foot, a pack on your back, the road scrolls by, a signpost passes, then a whip to the destination. */
   'travel:walk'(g,t,p){
     travelBG(g,t,.09);
@@ -187,25 +154,6 @@ Object.assign(SCENE_KITS,{
     if(p>=.74&&p<.82)glint(g,cx+10,cy-6,seg(p,.74,.82));
     vignette(g,.3);
   },
-  /* BUILD: plank after plank goes up with a hammer blow each, a final big strike and a cloud of dust, then you step back and look. */
-  'build:'(g,t,p){
-    bgGarden(g,t);R(g,'#7a5a38',80,66,60,4);
-    const n=p<.2?0:p<.4?1:p<.6?2:3,done=p>=.75;
-    for(const x of [94,126]){R(g,OUT,x-1,34,6,34);R(g,'#8a6430',x,35,4,33);R(g,'#a8803f',x,35,1,33)}
-    R(g,OUT,92,32,40,5);R(g,'#8a6430',93,33,38,3);
-    for(let i=0;i<n;i++){const y=60-i*8,fl=(i===n-1&&((p-.2*(i+1))*5)<.12);R(g,OUT,94,y-1,34,9);R(g,fl?'#f4d8a0':'#b8873f',95,y,32,7);R(g,'#8f6429',95,y+3,32,1);R(g,'#d6a45a',95,y,32,1)}
-    if(done){for(let r=0;r<8;r++){const wdt=48-r*5;R(g,OUT,112-wdt/2-1,26-r*2-1,wdt+2,4);R(g,'#a83a2a',112-wdt/2,26-r*2,wdt,3)}R(g,'#c24a3a',92,32,40,1);R(g,OUT,106,50,12,16);R(g,'#6a4220',107,51,10,15);R(g,'#f2b84b',115,58,1,2)}
-    const x=60,hit=p<.75&&((p/.0375)%2)>1.1,standing=p>=.78;
-    const f=figure(g,x,68,{d:1,fh:standing?[3,8]:hit?[10,5]:[8,-13],bh:standing?[3,8]:[5,4]});
-    if(!standing){const hx=f.F[0],hy=f.F[1];ln(g,OUT,hx,hy,hx+9,hy-9,4);ln(g,'#8a6430',hx,hy,hx+9,hy-9,2);R(g,OUT,hx+6,hy-15,10,8);R(g,'#8a929c',hx+7,hy-14,8,6);R(g,'#c9ced3',hx+7,hy-14,8,2)}
-    for(const [a,b] of [[.2,.3],[.4,.5],[.6,.7]])if(p>=a&&p<b)puff(g,110,62,seg(p,a,b),'210,190,150');
-    if(p>=.75&&p<.9){puff(g,100,62,seg(p,.75,.9),'210,190,150');puff(g,124,62,seg(p,.75,.9)*.9,'210,190,150')}
-    if(p>=.84)glint(g,112,22,seg(p,.84,1));
-  },
-  /* SOCIAL: over your shoulder, a friendly chat: they talk with their hands, you nod, they laugh, they wave. */
-  'social:friendly'(g,t,p){social(g,t,p,false)},
-  /* SOCIAL: a serious talk that ends in a handshake. */
-  'social:serious'(g,t,p){social(g,t,p,true)},
   /* JAIL BARS: first person inside a cell. Grip the bars, shake them, a guard walks past, let go. */
   'jail:'(g,t,p){
     bricks(g,'#3a404a','#262b33',0,56);R(g,'#2e333c',0,56,160,24);for(let x=0;x<160;x+=30)R(g,'#232830',x,56,1,24);R(g,'#232830',0,66,160,1);
@@ -224,18 +172,3 @@ Object.assign(SCENE_KITS,{
 });
 /* a whip pan to the destination, in the last tenth of a travel scene */
 function whip(g,p){if(p<.86)return;const k=seg(p,.86,1);for(let i=0;i<14;i++)R(g,'rgba(255,255,255,'+(.5*k).toFixed(2)+')',0,i*6+(i%3)*2,160,1);R(g,'rgba(255,255,255,'+(k*k*.8).toFixed(2)+')',0,0,160,80)}
-/* over-the-shoulder talk: you are the back of a head on the left, they face you on the right */
-function social(g,t,p,serious){
-  const looks=serious?NPC_LOOKS.stern():NPC_LOOKS.friend();
-  if(serious){R(g,'#1c2a44',0,0,160,50);skyline(g,'#101a2c','#f2d77a',50);R(g,'#4a4f58',0,50,160,30);R(g,'#5a5f68',0,50,160,3)}else bgGarden(g,t);
-  const talk=p>=.08&&p<.62,shake=serious&&p>=.72,nod=(p>=.38&&p<.46)||(p>=.5&&p<.58)?2:0;
-  const bounce=!serious&&p>=.68&&p<.86?Math.round(Math.sin(t/60)):0;
-  const gest=talk?[8+Math.round(Math.sin(t/(serious?260:160))*2),-3+Math.round(Math.sin(t/(serious?340:110))*(serious?2:4))]:[7,6];
-  let fh=gest;if(!serious&&p>=.88)fh=[9,-14+Math.round(Math.sin(t/70)*2)];if(shake)fh=[lerp(8,17,ease(seg(p,.72,.84))),0];
-  const f=figure(g,116,70+bounce,{d:-1,look:looks,fh,bh:[4,9]});
-  if(talk)for(let i=0;i<3;i++){const on=Math.floor(t/180)%4>i;R(g,OUT,100+i*6,22,5,5);R(g,on?'#fff':'#9aa0a6',101+i*6,23,3,3)}
-  if(!serious&&p>=.68&&p<.86){for(let i=0;i<2;i++){R(g,'#151720',100-i*0,26+i*5,4,1);R(g,'#151720',130+0,26+i*5,4,1)}R(g,'#151720',99,30,1,3);R(g,'#151720',133,30,1,3)}
-  const L=scLook(),B=backView(g,36,84,{nod});
-  if(shake){const hand=[f.F[0]-3,f.F[1]];oArm(g,B.sr,hand,L);if(p>.86)glint(g,(hand[0]+f.F[0])/2,hand[1]-4,seg(p,.86,1))}
-  vignette(g,.2);
-}

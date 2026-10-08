@@ -11,6 +11,7 @@ MENUS.market=(poi,n,msg)=>{
       if(Math.random()<c){addRumor('thief',['mina','reyes']);news('Theft reported at the Market Hall.',2);npcS(NPC.mina).m-=20;G.rep.Grid=clamp(G.rep.Grid-10,-100,100);G.heat=Math.min(5,G.heat+2);MENUS.market(poi,n,'Caught! Mina shouts for the constable. Run.')}
       else{G.inv.crops+=2;MENUS.market(poi,n,'You slip two crops into your coat and walk off.')}}},
     ...shopBtn(poi,n),leaveBtn]);
+  sceneCtx({who:n});
 };
 MENUS.diner=(poi,n,msg)=>{
   const price=Math.round(mealPrice()*buyF(n)*shopMul('diner',.7));
@@ -49,6 +50,7 @@ MENUS.club=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">Candlelight and low talk above the tide.</p>${msgP(msg)}`,[
     {label:'Mingle with the guests',sub:'$30, 2 hours. Raises Highline standing.',off:G.cash<30,fn:()=>{G.cash-=30;G.rep.Highline=clamp(G.rep.Highline+(has('smooth')?8:5),-100,100);advance(120);MENUS.club(poi,n,'You work the room and a few doors open.')}},
     leaveBtn]);
+  sceneCtx({where:'club'});
 };
 MENUS.bank=(poi,n,msg)=>{
   const t=tier(att(n)),barred=lawTier()>=2,can=t>=2&&G.debt===0&&!has('known-thief')&&!barred,biz=G.biz.some(b=>b.type);

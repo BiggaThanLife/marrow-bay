@@ -6,7 +6,7 @@ const R=(g,c,x,y,w,h)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Mat
 const ln=(g,c,x0,y0,x1,y1,th)=>{th=th||2;const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0),1);for(let i=0;i<=n;i++)R(g,c,x0+(x1-x0)*i/n-th/2,y0+(y1-y0)*i/n-th/2,th,th)};
 const lerp=(a,b,t)=>a+(b-a)*t;
 const rn=i=>{const s=Math.sin(i*127.1+311.7)*43758.5453;return s-Math.floor(s)};
-function shade(hex,f){
+function tint(hex,f){
   const n=parseInt(hex.slice(1),16),r=n>>16,gg=(n>>8)&255,b=n&255,t=f<0?0:255,k=Math.abs(f),m=v=>Math.round(v+(t-v)*k);
   return '#'+((1<<24)+(m(r)<<16)+(m(gg)<<8)+m(b)).toString(16).slice(1);
 }
@@ -14,27 +14,35 @@ function scLook(){
   const L=(G&&G.look)||{skin:1,hair:0,outfit:'blue',style:0};
   const skin=(typeof SKIN!=='undefined'&&SKIN[L.skin])||'#e0b68a',hair=(typeof HAIR!=='undefined'&&HAIR[L.hair])||'#2b2118';
   const o=(typeof OUTFITS!=='undefined'&&OUTFITS.find(x=>x.id===L.outfit))||{c:'#2f6fb3'};
-  return{skin,skinDk:shade(skin,-.22),skinHi:shade(skin,.18),hair,hairHi:shade(hair,.3),cloth:o.c,clothDk:shade(o.c,-.28),clothHi:shade(o.c,.2),style:L.style||0,pants:'#2d3548',boot:'#3a2a22'};
+  return{skin,skinDk:tint(skin,-.22),skinHi:tint(skin,.18),hair,hairHi:tint(hair,.3),cloth:o.c,clothDk:tint(o.c,-.28),clothHi:tint(o.c,.2),style:L.style||0,pants:'#2d3548',boot:'#3a2a22'};
 }
 /* a look for someone else in a scene: skin, hair and cloth colours and a hair style */
-function mkLook(skin,hair,style,cloth){return{skin,skinDk:shade(skin,-.22),skinHi:shade(skin,.18),hair,hairHi:shade(hair,.3),cloth,clothDk:shade(cloth,-.28),clothHi:shade(cloth,.2),style,pants:'#3a3a48',boot:'#2a2a30'}}
+function mkLook(skin,hair,style,cloth){return{skin,skinDk:tint(skin,-.22),skinHi:tint(skin,.18),hair,hairHi:tint(hair,.3),cloth,clothDk:tint(cloth,-.28),clothHi:tint(cloth,.2),style,pants:'#3a3a48',boot:'#2a2a30'}}
 /* A person standing with their feet at (x,y), drawn like the people on the map: a square head, a block body and short legs, with a dark outline.
-   o: d facing (1 right, -1 left), ph walk phase 0-1, fh and bh the front and back hand relative to the shoulder, look someone else's look.
-   Returns where the hands, shoulder and head are. */
+   o: d facing (1 right, -1 left), ph walk phase 0-1, fh and bh the front and back hand relative to the shoulder, look someone else's look,
+   crouch to keep low. A look can have fem (a dress, as on the map), beard and hat. Returns where the hands, shoulder and head are. */
 function figure(g,x,y,o){
   o=o||{};
-  const L=o.look||scLook(),me=!o.look,d=o.d||1,sw=o.ph==null?0:Math.round(Math.sin(o.ph*Math.PI*2)*2);
-  const S=[x,y-19],fh=o.fh||[3+sw,10],bh=o.bh||[-3-sw,10];
+  const L=o.look||scLook(),me=!o.look,d=o.d||1,sw=o.ph==null?0:Math.round(Math.sin(o.ph*Math.PI*2)*2),cr=o.crouch?5:0;
+  const S=[x,y-19+cr],fh=o.fh||[3+sw,10],bh=o.bh||[-3-sw,10];
   const F=[S[0]+d*fh[0],S[1]+fh[1]],B=[S[0]+d*bh[0],S[1]+bh[1]];
-  const X=(dx,w)=>d>0?x+dx:x-dx-w,parts=[],P=(c,dx,dy,w,h)=>parts.push([c,X(dx,w),y+dy,w,h]);
-  const st=L.style,hc=L.hair,hat=me&&typeof G!=='undefined'&&G&&G.look?G.look.hat:null;
-  /* legs (they swap a little as you walk), body, head */
-  P(L.pants,-6-sw,-8+(sw>0?-1:0),5,8);P(L.pants,1+sw,-8+(sw<0?-1:0),5,8);
-  P(L.cloth,-7,-23,14,16);P(L.clothDk,-7,-23,3,16);P(L.clothDk,-7,-9,14,2);P(me?'#ffffff':L.clothHi,-7,-23,14,2);
+  const X=(dx,w)=>d>0?x+dx:x-dx-w,parts=[],P=(c,dx,dy,w,h)=>parts.push([c,X(dx,w),y+dy+(dy<=-9?cr:0),w,h]);
+  const st=L.style,hc=L.hair,hat=me?(typeof G!=='undefined'&&G&&G.look?G.look.hat:null):L.hat;
+  /* legs (they swap a little as you walk), body or dress, head */
+  if(L.fem){
+    P(L.skin,-5-sw,-7+cr,3,7-cr);P(L.skin,2+sw,-7+cr,3,7-cr);
+    P(L.cloth,-7,-23,14,11);P(L.cloth,-9,-13,18,6);P(L.clothDk,-7,-23,3,11);P(L.clothDk,-9,-13,3,6);P(L.clothDk,-9,-9,18,2);
+  }else{
+    if(o.kick){P(L.pants,-6,-8+cr,5,8-cr);P(L.pants,3,-12,10,5);P(L.boot,12,-13,3,7)}
+    else{P(L.pants,-6-sw,-8+cr+(sw>0?-1:0),5,8-cr);P(L.pants,1+sw,-8+cr+(sw<0?-1:0),5,8-cr)}
+    P(L.cloth,-7,-23,14,16);P(L.clothDk,-7,-23,3,16);P(L.clothDk,-7,-9,14,2);
+  }
+  P(me?'#ffffff':L.clothHi,-7,-23,14,2);
   P(L.skin,-4,-33,10,10);P(L.skinDk,-4,-33,2,10);
+  if(L.beard){P(hc,-4,-27,10,4);P(L.skinDk,2,-27,3,1)}
   /* hair, by style, the same styles as the map */
   if(st===1){P(hc,-4,-34,10,3);P(hc,-5,-34,3,13)}
-  else if(st===2){P(shade(hc,.35),-4,-34,10,2)}
+  else if(st===2){P(tint(hc,.35),-4,-34,10,2)}
   else if(st===3){}
   else if(st===4){P(hc,-4,-34,10,3);P(hc,-3,-38,5,4)}
   else if(st===5){P(hc,-4,-34,10,3);P(hc,-6,-32,3,9)}
@@ -53,9 +61,9 @@ function figure(g,x,y,o){
   R(g,'rgba(0,0,0,.25)',x-8,y,17,2);
   arm(B,0,0);parts.forEach(p=>R(g,OUT,p[1]-1,p[2]-1,p[3]+2,p[4]+2));
   arm(B,L.clothDk,1);parts.forEach(p=>R(g,p[0],p[1],p[2],p[3],p[4]));
-  R(g,OUT,X(3,2),y-30,2,2);
+  R(g,OUT,X(3,2),y-30+cr,2,2);
   arm(F,0,0);arm(F,L.cloth,1);
-  return{F,B,S,head:[x,y-34]};
+  return{F,B,S,head:[x,y-34+cr]};
 }
 /* ----- props and effects ----- */
 function crate(g,x,y,w,h){R(g,OUT,x-1,y-1,w+2,h+2);R(g,'#b8873f',x,y,w,h);R(g,'#8f6429',x,y+Math.floor(h/2),w,1);R(g,'#8f6429',x,y,1,h);R(g,'#8f6429',x+w-1,y,1,h);R(g,'#d6a45a',x+1,y+1,w-2,1);R(g,'#5a3f1a',x+2,y+2,1,1);R(g,'#5a3f1a',x+w-3,y+h-3,1,1)}

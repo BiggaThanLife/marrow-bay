@@ -33,7 +33,7 @@ function hud(){
   const ms=$('#mission');ms.hidden=!G.mission;if(G.mission)ms.textContent=missionText();
 }
 function ui(html,btns=[],isModal=true,dismiss=true){
-  modal=isModal;dismissable=dismiss;
+  sceneCtx();modal=isModal;dismissable=dismiss;
   if(!isModal){sheet.hidden=true;return}
   if(dismiss)btns=btns.filter(b=>b.fn!==closeMenu||b.keep);
   $('#xbtn').hidden=!dismiss;

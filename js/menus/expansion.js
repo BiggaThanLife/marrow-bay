@@ -40,6 +40,7 @@ function shopMenu(poi,n,msg){
     {label:'Use the shop',sub:'Buy and sell like any customer, with your perk',cls:'',fn:()=>(MENUS[poi.id]||info)(poi,n)},
     {label:'Sell the shop',sub:`Get ${money(s.paid*.7+Math.max(0,s.till))}`,cls:'quiet',fn:()=>ask(`Sell ${poi.name}?`,`You get ${money(s.paid*.7+Math.max(0,s.till))}. ${n.name} goes back to running it.`,'Yes, sell',()=>{G.cash+=Math.round(s.paid*.7+Math.max(0,s.till));delete G.shops[poi.id];advance(20);(MENUS[poi.id]||info)(poi,n,'Sold. The sign over the door is the old one again.')},()=>shopMenu(poi,n))},
     leaveBtn]);
+  sceneCtx({bkey:poi.id,level:s.level});
 }
 function shopButtons(){
   return Object.keys(G.shops).map(id=>({label:`${POIS[id].name} (shop)`,sub:`Takings ${money(G.shops[id].till)}, level ${G.shops[id].level}`,cls:'',fn:()=>shopMenu(POIS[id],NPC[OWNER[id]])}));

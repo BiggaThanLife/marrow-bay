@@ -3,6 +3,10 @@
    A scene is drawn on a 160x80 canvas, plays for about two seconds, and then runs the action it was holding back.
    Tap after SCENE_SKIP_AFTER ms to skip. Settings can switch scenes off. Games embedded in a frame (the test pages) skip scenes. */
 let sceneBusy=false,sceneTimer=0,shieldTimer=0,SCENE_FORCE=false;
+/* what the open menu is about (who you are talking to, which business, where a job is), so a scene can draw the right person or building.
+   ui() clears it, the menu that knows sets it again just after drawing itself, and ask() keeps it for its confirm button. */
+let SCENE_CTX={};
+const sceneCtx=o=>{SCENE_CTX=o||{}};
 const SC_W=160,SC_H=80;
 const scenesOff=()=>SET.scenes===false||(window.top!==window&&!SCENE_FORCE);
 /* ----- tap shield: a clear sheet over everything for a moment ----- */

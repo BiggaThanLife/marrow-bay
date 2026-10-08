@@ -37,6 +37,7 @@ function missionTick(){
   m.i++;
   if(m.i<m.stops.length){notify(`Package picked up. Deliver it to ${POIS[m.stops[m.i]].name}.`);return}
   G.mission=null;const vex=npcS(NPC.vex);threadMissionEnd(m,true);
+  const end=()=>{
   if(m.type==='courier'){earnDirty(m.reward);vex.m+=5;G.rep['Neon Mile']=clamp(G.rep['Neon Mile']+3,-100,100);notify(`Delivered. You earn ${money(m.reward)}, in cash nobody asks about.`);quip('job')}
   else if(m.type==='collect'){
     if(Math.random()<.7+crewSkill('muscle')*.04){earnDirty(m.reward);G.heat=Math.min(5,G.heat+1);vex.m+=6;G.rep[poi.d]=clamp(G.rep[poi.d]-6,-100,100);const o=OWNER[poi.id]&&NPC[OWNER[poi.id]];if(o)npcS(o).m-=15;{news(`Shakedown reported at ${poi.name}.`,2);notify(`They pay up. You earn ${money(m.reward)} in dirty cash, and made an enemy.`)}}
@@ -48,5 +49,8 @@ function missionTick(){
     if(Math.random()<m.odds){G.veh.owned.sedan=true;G.veh.stolen.sedan=true;G.veh.fuel.sedan=60;G.veh.active='sedan';G.heat=Math.min(5,G.heat+2);{news(`A sedan was stolen near ${poi.name}.`,2);notify('Hotwired. The sedan is yours, but it is hot.')}}
     else{G.heat=Math.min(5,G.heat+3);notify('The owner spots you. Run!')}
   }
-  hud();
+  hud();};
+  /* the smash and the boost play out as you arrive, then the result */
+  if((m.type==='heist'||m.type==='boost')&&!scenesOff()&&!sceneBusy){sceneCtx({where:district(poi.ex,poi.ey)});playScene(m.type==='heist'?{type:'sneaky',kit:'smash',cap:'Smash and grab'}:{type:'sneaky',kit:'boost',cap:'Boosting a car'},end)}
+  else end();
 }

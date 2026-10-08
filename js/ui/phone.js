@@ -90,4 +90,5 @@ function callMenu(n,msg){
     {label:'Find them on GPS',sub:`They are ${w.text}`,cls:'',fn:()=>{G.gps={x:w.x,y:w.y,name:n.name};gpsTick();phone(`GPS route set to ${n.name}.`)}},
     {label:'Ask for news',sub:tr>=2?'Rumors and tips':'They will not share that yet',off:tr<2,cls:'',fn:()=>{advance(5);callMenu(n,`"${pick(worldLines())}"`)}},
     ...sp,{label:'Back',cls:'quiet',fn:contactsMenu}]);
+  sceneCtx({who:n,phone:true});
 }

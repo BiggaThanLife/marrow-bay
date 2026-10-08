@@ -43,9 +43,9 @@ function arm(g,x,y,fx,fy,o){
   cap(g,OUT,x,y,fx,fy,4.6*s,7*s);cap(g,L.skin,x,y,sx,sy,3.6*s,5*s);
   cap(g,L.skinDk,x+vx*2.8*s,y+vy*2.8*s,sx+vx*4.1*s,sy+vy*4.1*s,1*s,1.1*s);cap(g,L.skinHi,x-vx*1.8*s,y-vy*1.8*s,sx-vx*2.6*s,sy-vy*2.6*s,.4*s,.6*s);
   const sl=o.sleeve||L.cloth;cap(g,OUT,sx,sy,fx,fy,6.4*s,7.4*s);cap(g,sl,sx,sy,fx,fy,5.4*s,6.6*s);
-  cap(g,o.sleeve?shade(o.sleeve,-.18):L.clothDk,sx+vx*3*s,sy+vy*3*s,fx+vx*4*s,fy+vy*4*s,1.6*s,2.2*s);
-  cap(g,o.sleeve?shade(o.sleeve,.15):L.clothHi,sx+ux*1.2,sy+uy*1.2,sx+ux*1.2+vx*.1,sy+uy*1.2,.1,.1);
-  const c0=[sx-vx*5*s,sy-vy*5*s],c1=[sx+vx*5*s,sy+vy*5*s];cap(g,o.sleeve?shade(o.sleeve,-.25):L.clothDk,c0[0],c0[1],c1[0],c1[1],.8*s);
+  cap(g,o.sleeve?tint(o.sleeve,-.18):L.clothDk,sx+vx*3*s,sy+vy*3*s,fx+vx*4*s,fy+vy*4*s,1.6*s,2.2*s);
+  cap(g,o.sleeve?tint(o.sleeve,.15):L.clothHi,sx+ux*1.2,sy+uy*1.2,sx+ux*1.2+vx*.1,sy+uy*1.2,.1,.1);
+  const c0=[sx-vx*5*s,sy-vy*5*s],c1=[sx+vx*5*s,sy+vy*5*s];cap(g,o.sleeve?tint(o.sleeve,-.25):L.clothDk,c0[0],c0[1],c1[0],c1[1],.8*s);
   hand(g,x+ux*0,y+uy*0,Object.assign({},o,{a}));
 }
 /* ----- over the shoulder: the back of the player's head and shoulders, drawn in the same blocky style as the map ----- */
@@ -57,7 +57,7 @@ function backView(g,x,y,o){
   for(const sx of [x-13,x+11]){R(g,OUT,sx,hy+7,3,7);R(g,L.skinDk,sx+(sx<x?1:0),hy+8,2,5)}
   R(g,OUT,x-11,hy-1,22,22);R(g,L.skin,x-10,hy,20,20);R(g,L.skinDk,x-10,hy+16,20,4);
   if(st===3){R(g,L.skinHi,x-6,hy+2,8,2)}
-  else if(st===2){R(g,shade(hc,.35),x-10,hy,20,6)}
+  else if(st===2){R(g,tint(hc,.35),x-10,hy,20,6)}
   else if(st===1||st===5){R(g,hc,x-10,hy,20,20);R(g,hh,x-6,hy+2,8,1)}
   else if(st===4){R(g,OUT,x-5,hy-8,10,9);R(g,hc,x-4,hy-7,8,7);R(g,hc,x-10,hy,20,13);R(g,hh,x-6,hy+2,8,1)}
   else if(st===6){R(g,OUT,x-13,hy-6,26,20);R(g,hc,x-12,hy-5,24,18);R(g,hh,x-7,hy-3,9,1)}

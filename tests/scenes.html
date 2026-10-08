@@ -13,15 +13,15 @@ const f = document.getElementById('game');
 f.addEventListener('load', async () => {
   const win = f.contentWindow, errs = [], doc = win.document, stats = {};
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const api = win.eval(`({get G(){return G},BG,SET,SCENE_RULES,SCENE_MS,SCENE_DRAW,SCENE_KITS,sceneFor,playScene,start,closeMenu,popClear,bizMenu,shopMenu,MENUS,POIS,NPC,ui,worldPanel,get sceneBusy(){return sceneBusy},blocks,saveSettings,settingsMenu})`);
+  const api = win.eval(`({get G(){return G},BG,SET,SCENE_RULES,SCENE_MS,SCENE_DRAW,SCENE_KITS,sceneFor,playScene,start,closeMenu,popClear,bizMenu,shopMenu,MENUS,POIS,NPC,ui,worldPanel,talk,get sceneBusy(){return sceneBusy},blocks,saveSettings,settingsMenu})`);
   const G = () => api.G, btn = rx => [...doc.querySelectorAll('#sheet #actions button')].find(x => rx.test(x.innerText));
   const shown = () => !doc.getElementById('actscene').hidden, shieldOn = () => !doc.getElementById('shield').hidden;
   try {
     api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; api.SET.hints = false;
     // every rule has a type with a drawing and a length
     api.SCENE_RULES.forEach(r => { if (!api.SCENE_DRAW[r[1]] || !api.SCENE_MS[r[1]]) errs.push('no drawing or length for ' + r[0]) });
-    ['Haul cargo', 'Work a kitchen shift', 'Tend the gardens', 'Repair shift', 'Foundry shift', 'Collect till', 'Collect all tills', 'Sleep until morning', 'Nap for 2 hours', 'Get treated', 'Pay union dues', 'Fish from the pier', 'Fish the exposed channel', 'Take the boat out', 'Scavenge the mudflats', 'Plant a seed', 'Harvest', 'Order a meal', 'Eat a meal', 'Buy a round for the bar', 'Cook a meal', 'Cook fish stew', 'Buy 10 scrap', 'Buy a rowboat', 'Slots, $10', 'Roulette: red', 'Blackjack', 'Pickpocket', 'Scout their stash house', 'Walk to Pier', 'Ride the tram from Pier', 'Call a taxi', 'Records office', 'Expand to level 2', 'Chat', 'Ask for work', 'Sit it out for six hours', 'Walk the yard'].forEach(l => { if (!api.sceneFor(l)) errs.push('no scene for ' + l) });
-    ['Collect a debt', 'Sell goods', 'Takeaway meals', 'Buy for $500', 'Buy it back', 'Back', 'Leave'].forEach(l => { if (api.sceneFor(l)) errs.push('unexpected scene for ' + l) });
+    ['Haul cargo', 'Work a kitchen shift', 'Tend the gardens', 'Repair shift', 'Foundry shift', 'Collect till', 'Collect all tills', 'Sleep until morning', 'Nap for 2 hours', 'Get treated', 'Pay union dues', 'Fish from the pier', 'Fish the exposed channel', 'Take the boat out', 'Scavenge the mudflats', 'Plant a seed', 'Harvest', 'Order a meal', 'Eat a meal', 'Buy a round for the bar', 'Cook a meal', 'Cook fish stew', 'Buy 10 scrap', 'Buy a rowboat', 'Slots, $10', 'Roulette: red', 'Blackjack', 'Pickpocket', 'Scout their stash house', 'Walk to Pier', 'Ride the tram from Pier', 'Call a taxi', 'Records office', 'Yes, expand', 'Yes, upgrade', 'Craft a trinket', 'Make a part', 'Build a FLACK jammer', 'Fit a jammer to a pole', 'Paint over a camera lens', 'Pocket something and run', 'Pry it open and look', 'Sabotage a shipment', 'Hit the Salt Kings\'s stash', 'Chat', 'Ask for work', 'Sit it out for six hours', 'Walk the yard'].forEach(l => { if (!api.sceneFor(l)) errs.push('no scene for ' + l) });
+    ['Collect a debt', 'Sell goods', 'Takeaway meals', 'Buy for $500', 'Buy it back', 'Back', 'Leave', 'Expand to level 2', 'Upgrade to level 2', 'Smash and grab', 'Boost a car'].forEach(l => { if (api.sceneFor(l)) errs.push('unexpected scene for ' + l) });
     // every first-person or over-the-shoulder kit exists
     api.SCENE_RULES.forEach(r => { if (!api.SCENE_KITS[r[1] + ':' + r[2]] && !['crate', 'rake', 'bed', 'fish'].includes(r[2])) errs.push('no kit ' + r[1] + ':' + r[2]) });
     // draw every rule at several moments with no errors
@@ -55,6 +55,20 @@ f.addEventListener('load', async () => {
     const free = api.blocks.filter(b => !b.poi && b.kind === 'tower')[0];
     G().biz = [{ key: free.key, d: 'Grid', price: 1, paid: 1, type: 'cafe', level: 1, workers: [], till: 77, supplies: 0, mk: 1, store: 0, auto: false, last: null }];
     const cash = G().cash; api.bizMenu(G().biz[0]); btn(/^Collect till/).click(); if (G().biz[0].till !== 77) errs.push('real action ran before its scene'); await sleep(api.SCENE_MS.cash + 400); if (G().biz[0].till !== 0 || G().cash !== cash + 77) errs.push('real action did not run after its scene');
+    await sleep(500);
+    // the open menu tells the scene who and what: talking sets the person, any other menu clears it, a confirm keeps it
+    const ctx = () => win.eval('SCENE_CTX');
+    api.talk(api.NPC.mina); if (ctx().who !== api.NPC.mina) errs.push('talking did not tell the scene who');
+    api.ui('<p>x</p>', [{ label: 'Hello', fn() {} }]); if (ctx().who) errs.push('another menu did not clear the scene context');
+    G().cash = 5000; api.bizMenu(G().biz[0]); if (ctx().bkey !== 'cafe' || ctx().level !== 1) errs.push('the business menu did not tell the scene which building');
+    btn(/^Upgrade to level 2/).click(); if (shown()) errs.push('the upgrade played its scene before the confirm'); if (ctx().bkey !== 'cafe') errs.push('the confirm lost the scene context');
+    btn(/^Yes, upgrade/).click(); if (!shown() || G().biz[0].level !== 1) errs.push('the confirm did not play its scene first');
+    await sleep(api.SCENE_MS.build + 400); if (G().biz[0].level !== 2) errs.push('the upgrade did not happen after its scene');
+    await sleep(500);
+    // a smash and grab plays as you arrive, then pays out
+    const bank = api.POIS.bank; G().p.x = bank.ex; G().p.y = bank.ey; G().mission = { type: 'heist', title: 'Smash and grab', stops: ['bank'], i: 0, deadline: G().t + 600, reward: 260, odds: 1 };
+    const loot = G().inv.loot; win.eval('missionTick()'); if (!shown() || G().mission) errs.push('the smash and grab did not play as you arrived'); if (G().inv.loot !== loot) errs.push('the smash and grab paid before its scene');
+    await sleep(api.SCENE_MS.sneaky + 400); if (G().inv.loot <= loot) errs.push('the smash and grab did not pay after its scene');
     win.eval('SCENE_FORCE=false');
   } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
   try { win.localStorage.removeItem('marrowbay_settings') } catch (e) {} /* the settings menu saves SET, so leave nothing behind for the other test pages */
