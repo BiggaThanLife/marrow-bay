@@ -29,8 +29,9 @@ function hud(){
   $('#b-heat').style.width=(G.heat/5*100)+'%';
   $('#t-heat').textContent=G.heat>=.5?'\u2605'.repeat(Math.min(5,Math.ceil(G.heat))):'Clear';
   $('#b-build').classList.toggle('on',!!placing);
-  $('#b-phone').textContent=(G.news.some(x=>x.id>G.newsRead)||G.threads.active.some(t=>t.pending))?'Phone \u25CF':'Phone';
+  $('#b-phone').textContent=(G.news.some(x=>x.id>G.newsRead)||G.threads.active.some(t=>t.pending)||(G.flags.onboarded&&leadUnseen()))?'Phone \u25CF':'Phone';
   const cb=$('#b-comp'),cn=G.companion&&NPC[G.companion];cb.hidden=!cn;if(cn)cb.textContent=cn.name.split(' ')[0]+' ×';
+  const ld=$('#lead'),ln=G.flags&&G.flags.onboarded&&SET.leadLine!==false&&sheet.hidden&&!placing?leadNext():null;ld.hidden=!ln;if(ln)ld.textContent='Lead: '+ln.t;
   const ms=$('#mission');ms.hidden=!G.mission;if(G.mission)ms.textContent=missionText();
 }
 function ui(html,btns=[],isModal=true,dismiss=true){

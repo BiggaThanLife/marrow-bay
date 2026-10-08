@@ -34,12 +34,17 @@ function tick(dt){
   hudT+=dt;if(hudT>.3){hudT=0;hud()}
   if(!modal&&(G.energy<=0||G.hunger<=0))collapse();
 }
+let camShiftX=0,camShiftY=0;
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
   requestAnimationFrame(frame);
   try{if(G&&!modal)tick(dt)}catch(e){console.error(e)}
   if(G){
-    camX=Math.round(clamp(G.p.x*TS+8-VW/2,0,W*TS-VW));camY=Math.round(clamp(G.p.y*TS+8-VH/2,0,Math.max(0,H*TS-VH)));
+    /* an open sheet covers part of the map, so slide the view until the player sits in the part that is still showing */
+    let tx=0,ty=0;
+    if(!sheet.hidden){const sr=sheet.getBoundingClientRect(),st=stage.getBoundingClientRect();if(st.width){if(sr.width<st.width*.95)tx=VW*(sr.width/st.width)/2;else ty=VH*(sr.height/st.height)/2}}
+    camShiftX+=(tx-camShiftX)*.25;camShiftY+=(ty-camShiftY)*.25;
+    camX=Math.round(clamp(G.p.x*TS+8-VW/2+camShiftX,0,W*TS-VW));camY=Math.round(clamp(G.p.y*TS+8-VH/2+camShiftY,0,Math.max(0,H*TS-VH)));
   }else{
     camX=Math.round((Math.sin(now*.00008)*.5+.5)*(W*TS-VW));camY=Math.round((Math.sin(now*.00006+1)*.5+.5)*Math.max(0,H*TS-VH));
   }

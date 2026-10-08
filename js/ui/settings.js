@@ -76,6 +76,7 @@ function settingsMenu(msg){
     {label:`Action scenes: ${SET.scenes===false?'Off':'On'}`,sub:'Short pixel scenes for work, money and rest',cls:'',fn:()=>{SET.scenes=SET.scenes===false;saveSettings();sfx('open');back()}},
     {label:`Depth and lighting: ${SET.depth===false?'Off':'On'}`,sub:'Shadows, roofs, trees you can walk behind, and lamp light at night. Off is the classic flat map.',cls:'',fn:()=>{SET.depth=SET.depth===false;saveSettings();sfx('open');back()}},
     {label:`Hints: ${SET.hints===false?'Off':'On'}`,sub:'Short notes the first time something matters',cls:'',fn:()=>{SET.hints=SET.hints===false;saveSettings();sfx('open');back()}},
+    {label:`Next-lead line: ${SET.leadLine===false?'Off':'On'}`,sub:'A one-line idea on the map. The Leads list stays in the Phone.',cls:'',fn:()=>{SET.leadLine=SET.leadLine===false;saveSettings();sfx('open');back()}},
     ...(inGame?[
       {label:'Save now',sub:'Write your game to this device',cls:'',fn:()=>{save();back('Game saved.')}},
       {label:'Load last save',sub:saved?`Go back to ${saveStamp(saved)}`:'No save yet',off:!saved,cls:'',fn:()=>ask('Load your last save?','Anything since your last save is lost.','Load',()=>{continueSave(loadSave())},()=>back())}
