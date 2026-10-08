@@ -32,6 +32,7 @@ MENUS.casino=(poi,n,msg)=>{
     {label:'Roulette: one number',sub:'1 in 38, pays 35 to 1',off:G.cash<st,cls:'',fn:()=>roul('num')},
     {label:'Blackjack',sub:`${money(st)} a hand. Hit or stand.`,off:G.cash<st,cls:'',fn:()=>blackjack(poi,n,st)},
     {label:'Slots, $10',sub:'Cheap, flashy, and kind to the house',off:G.cash<10,cls:'',fn:spin},
+    ...((G.dirty||0)>0?[{label:'Wash dirty cash at the cage',sub:`Up to ${money(cageLeft())} today, about ${Math.round(cageFee()*100)}% to the house`,off:cageLeft()<=0,cls:'',fn:()=>cageMenu(poi,n)}]:[]),
     {label:'Pit fight',sub:isNight()?'Basement ring, nights only. $140 if you win.':'Nights only',off:!isNight()||G.energy<20,cls:'warn',fn:()=>pitFight(poi,n)},
     leaveBtn]);
 };

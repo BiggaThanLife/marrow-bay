@@ -6,6 +6,7 @@ function racketPay(r){
   if(flackBand()>=2)m*=.7;
   if(fact('mayor')==='reyes')m*=.8;
   if(G.companion==='vex')m*=1.1;
+  m*=1+.05*crewGuards().length;
   return Math.round(r.pay*m);
 }
 function neonDaily(){
@@ -26,7 +27,7 @@ function takeRacket(id,how){
   }
   if(G.energy<12)return 'You are too tired to lean on anybody.';
   G.energy=clamp(G.energy-12,0,100);advance(90);
-  const c=clamp(.35+(has('strong')?.2:0)+(G.fx.kit?.05:0)-r.hard*.3+G.fac.crew/300,.1,.85);
+  const c=clamp(.35+(has('strong')?.2:0)+(G.fx.kit?.05:0)+Math.min(.2,crewSkill('muscle')*.06)-r.hard*.3+G.fac.crew/300,.1,.85);
   if(Math.random()<c){G.turf[id]='player';G.heat=Math.min(5,G.heat+.5);if(was==='vex')facAdd('crew',-8);if(was==='salt')facAdd('salt',-8);meterAdd('Neon Mile',2);return `${r.n} is yours now. The previous owner takes it personally.`}
   G.heat=Math.min(5,G.heat+1);facAdd('crew',-3);return 'It goes badly. Somebody calls the constable.';
 }

@@ -34,7 +34,9 @@ const SCENE_RULES=[
   [/^(Records office|Read the Trust|Check the ledger|Cargo manifest|Make them sign something)/,'paper','','Reading the paperwork'],
   [/^(Expand to level|Upgrade to level|Craft a trinket|Make a part|Build a FLACK jammer|Fit a jammer to a pole)/,'build','','Building'],
   [/^(Chat|Have a chat|Talk to them|Mingle with the guests|Ask about town|Ask for news|Send a gift|Go door to door)/,'social','friendly','Having a word'],
-  [/^(Ask for work|Ask about dock work|Give a statement)/,'social','serious','A serious word']
+  [/^(Ask for work|Ask about dock work|Give a statement)/,'social','serious','A serious word'],
+  [/^Hit .*stash/,'sneaky','grab','Hitting the stash'],
+  [/^Wash \$/,'cash','','Through the cage']
 ];
 const SCENE_MS={work:2000,cash:1600,rest:2200,nature:2200,eat:2000,purchase:1900,gamble:2200,sneaky:2200,travel:2200,paper:2000,build:2200,social:2200,jail:2000};
 const SCENE_SKIP_AFTER=400;
