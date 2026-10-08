@@ -44,6 +44,17 @@ f.addEventListener('load', () => {
     // cost of a frame
     const time = dep => { api.SET.depth = dep; at(23, 49, 7); const t0 = win.performance.now(); for (let i = 0; i < 40; i++) draw('time'); return (win.performance.now() - t0) / 40 };
     stats.ms = { classic: +time(false).toFixed(2), depth: +time(true).toFixed(2) }; if (stats.ms.depth > 8) errs.push('depth frame too slow ' + stats.ms.depth + 'ms');
+    // every building look, as a place, a business you run or filler, draws by day and night
+    const bapi = win.eval('({BSTYLE,BT,blocks,drawBlockDepth,bKey,bGlows})'), filler = bapi.blocks.filter(b => !b.poi && b.kind === 'tower');
+    Object.keys(bapi.BSTYLE).forEach((k, i) => {
+      let b = bapi.blocks.find(x => x.poi && x.kind === k) || (['tower', 'warehouse', 'farmstead'].includes(k) ? bapi.blocks.find(x => !x.poi && x.kind === k) : null); const keep = G().biz;
+      if (!b) { if (!bapi.BT[k]) { errs.push('look with no place or business: ' + k); return } b = filler[i % filler.length]; G().biz = [{ key: b.key, d: 'Grid', price: 1, paid: 1, type: k, level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, auto: false, last: null, tenants: [] }] }
+      if (bapi.bKey(b) !== k) errs.push('bKey ' + k + ' gave ' + bapi.bKey(b));
+      [false, true].forEach(lit => { try { bapi.drawBlockDepth(b, lit, win.performance.now()); bapi.bGlows(k) } catch (e) { errs.push('building ' + k + ' lit ' + lit + ': ' + e.message) } });
+      G().biz = keep;
+    });
+    // every place and business type has its own look
+    const kinds = new Set([...bapi.blocks.map(b => b.poi ? b.kind : b.kind), ...Object.keys(bapi.BT)]); kinds.forEach(k => { if (!bapi.BSTYLE[k]) errs.push('no look for ' + k) });
     // the setting
     api.SET.depth = true; api.settingsMenu(); if (!/Depth and lighting: On/.test(sheet())) errs.push('no depth setting'); click(/^Depth and lighting/); if (api.SET.depth !== false || api.depthOn()) errs.push('setting did not switch off');
     api.settingsMenu(); click(/^Depth and lighting/); if (api.SET.depth !== true) errs.push('setting did not switch back on'); api.closeMenu();

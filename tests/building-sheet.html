@@ -1,0 +1,34 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay building contact sheet</title>
+<style>body{font:12px system-ui;margin:8px;background:#10202a;color:#e6efe9}.g{display:grid;grid-template-columns:repeat(auto-fill,168px);gap:6px}.c{width:168px}canvas{width:168px;height:168px;image-rendering:pixelated;display:block;border:1px solid #2f4a5b}</style>
+<h3>Building contact sheet (a look at every building with depth on, not a pass or fail test)</h3>
+<p>Add ?night=1 for night. Add ?only=bank,casino to show some.</p>
+<div class="g" id="grid"></div>
+<iframe id="game" src="../index.html" style="display:none"></iframe>
+<script>
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, q = new URLSearchParams(location.search), night = !!q.get('night'), only = (q.get('only') || '').split(',').filter(Boolean);
+  win.eval(`start(Object.keys(BG)[0]);G.flags.customDone=true;closeMenu();popClear();SET.depth=true`);
+  const api = win.eval(`({get G(){return G},blocks,BSTYLE,BT,POIS,drawBlockDepth,depthShadows,cx,TS,setCam(x,y){camX=x;camY=y},GROUND})`);
+  const G = api.G, grid = document.getElementById('grid');
+  const filler = api.blocks.filter(b => !b.poi && b.kind === 'tower'), keys = Object.keys(api.BSTYLE).filter(k => !only.length || only.includes(k));
+  keys.forEach((k, i) => {
+    let b = api.blocks.find(x => x.poi && x.kind === k) || (k === 'warehouse' || k === 'farmstead' || k === 'tower' ? api.blocks.find(x => !x.poi && x.kind === k) : null);
+    G.biz = [];
+    if (!b) { b = filler[i % filler.length]; G.biz = [{ key: b.key, d: 'Grid', price: 1, paid: 1, type: k, level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, auto: false, last: null, tenants: [] }] }
+    const sx = b.x * api.TS - 10, sy = b.y * api.TS - 14;
+    api.setCam(sx, sy);
+    const g = api.cx; g.fillStyle = '#6f9a58'; g.fillRect(0, 0, 90, 90); g.fillStyle = '#4b505a'; g.fillRect(0, 78, 90, 12);
+    G.t = Math.floor(G.t / 1440) * 1440 + (night ? 23 : 15) * 60;
+    try { api.drawBlockDepth(b, night, win.performance.now()) } catch (e) { console.error(k, e) }
+    if (night) { g.fillStyle = 'rgba(10,14,40,.45)'; g.fillRect(0, 0, 90, 90) }
+    const c = document.createElement('div'); c.className = 'c'; const cv = document.createElement('canvas'); cv.width = 84; cv.height = 84;
+    cv.getContext('2d').drawImage(win.document.getElementById('scene'), 0, 0, 84, 84, 0, 0, 84, 84);
+    const lab = document.createElement('div'); lab.textContent = k + (b.poi ? ' (place)' : G.biz.length ? ' (your business)' : ' (filler)');
+    c.appendChild(cv); c.appendChild(lab); grid.appendChild(c);
+  });
+  window.__done = true;
+});
+</script>

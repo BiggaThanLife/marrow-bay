@@ -45,7 +45,7 @@ f.addEventListener('load', () => {
     G().notor = 0; const f0 = api.fencePrice(); G().notor = 80; if (!(api.fencePrice() < f0)) errs.push('fence price did not drop');
     // lockouts: bank etc closed at tier 3, but City Hall, clinic, diner stay open
     G().heat = 0; G().notor = 80; G().home = G().home;
-    ['bank', 'estate', 'club', 'realty'].forEach(id => { if (!api.lawLocked(id)) errs.push(id + ' not locked at 3'); G().t = Math.floor(G().t / 1440) * 1440 + (id === 'club' ? 20 : 12) * 60; api.openPOI(api.POIS[id]); if (!/will not see you/.test(sheet())) errs.push('no lockout message ' + id); api.closeMenu() });
+    ['bank', 'estate', 'club', 'realty'].forEach(id => { if (!api.lawLocked(id)) errs.push(id + ' not locked at 3'); G().t = Math.floor(G().t / 1440) * 1440 + (id === 'club' ? 20 : 12) * 60; G().mod.closed = []; api.openPOI(api.POIS[id]); if (!/will not see you/.test(sheet())) errs.push('no lockout message ' + id); api.closeMenu() });
     ['cityhall', 'clinic', 'diner', 'market', 'dock'].forEach(id => { if (api.lawLocked(id)) errs.push(id + ' must stay open') });
     // bank tier 2: no loans or trading
     G().notor = 55; G().t = Math.floor(G().t / 1440) * 1440 + 12 * 60; api.MENUS.bank(api.POIS.bank, win.eval('NPC.cordelia')); if (!/flagged/.test(sheet())) errs.push('no bank flag message'); const td = btns().find(x => /^Trading desk/.test(x.innerText)); if (!td || !td.disabled) errs.push('trading not barred'); const bl = btns().find(x => /^Borrow/.test(x.innerText)); if (!bl || !bl.disabled) errs.push('loan not barred'); api.closeMenu();
