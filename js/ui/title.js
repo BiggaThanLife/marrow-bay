@@ -17,7 +17,7 @@ function continueSave(saved){
 }
 function chooseBg(){
   ui('<h2>Who are you?</h2><p class="muted">Your background decides where you start, how people see you, and what you are good at.</p>',
-    Object.entries(BG).map(([k,v],i)=>({label:v.n,sub:`${v.perk} Starts with ${money(v.cash)}.`,cls:i?'':'primary',fn:()=>start(k)})),true,false);
+    Object.entries(BG).map(([k,v],i)=>({label:v.n,sub:`${v.cash>=200?'Easy start':v.cash<=30?'Hard start':'Medium start'}. ${v.perk} Starts with ${money(v.cash)}.`,cls:i?'':'primary',fn:()=>start(k)})),true,false);
 }
 function start(k){
   const seed=1+Math.floor(Math.random()*2147483646);buildWorld(seed);

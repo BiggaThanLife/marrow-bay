@@ -57,9 +57,13 @@ function runBiz(b){
     const sticky=b.workers.filter(w=>w.trait==='sticky').length,guard=b.workers.some(w=>w.trait==='guard');
     if(sticky&&!guard){r.theft=Math.min(b.till,Math.round(r.rev*.08*sticky*(b.mgr?.5:1)));b.till-=r.theft}
     if(t.shady){
-      G.rep[dist]=clamp(G.rep[dist]-t.shady.rep,-100,100);
-      if(Math.random()<t.shady.inspect){const fine=Math.min(Math.round(t.shady.fine*(b.mgr?.5:1)),Math.max(0,G.cash+b.till));payOut(b,fine);r.cost+=fine;r.note=`Fined ${money(fine)}.`;news(t.shady.news.replace('{d}',dist),2);notify(`Inspectors at ${bizName(b)} in ${dist}. Fined ${money(fine)}.`);startScandal(b)}
+      /* the longer a shady place runs the more the district minds (up to 2x), and the more it minds the more often inspectors come (up to 2x) */
+      b.shadyDays=(b.shadyDays||0)+1;
+      const grow=1+Math.min(1,b.shadyDays/45),suspicion=1+clamp(-G.rep[dist],0,50)/50;
+      G.rep[dist]=clamp(G.rep[dist]-t.shady.rep*grow,-100,100);
+      if(Math.random()<t.shady.inspect*suspicion){const fine=Math.min(Math.round(t.shady.fine*(b.mgr?.5:1)),Math.max(0,G.cash+b.till));payOut(b,fine);r.cost+=fine;r.note=`Fined ${money(fine)}.`;news(t.shady.news.replace('{d}',dist),2);notify(`Inspectors at ${bizName(b)} in ${dist}. Fined ${money(fine)}.`);startScandal(b)}
     }
+    if(!t.shady)b.shadyDays=0;
     if(t.calm&&G.heat>0)G.heat=Math.max(0,G.heat-t.calm.heat);
   }
   b.workers=b.workers.filter(w=>{
