@@ -37,6 +37,9 @@ cv.addEventListener('pointerdown',e=>{
   if(placing)return tryPlace(tx,ty);
   /* Streets are one tile wide, so someone is nearly always standing next to whatever you tap. A tap that lands on a stop or a structure only goes to a person who is almost on that exact spot. */
   const onThing=STOPS.some(s=>s.x===tx&&s.y===ty)||!!structAt(tx,ty),reach=onThing?.5:1.1;
+  /* Your companion trails you and is marked indoors, so the loop below never sees them. Tapping them opens their talk menu and leaves you standing still. */
+  const cn=G.companion&&NPC[G.companion];
+  if(cn){const ct=compTrail.length>=8?compTrail[0]:[G.p.x-.9,G.p.y+.1];if(Math.hypot(ct[0]+.5-fx,ct[1]+.5-fy)<1.1)return talk(cn)}
   let best=null,bd=reach;
   NPCS.forEach(n=>{if(n.indoors)return;const d=Math.hypot(n.x+.5-fx,n.y+.5-fy);if(d<bd){bd=d;best=n}});
   if(best)return goTalk(best);

@@ -30,6 +30,7 @@ function hud(){
   $('#t-heat').textContent=G.heat>=.5?'\u2605'.repeat(Math.min(5,Math.ceil(G.heat))):'Clear';
   $('#b-build').classList.toggle('on',!!placing);
   $('#b-phone').textContent=(G.news.some(x=>x.id>G.newsRead)||G.threads.active.some(t=>t.pending))?'Phone \u25CF':'Phone';
+  const cb=$('#b-comp'),cn=G.companion&&NPC[G.companion];cb.hidden=!cn;if(cn)cb.textContent=cn.name.split(' ')[0]+' ×';
   const ms=$('#mission');ms.hidden=!G.mission;if(G.mission)ms.textContent=missionText();
 }
 function ui(html,btns=[],isModal=true,dismiss=true){
@@ -56,6 +57,7 @@ $('#xbtn').addEventListener('click',()=>{if(dismissable)closeMenu()});
 const msgP=m=>m?`<p class="amber">${esc(m)}</p>`:'';
 
 $('#b-bag').addEventListener('click',()=>{if(G){placing=null;bag()}});
+$('#b-comp').addEventListener('click',()=>{if(G&&G.companion){placing=null;talk(NPC[G.companion])}});
 $('#b-phone').addEventListener('click',()=>{if(G){placing=null;phone()}});
 $('#b-biz').addEventListener('click',()=>{if(G){placing=null;bizOverview()}});
 $('#b-go').addEventListener('click',()=>{if(G){placing=null;if(G.jail)return notify('You are in prison.');goMenu()}});
