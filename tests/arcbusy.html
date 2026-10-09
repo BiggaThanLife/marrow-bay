@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay busy arc test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>"I will not talk about that until..."</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* While one arc runs, walking into a building in another arc's district opens the building as normal; the "not until it has concluded" line only
+   shows when you talk to the person who would have offered it. With no arc running, the offer still comes on entering the building. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document;
+  const api = win.eval(`({get G(){return G},BG,NPC,POIS,ARCS,start,closeMenu,popClear,openPOI,talk,arcWaiting,arcBusyText})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText;
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().cash = 500;
+    const id = Object.keys(api.ARCS).find(k => api.ARCS[k].hook && api.ARCS[k].hook.who === 'cordelia'); if (!id) throw new Error('no Cordelia arc');
+    const D = api.ARCS[id], poi = Object.values(api.POIS).find(p => p.d === D.district && p.id !== G().home && (win.eval('OWNER')[p.id] === 'cordelia'));
+    G().t = 40 * 1440 + 600; G().engage[D.district] = 20; G().arcLast = 0; G().hookCool = {}; G().arcsDone = [];
+    if (!api.arcWaiting(id, D.district)) throw new Error('arc ' + id + ' is not ready in this test setup');
+    // with no arc running the offer comes on entering the building
+    api.openPOI(poi); if (!/Cordelia/.test(text()) || /will not talk/.test(text())) errs.push('no offer on entering with no arc running: ' + text().slice(0, 60)); api.closeMenu();
+    // with another arc running the building just opens
+    G().hookCool = {}; G().arc = { id: Object.keys(api.ARCS).find(k => k !== id), i: 0, stance: null }; api.closeMenu();
+    api.openPOI(poi); if (/will not talk/.test(text())) errs.push('entering the building still shows the refusal'); if (!new RegExp(poi.name).test(text())) errs.push('building did not open: ' + text().slice(0, 60)); api.closeMenu();
+    // talking to the person does show it
+    api.talk(api.NPC.cordelia); if (!/will not talk about that until/.test(text())) errs.push('talking to her does not explain'); api.closeMenu();
+    // someone with nothing waiting says nothing of the kind
+    api.talk(api.NPC.mina); if (/will not talk about that until/.test(text())) errs.push('an unrelated person refuses'); api.closeMenu();
+    // when the arc ends it stops
+    G().arc = null; api.talk(api.NPC.cordelia); if (/will not talk about that until/.test(text())) errs.push('refusal after the arc ended');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n');
+  window.__done = { ok: !errs.length, errs };
+});
+</script>

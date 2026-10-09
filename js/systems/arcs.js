@@ -52,18 +52,20 @@ function arcMenu(msg){
 }
 
 /* Story hook: once you have dealt with enough businesses in a district, someone there brings the arc to you. */
+/* an arc that would be offered here if another were not already running */
+const arcWaiting=(id,d)=>{const D=ARCS[id],H=D.hook;return !!H&&D.district===d&&day()>=H.min&&day()-(G.arcLast||0)>=6&&(G.engage[D.district]||0)>=H.need&&!arcDone(id)&&(G.hookCool[id]||0)<=day()&&D.can()};
+/* what a hook person says when you talk to them while another arc is running; only in conversation, never on walking into a building */
+function arcBusyText(n){
+  if(!G.arc)return '';
+  const id=Object.keys(ARCS).find(k=>ARCS[k].hook&&ARCS[k].hook.who===n.id&&arcWaiting(k,n.d));
+  return id?`${n.name} glances at you, then away. "I will not talk about that until ${ARCS[G.arc.id].title.replace(/^The /,'the ')} has concluded. Ask me after."`:'';
+}
 function arcHook(poi){
-  if(poi.id===G.home)return false;
+  if(poi.id===G.home||G.arc)return false;
   for(const id of Object.keys(ARCS)){
     const D=ARCS[id],H=D.hook;
     if(!H||D.district!==poi.d||day()<H.min||day()-(G.arcLast||0)<6||(G.engage[D.district]||0)<H.need||arcDone(id)||(G.hookCool[id]||0)>day()||!D.can())continue;
     const who=NPC[H.who];
-    if(G.arc){
-      if(G.hookBusy[id]===day())return false;
-      G.hookBusy[id]=day();
-      ui(`<h2>${esc(who.name)}</h2><p>${esc(who.name)} glances at you, then away. "I will not talk about that until ${esc(ARCS[G.arc.id].title.replace(/^The /,'the '))} has concluded. Ask me after."</p>`,[{label:'Understood',fn:closeMenu}],true,false);
-      return true;
-    }
     const vt=H.voices&&tagsNow().find(t=>H.voices[t]);
     ui(`<h2>${esc(who.name)}</h2><p>${esc(H.text.replace('{name}',G.name))}</p>`,[
       {label:H.yes,cls:'primary',fn:()=>{closeMenu();startArc(id)}},

@@ -33,6 +33,7 @@ function talk(n,extra){
   let best=null,bv=-1;
   tg.forEach(t=>{if(n.react[t]&&Math.abs(n.aff[t]||0)>=bv){bv=Math.abs(n.aff[t]||0);best=t}});
   const why=tg.filter(t=>n.aff[t]);
+  if(!extra)extra=arcBusyText(n);
   const heard=G.rumors.filter(r=>r.knows.includes(n.id)).map(r=>RUM[r.type].t);
   const needsL=[];if(s.hunger<40)needsL.push('hungry');if(s.cash<15)needsL.push('short on cash');
   const cls=tr>=3?'good':tr===0?'bad':tr===1?'amber':'';
