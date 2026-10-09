@@ -1,10 +1,10 @@
 "use strict";
 /* Market, diner, dock, estate, workshop, bar, club, bank, clinic. */
 MENUS.market=(poi,n,msg)=>{
-  const f=buyF(n),seed=Math.round(4*f*shopMul('market',.75));
+  const f=buyF(n);
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the counter.</p>${msgP(msg)}`,[
     {label:'Sell goods',fn:()=>sellScreen(sellF(n),poi.name,()=>MENUS.market(poi,n))},
-    {label:'Buy seed packets',sub:`${money(seed)} each. Choose how many.`,cls:'',off:G.cash<seed,fn:()=>qtyMenu({title:'Seed packets',intro:'Plant them in a plot or Greenhouse.',price:seed,max:99,mode:'buy',onConfirm:q=>{G.cash-=Math.round(seed*q);G.inv.seeds+=q;advance(5);return `You bought ${q} seed packet${q>1?'s':''}.`},back:m=>MENUS.market(poi,n,m)})},
+    {label:'Seeds',sub:`Four kinds, from ${money(Math.round(CROPS.radish.seedPrice*f*shopMul('market',.75)))}. Slower crops pay more.`,cls:'',fn:()=>seedShop(poi,n,f)},
     {label:'Pocket something and run',sub:'Free, but the whole Grid may hear about it',cls:'quiet',fn:()=>{
       let c=.4;if(G.quirk==='light-fingered')c-=.1;if(has('smooth'))c-=.12;if(has('creative'))c-=.08;if(has('known-thief'))c+=.15;
       advance(10);

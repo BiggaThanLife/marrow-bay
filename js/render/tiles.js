@@ -20,7 +20,7 @@ function drawTile(tx,ty,now){
     for(let i=2;i<TS;i+=4)cx.fillRect(sx,sy+i,TS,1);
     const pl=G&&G.plots.find(q=>q.x===tx&&q.y===ty);
     if(pl&&pl.s===1){cx.fillStyle='#6fbf5a';cx.fillRect(sx+4,sy+6,2,4);cx.fillRect(sx+10,sy+6,2,4)}
-    if(pl&&pl.s===2){cx.fillStyle='#e0b83a';cx.fillRect(sx+3,sy+4,3,7);cx.fillRect(sx+10,sy+4,3,7)}
+    if(pl&&pl.s===2){cx.fillStyle=cropOf(pl).col;cx.fillRect(sx+3,sy+4,3,7);cx.fillRect(sx+10,sy+4,3,7)}
   }else if(t===T.PLAZA){
     cx.fillStyle=(tx+ty)%2?'#cfc5ae':'#c4baa2';cx.fillRect(sx,sy,TS,TS);
   }else if(t===T.DOCK){

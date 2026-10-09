@@ -68,9 +68,10 @@ function structMenu(st,msg){
        leaveBtn,mv,rm]);
   }else if(st.type==='planter'){
     const grow=G.fx.irrig?1:2;
-    if(st.s===0)ui(`<h2>${nm}</h2>${msgP(msg)}`,[{label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${grow} day${grow>1?'s':''}.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;st.s=1;st.d=Math.max(1,grow+G.mod.growth);advance(20);structMenu(st,'Planted.')}},leaveBtn,mv,rm]);
-    else if(st.s===1)ui(`<h2>${nm}</h2><p>${st.d} day${st.d>1?'s':''} until harvest.</p>`,[leaveBtn,mv,rm]);
-    else ui(`<h2>${nm}</h2><p class="good">Ready to harvest.</p>`,[{label:'Harvest',fn:()=>{const n=Math.round(4*(has('rural')?1.5:1)*G.mod.yield);G.inv.crops+=n;st.s=0;advance(20);structMenu(st,`You harvested ${n} crops.`)}},leaveBtn,mv,rm]);
+    const again=m=>structMenu(st,m);
+    if(st.s===0)ui(`<h2>${nm}</h2><p class="muted">${esc(seedLine())}</p>${msgP(msg)}`,[{label:seedsOwned().length>1?'Choose a seed':'Plant a seed',sub:seedsOwned().length>1?'Pick what to plant':seedsOwned().length?`Ready in ${cropDays(seedsOwned()[0],true)} day${cropDays(seedsOwned()[0],true)>1?'s':''}.`:'You have no seeds.',off:!seedsOwned().length,fn:()=>plantMenu(st,true,again,()=>structMenu(st))},leaveBtn,mv,rm]);
+    else if(st.s===1)ui(`<h2>${nm}</h2><p>${esc(cropOf(st).n)}: ${st.d} day${st.d>1?'s':''} until harvest.</p>`,[leaveBtn,mv,rm]);
+    else ui(`<h2>${nm}</h2><p class="good">Ready to harvest: ${esc(cropOf(st).n.toLowerCase())}.</p>`,[{label:'Harvest',fn:()=>{const m=harvestCrop(st,true);advance(20);structMenu(st,m)}},leaveBtn,mv,rm]);
   }else if(st.type==='smoker'){
     ui(`<h2>${nm}</h2><p class="muted">Smoked fish keep and sell for more.</p>${msgP(msg)}`,[{label:'Smoke 2 fish',sub:`You have ${G.inv.fish} fish. 90 minutes.`,off:G.inv.fish<2,fn:()=>{G.inv.fish-=2;G.inv.smoked+=2;advance(90);structMenu(st,'You smoked two fish.')}},leaveBtn,mv,rm]);
   }else if(st.type==='bench'){

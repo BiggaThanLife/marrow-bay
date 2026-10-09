@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay crops test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Seeds and harvests</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* The market sells four kinds of seed; each crop ripens in its own time (a greenhouse and irrigation each take a day off, never below one); a plot or greenhouse remembers its crop;
+   harvests land in the right bag slot within the crop's range; the new crops sell at their own prices, show in the Bag only once owned, and can be eaten; old saves still work. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,NPC,POIS,CROPS,CROP_KEYS,start,closeMenu,popClear,plotMenu,structMenu,MENUS,advance,cropDays,seedsOwned,migrate,bag,tryPlace,canBuild,npcS,sellScreen,saleTotal})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], btn = rx => btns().find(x => rx.test(x.innerText));
+  const days = n => api.advance(n * 1440, true, true);
+  try {
+    api.start('farm'); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().opening = { step: 'done', done: true }; G().cash = 9999; G().energy = 90; G().hunger = 90;
+    api.npcS(api.NPC.wren).m = 80; // Wren lets you on the field
+    // the data
+    const ids = Object.keys(api.CROPS); if (ids.join() !== 'greens,radish,tomato,pumpkin') errs.push('crop list: ' + ids);
+    if (api.CROPS.greens.key !== 'crops' || api.CROPS.greens.seedKey !== 'seeds') errs.push('greens lost its original keys');
+    const want = { greens: 3, radish: 1, tomato: 3, pumpkin: 6 }; ids.forEach(i => { if (api.CROPS[i].days !== want[i]) errs.push(i + ' takes ' + api.CROPS[i].days + ' days') });
+    // days: plot, greenhouse, irrigation
+    G().fx.irrig = false; G().mod.growth = 0; if (api.cropDays('pumpkin', false) !== 6 || api.cropDays('pumpkin', true) !== 5 || api.cropDays('radish', true) !== 1 || api.cropDays('greens', false) !== 3) errs.push('days wrong');
+    G().fx.irrig = true; if (api.cropDays('pumpkin', true) !== 4 || api.cropDays('greens', false) !== 2 || api.cropDays('greens', true) !== 1) errs.push('irrigated days wrong'); G().fx.irrig = false;
+    // the rack in the market
+    const mk = api.POIS.market, mina = api.NPC.mina; api.MENUS.market(mk, mina); btn(/^Seeds/).click(); if (btns().filter(b => /seeds, \$/.test(b.innerText)).length !== 4) errs.push('seed rack should list four: ' + btns().map(b => b.innerText.split('\n')[0]).join('|'));
+    const price = {}; btns().forEach(b => { const m = b.innerText.match(/^(.*) seeds, \$(\d+)/); if (m) price[m[1]] = +m[2] }); stats.seedPrices = price;
+    if (!(price.Radish < price['Mixed greens'] && price['Mixed greens'] < price.Tomatoes && price.Tomatoes < price.Pumpkins)) errs.push('seed prices not ordered: ' + JSON.stringify(price));
+    const c0 = G().cash; btn(/^Pumpkins seeds/).click(); btn(/^Buy/) && 0; win.eval('qtyMenu'); // open the quantity screen
+    const buy = btns().find(b => /^Buy|Yes|Confirm/i.test(b.innerText)); if (!buy) errs.push('no buy button on the quantity screen: ' + btns().map(b => b.innerText.split('\n')[0]).join('|')); else { buy.click(); if (G().inv.seedPumpkin !== 1 || G().cash >= c0) errs.push('buying a pumpkin seed did not work: ' + G().inv.seedPumpkin) }
+    G().inv.seedRadish = 3; G().inv.seedTomato = 2; G().inv.seedPumpkin = 2; G().inv.seeds = 2; api.closeMenu();
+    // a plot: several seeds ask which, one plants straight away
+    const pl = G().plots[0]; pl.s = 0; api.plotMenu(pl, 'x'); if (!btn(/Choose a seed/)) errs.push('no seed choice with four kinds'); btn(/Choose a seed/).click();
+    if (btns().filter(b => /^Plant a seed: /.test(b.innerText)).length !== 4) errs.push('seed choice should list four'); btn(/Plant a seed: Radish/).click();
+    if (pl.s !== 1 || pl.c !== 'radish' || pl.d !== 1 || G().inv.seedRadish !== 2) errs.push('radish not planted properly: ' + JSON.stringify({ s: pl.s, c: pl.c, d: pl.d, seeds: G().inv.seedRadish }));
+    G().inv.crops = 0; G().inv.radish = 0; days(1); if (pl.s !== 2) errs.push('radish not ripe after a day'); api.plotMenu(pl, 'x'); if (!/Radish/.test(text())) errs.push('ripe plot does not name its crop'); btn(/^Harvest/).click();
+    if (G().inv.radish < 2 || G().inv.radish > 5 || pl.s !== 0 || pl.c) errs.push('radish harvest wrong: ' + G().inv.radish + ' ' + JSON.stringify(pl)); stats.radishHarvest = G().inv.radish;
+    // pumpkins need six days
+    api.plotMenu(pl, 'x'); btn(/Choose a seed/).click(); btn(/Plant a seed: Pumpkins/).click(); if (pl.d !== 6) errs.push('pumpkin days ' + pl.d); days(5); if (pl.s !== 1) errs.push('pumpkin ripe too early'); days(1); if (pl.s !== 2) errs.push('pumpkin not ripe after six days');
+    api.plotMenu(pl, 'x'); btn(/^Harvest/).click(); if (G().inv.pumpkin < 2 || G().inv.pumpkin > 5) errs.push('pumpkin harvest ' + G().inv.pumpkin);
+    // with one kind of seed it plants straight away and the original crop is unchanged
+    G().inv.seedRadish = 0; G().inv.seedTomato = 0; G().inv.seedPumpkin = 0; G().inv.seeds = 3; const pl2 = G().plots[1]; pl2.s = 0; api.plotMenu(pl2, 'x'); if (btn(/Choose a seed/)) errs.push('asked which with only one kind'); btn(/Plant a seed/).click();
+    if (pl2.s !== 1 || pl2.c !== 'greens' || pl2.d !== 3 || G().inv.seeds !== 2) errs.push('greens not planted as before'); days(3); G().inv.crops = 0; api.plotMenu(pl2, 'x'); btn(/^Harvest/).click(); if (G().inv.crops < 3 || G().inv.crops > 6) errs.push('greens harvest ' + G().inv.crops);
+    // a plot from an old save has no crop field and is greens
+    const pl3 = G().plots[2]; pl3.s = 2; delete pl3.c; G().inv.crops = 0; api.plotMenu(pl3, 'x'); btn(/^Harvest/).click(); if (G().inv.crops < 3) errs.push('old plot did not give greens');
+    // a greenhouse
+    const spot = (() => { const p = G().p; for (let r = 1; r < 9; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = Math.round(p.x) + dx, y = Math.round(p.y) + dy; if (api.canBuild(x, y)) return [x, y] } })();
+    win.eval('placing="planter"'); api.tryPlace(spot[0], spot[1]); const gh = G().structs.find(s => s.type === 'planter'); G().inv.seedTomato = 2; G().inv.seeds = 0; api.structMenu(gh); btn(/Plant a seed/).click();
+    if (gh.s !== 1 || gh.c !== 'tomato' || gh.d !== 2) errs.push('greenhouse tomato: ' + JSON.stringify({ s: gh.s, c: gh.c, d: gh.d })); days(2); G().inv.tomato = 0; api.structMenu(gh); btn(/^Harvest/).click(); if (G().inv.tomato !== 6) errs.push('greenhouse tomato yield (4, and a farmhand gets half as much again) ' + G().inv.tomato);
+    // selling and the Bag
+    G().inv.radish = 5; G().inv.tomato = 5; G().inv.pumpkin = 5; G().inv.crops = 5; api.sellScreen(1, 'Market Hall', () => api.closeMenu()); const sellText = text(); ['radishes', 'tomatoes', 'pumpkins'].forEach(k => { if (!sellText.includes(k)) errs.push('market does not buy ' + k) });
+    api.closeMenu(); G().inv.radish = 0; G().inv.tomato = 0; G().inv.pumpkin = 0; api.bag(); if (/radishes|tomatoes|pumpkins|seeds/.test(text().replace(/\bseeds\b/, '')) && /radishes/.test(text())) errs.push('unused crops clutter the Bag');
+    G().inv.tomato = 2; api.bag(); if (!/tomatoes/.test(text()) || !btn(/Eat a tomato/)) errs.push('owned tomatoes not shown or edible'); const h0 = G().hunger = 40; btn(/Eat a tomato/).click(); if (G().hunger !== h0 + 9 || G().inv.tomato !== 1) errs.push('eating a tomato did the wrong thing');
+    // a save
+    win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (typeof G().inv.seedRadish !== 'number') errs.push('seed fields missing after a save');
+    win.eval('delete G.inv.radish;delete G.inv.seedPumpkin;migrate()'); if (G().inv.radish !== 0 || G().inv.seedPumpkin !== 0) errs.push('old save not given the new inventory fields');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

@@ -4,12 +4,13 @@
 function plotMenu(pl,msg){
   if(!msg){engageAdd('Greenbelt',1);if(arcHook({id:'plot',d:'Greenbelt'}))return}
   if(tier(att(NPC.wren))===0)return ui(`<h2>Greenbelt plot</h2><p>Old Wren shoos you off the field. "Not you."</p><p class="muted">Build standing in the Greenbelt first.</p>`,[leaveBtn]);
-  if(pl.s===0)ui(`<h2>Empty plot</h2>${msgP(msg)}`,[
-    {label:'Plant a seed',sub:`You have ${G.inv.seeds}. Grows in ${G.fx.irrig?2:3} days.`,off:G.inv.seeds<1,fn:()=>{G.inv.seeds--;pl.s=1;pl.d=Math.max(1,(G.fx.irrig?2:3)+G.mod.growth);advance(20);plotMenu(pl,'You planted a seed.')}},leaveBtn]);
-  else if(pl.s===1)ui(`<h2>Growing</h2><p>${pl.d} day${pl.d>1?'s':''} until harvest.</p>`,[leaveBtn]);
-  else ui(`<h2>Ready to harvest</h2>`,[{label:'Harvest',fn:()=>{
-    const n=Math.round(ri(3,4)*(has('rural')?1.5:1)*G.mod.yield);G.inv.crops+=n;pl.s=0;G.rep.Greenbelt=clamp(G.rep.Greenbelt+1,-100,100);G.energy=clamp(G.energy-4,0,100);advance(30);quip('harvest');
-    plotMenu(pl,`You harvested ${n} crops.`)}},leaveBtn]);
+  const again=m=>plotMenu(pl,m);
+  if(pl.s===0)ui(`<h2>Empty plot</h2><p class="muted">${esc(seedLine())}</p>${msgP(msg)}`,[
+    {label:seedsOwned().length>1?'Choose a seed':'Plant a seed',sub:seedsOwned().length>1?'Pick what to plant':seedsOwned().length?`Ready in ${cropDays(seedsOwned()[0],false)} day${cropDays(seedsOwned()[0],false)>1?'s':''}.`:'You have no seeds.',off:!seedsOwned().length,fn:()=>plantMenu(pl,false,again,()=>plotMenu(pl))},leaveBtn]);
+  else if(pl.s===1)ui(`<h2>Growing ${esc(cropOf(pl).n.toLowerCase())}</h2><p>${pl.d} day${pl.d>1?'s':''} until harvest.</p>`,[leaveBtn]);
+  else ui(`<h2>Ready to harvest</h2><p class="muted">${esc(cropOf(pl).n)}.</p>`,[{label:'Harvest',fn:()=>{
+    const m=harvestCrop(pl,false);G.rep.Greenbelt=clamp(G.rep.Greenbelt+1,-100,100);G.energy=clamp(G.energy-4,0,100);advance(30);quip('harvest');
+    plotMenu(pl,m)}},leaveBtn]);
 }
 function plazaMenu(msg){
   const gala=G.ev&&G.ev.id==='gala',evening=hourOf()>=17;

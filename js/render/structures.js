@@ -17,7 +17,7 @@ function drawStruct(st,now){
     cx.fillStyle='#6b4a2c';cx.fillRect(sx+2,sy+9,12,5);
     cx.fillStyle='rgba(200,235,240,.6)';cx.fillRect(sx+2,sy+3,12,6);
     if(st.s===1){cx.fillStyle='#6fbf5a';cx.fillRect(sx+5,sy+6,2,3);cx.fillRect(sx+9,sy+6,2,3)}
-    if(st.s===2){cx.fillStyle='#e0b83a';cx.fillRect(sx+4,sy+4,3,5);cx.fillRect(sx+9,sy+4,3,5)}
+    if(st.s===2){cx.fillStyle=cropOf(st).col;cx.fillRect(sx+4,sy+4,3,5);cx.fillRect(sx+9,sy+4,3,5)}
   }else if(st.type==='smoker'){
     cx.fillStyle='#3a3a40';cx.fillRect(sx+4,sy+4,8,10);cx.fillStyle='#e07a3a';cx.fillRect(sx+6,sy+10,4,2);
     cx.fillStyle='rgba(200,200,200,.6)';cx.fillRect(sx+7,sy+1-(Math.floor(now/400)%2),2,2);
