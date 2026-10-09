@@ -254,7 +254,8 @@ function drawBlockDepth(b,lit,now){
   bWall(s.wall,c,sx,eave,base,ww,L);
   bF('rgba(255,255,255,.1)',L,eave+3,1,17);bF('rgba(0,0,0,.18)',Rr-4,eave,4,20);
   bF('rgba(0,0,0,.3)',L,eave,ww,3);bF('rgba(0,0,0,.22)',L,base-2,ww,2);
-  bWindows(s.win,sx,sy,eave,base,lit,c,hs);
+  bWindows(s.win,sx,sy,eave,base,lit||(G&&districtDayLit(b,hs)),c,hs);
+  if(G)districtBoards(b,biz,sx,sy,hs);
   bDoor(s.door||'std',sx,sy,base,lit,c);
   if(s.awn){const dx=sx+TS+3,dy=sy+52;for(let i=0;i<5;i++)bF(i%2?'#f4efe2':c[0],dx-4+i*4,dy-5,4,3);bF('rgba(0,0,0,.28)',dx-4,dy-2,20,1)}
   /* roof */

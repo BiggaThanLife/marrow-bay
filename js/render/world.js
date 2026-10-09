@@ -4,7 +4,7 @@ function drawWorld(now){
   const x0=Math.floor(camX/TS),y0=Math.floor(camY/TS),deep=depthOn();dpTrees=[];
   for(let ty=y0;ty<=y0+Math.ceil(VH/TS);ty++)for(let tx=x0;tx<=x0+Math.ceil(VW/TS);tx++){
     if(tx<0||ty<0||tx>=W||ty>=H)continue;
-    drawTile(tx,ty,now);if(deep)depthTileFx(tx,ty,now);
+    drawTile(tx,ty,now);if(deep)depthTileFx(tx,ty,now);districtTileFx(tx,ty,now);
     if(placing&&canBuild(tx,ty)){const sx=tx*TS-camX,sy=ty*TS-camY;cx.fillStyle='rgba(79,209,181,.28)';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='rgba(79,209,181,.9)';cx.fillRect(sx,sy,3,1);cx.fillRect(sx,sy,1,3);cx.fillRect(sx+TS-3,sy+TS-1,3,1);cx.fillRect(sx+TS-1,sy+TS-3,1,3)}
   }
   const n=night(),lit=n>.2;
@@ -29,6 +29,7 @@ function drawWorld(now){
     if(deep){dpTrees.forEach(([tx,ty])=>ents.push({y:ty+.4,f:()=>drawTreeDepth(tx,ty)}));DP_LAMPS.forEach(l=>ents.push({y:l.y/TS+.1,f:()=>drawLampDepth(l,n>.1)}))}
     G.structs.forEach(s=>ents.push({y:s.y-.5,f:()=>drawStruct(s,now)}));
     NPCS.forEach(n=>{if(!n.indoors)ents.push({y:n.y,f:()=>person(n.x,n.y,n.col,false,n.path.length>0,now,false,NPC_LOOK[n.id])})});
+    ambientEnts(now).forEach(e=>ents.push(e));
     WALKERS.forEach(w=>{if(!w.indoors)ents.push({y:w.y,f:()=>person(w.x,w.y,w.col,false,w.path.length>0,now,false,w.look)})});
     if(G.companion&&NPC[G.companion]){const cn=NPC[G.companion],ct=compTrail.length>=8?compTrail[0]:[G.p.x-.9,G.p.y+.1];ents.push({y:ct[1],f:()=>person(ct[0],ct[1],cn.col,false,compTrail.length>=8,now,false,NPC_LOOK[cn.id])})}
     ents.push({y:G.p.y,f:()=>{

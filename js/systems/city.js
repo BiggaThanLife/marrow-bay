@@ -56,6 +56,7 @@ function cityDaily(){
   marketDaily();
   neonDaily();
   councilDaily();
+  districtTipCheck();
   arcsDaily();
   if(G.arc&&G.arc.waitThread)arcThread(G.arc.waitThread);
 }

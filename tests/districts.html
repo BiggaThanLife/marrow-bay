@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay districts test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Districts show their meters</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* DSTATE splits meters into low, middle and high; more extra people are out when a meter is high and none when it is low; every district draws at every state with no errors
+   and looks different at the extremes; the feed announces a district tipping high or low once, with give around the line, and never on the first check. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,METERS,POIS,start,closeMenu,popClear,DSTATE,ambientCount,ambientEnts,districtTipCheck,drawWorld,get cv(){return cv},district,hud})`);
+  const G = () => api.G;
+  const sums = () => { const c = api.cv, d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let s = 0; for (let i = 0; i < d.length; i += 4) s = (s * 31 + d[i] + d[i + 1] * 3 + d[i + 2] * 7) >>> 0; return s };
+  const setAll = v => { for (const k in api.METERS) G().meters[k] = v };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false');
+    G().t = 12 * 60; // noon, so people are out
+    // thresholds
+    G().meters.Grid = 70; if (api.DSTATE('Grid') !== 2) errs.push('70 is not high'); G().meters.Grid = 50; if (api.DSTATE('Grid') !== 1) errs.push('50 is not middle'); G().meters.Grid = 30; if (api.DSTATE('Grid') !== 0) errs.push('30 is not low');
+    // people: none when low, more when high, never at night (except the Neon Mile)
+    const cnt = (d, m, t) => { G().t = t; G().meters[d] = m; return api.ambientCount(d) };
+    const noon = 12 * 60, small = 3 * 60;
+    if (cnt('Grid', 20, noon) !== 0) errs.push('people out in a collapsing district'); if (cnt('Grid', 50, noon) < 1) errs.push('nobody out in a steady district'); if (cnt('Grid', 95, noon) <= cnt('Grid', 50, noon)) errs.push('a booming district is not busier');
+    if (cnt('Grid', 95, small) !== 0) errs.push('Grid people out at 3 am'); if (cnt('Neon Mile', 95, small) < 1) errs.push('Neon Mile empty at 3 am');
+    stats.counts = { low: cnt('Grid', 20, noon), mid: cnt('Grid', 50, noon), high: cnt('Grid', 95, noon) };
+    // every district draws at every state, and the extremes look different from the middle
+    G().t = noon; setAll(50);
+    for (const d of Object.keys(api.METERS)) {
+      const p = Object.values(api.POIS).find(q => q.d === d); if (!p) { errs.push('no place in ' + d); continue }
+      G().p.x = p.ex; G().p.y = p.ey; win.eval('camX=Math.max(0,Math.round(G.p.x*TS-VW/2));camY=Math.max(0,Math.round(G.p.y*TS-VH/2))');
+      const look = m => { G().meters[d] = m; try { api.drawWorld(1234) } catch (e) { errs.push(d + ' failed to draw at ' + m + ': ' + e.message) } return sums() };
+      const mid = look(50), lo = look(10), hi = look(95);
+      if (mid === lo) errs.push(d + ' looks the same when low'); if (mid === hi) errs.push(d + ' looks the same when high'); if (lo === hi) errs.push(d + ' low and high look the same');
+      G().meters[d] = 50;
+    }
+    // people are not tappable or saved: they are not in NPCS or WALKERS
+    const n0 = win.eval('NPCS.length'), w0 = win.eval('WALKERS.length'); setAll(95); api.ambientEnts(1000); if (win.eval('NPCS.length') !== n0 || win.eval('WALKERS.length') !== w0) errs.push('ambient people leaked into the cast');
+    // the feed: no post on the first check, one when tipping, none while wobbling, one on the way back out then in again
+    setAll(50); G().dstate = undefined; G().feed = []; api.districtTipCheck(); if (G().feed.length) errs.push('first check posted');
+    G().meters.Dockside = 75; api.districtTipCheck(); const p1 = G().feed.filter(p => p.dist === 'Dockside'); if (p1.length !== 1 || p1[0].kind !== 'event' || !/Dockside/.test(p1[0].t)) errs.push('no high post: ' + JSON.stringify(p1));
+    G().meters.Dockside = 66; api.districtTipCheck(); G().meters.Dockside = 72; api.districtTipCheck(); if (G().feed.filter(p => p.dist === 'Dockside').length !== 1) errs.push('wobbling around the line reposted');
+    G().meters.Dockside = 55; api.districtTipCheck(); G().meters.Dockside = 25; api.districtTipCheck(); const p2 = G().feed.filter(p => p.dist === 'Dockside'); if (p2.length !== 2 || !/quiet|gulls/.test(p2[1].t)) errs.push('no low post: ' + JSON.stringify(p2.map(x => x.t)));
+    // a save keeps working
+    win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); api.districtTipCheck(); if (!G().dstate) errs.push('state lost');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>
