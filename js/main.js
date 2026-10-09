@@ -24,7 +24,8 @@ function tick(dt){
   let sp=vehSpeed(G.veh.active)*G.mod.vspeed;
   if(v.fuel&&(G.veh.fuel[G.veh.active]||0)<=0)sp=3;
   if(G.energy<15||G.hunger<10)sp=Math.min(sp,2.6);
-  if(G.mod.flood.includes(district(Math.round(p.x),Math.round(p.y))))sp*=.55;
+  if(G.fx.sneakers)sp*=1.1;
+  if(G.mod.flood.includes(district(Math.round(p.x),Math.round(p.y))))sp*=G.fx.umbrella?.8:.55;
   if(tideV()>.45&&map[Math.round(p.y)]&&map[Math.round(p.y)][Math.round(p.x)]===T.DOCK)sp*=.8; /* the pier is awash at high tide */
   const bx=p.x,by=p.y,was=p.path.length>0;
   moveEnt(p,dt,sp);

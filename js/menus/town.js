@@ -4,6 +4,7 @@ MENUS.market=(poi,n,msg)=>{
   const f=buyF(n);
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the counter.</p>${msgP(msg)}`,[
     {label:'Sell goods',fn:()=>sellScreen(sellF(n),poi.name,()=>MENUS.market(poi,n))},
+    {label:'General goods',sub:'Drinks, snacks, everyday items, gifts and tools',cls:'',fn:()=>generalStore(poi,n,()=>MENUS.market(poi,n))},
     {label:'Seeds',sub:`Four kinds, from ${money(Math.round(CROPS.radish.seedPrice*f*shopMul('market',.75)))}. Slower crops pay more.`,cls:'',fn:()=>seedShop(poi,n,f)},
     {label:'Pocket something and run',sub:'Free, but the whole Grid may hear about it',cls:'quiet',fn:()=>{
       let c=.4;if(G.quirk==='light-fingered')c-=.1;if(has('smooth'))c-=.12;if(has('creative'))c-=.08;if(has('known-thief'))c+=.15;
@@ -33,7 +34,7 @@ function craftTrinket(){G.inv.scrap-=3;G.inv.trinkets++;advance(120);G.energy=cl
 MENUS.workshop=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">Benches, tools, and the smell of solder.</p>${msgP(msg)}`,[
     {label:'Craft a trinket',sub:`Uses 3 scrap, 2 hours. You have ${G.inv.scrap}.`,off:G.inv.scrap<3,fn:()=>{craftTrinket();MENUS.workshop(poi,n,'You made a trinket.')}},
-    {label:'Repair shift',sub:'3 hours, about $18',need:21,cls:'',fn:()=>MENUS.workshop(poi,n,gig(null,{hrs:3,base:18,mult:has('creative')?1.2:1,rep:'Grid',label:'repairs'}))},
+    {label:'Repair shift',sub:'3 hours, about $18',need:21,cls:'',fn:()=>MENUS.workshop(poi,n,gig(null,{hrs:3,base:18,mult:(has('creative')?1.2:1)*(G.fx.toolkit?1.2:1),rep:'Grid',label:'repairs'}))},
     {label:'Crafting bench',sub:'Parts, jammers, and vehicle upgrades',cls:'',fn:()=>craftMenu(()=>MENUS.workshop(poi,n))},
     leaveBtn]);
 };

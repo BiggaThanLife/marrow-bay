@@ -1,0 +1,62 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay everyday goods test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Everyday goods</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* The market's General goods counter sells four groups; consumables go in the Bag and are used from there with the right effect; an energy drink gives energy with no fullness
+   and a dip about three hours later; equipment is bought once and changes walking, floods and shift pay; gifts raise attitude once a day each; old saves get the fields. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,NPC,POIS,GOODS,GOOD_CATS,start,closeMenu,popClear,MENUS,advance,generalStore,goodsCategory,useItem,itemsMenu,crashTick,giftMenu,talk,bag,tick,gig,migrate,npcS,hourly,itemCount,district,map,T,W,H})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], btn = rx => btns().find(x => rx.test(x.innerText));
+  const buy = (cat, rx, q) => { api.generalStore(api.POIS.market, api.NPC.mina, () => api.closeMenu()); btn(new RegExp('^' + cat)).click(); btn(rx).click(); const b = btns().find(x => /^Buy|Confirm|Yes/i.test(x.innerText)); if (b) b.click() };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().opening = { step: 'done', done: true }; G().cash = 9999; G().energy = 50; G().hunger = 50;
+    // the counter is on the market menu
+    api.MENUS.market(api.POIS.market, api.NPC.mina); if (!btn(/General goods/)) errs.push('Market has no General goods'); btn(/General goods/).click();
+    const cats = btns().map(b => b.innerText.split('\n')[0]).filter(x => x !== 'Back'); if (cats.join() !== 'Drinks and snacks,Everyday items,Gifts,Tools') errs.push('categories: ' + cats);
+    // every item is listed with a price and a description
+    Object.keys(api.GOODS).forEach(id => { const g = api.GOODS[id]; if (!g.n || !(g.price > 0) || !g.d) errs.push('incomplete item ' + id) });
+    const listed = api.GOOD_CATS.flatMap(c => c.of); if (listed.sort().join() !== Object.keys(api.GOODS).sort().join()) errs.push('categories and items do not match');
+    // buying and using a consumable
+    G().items = {}; buy('Drinks', /^Coffee/); if (api.itemCount('coffee') < 1) errs.push('coffee not bought');
+    G().energy = 40; G().hunger = 50; api.itemsMenu(); btn(/Coffee/).click(); if (G().energy < 51 || G().energy > 53 || G().hunger > 50) errs.push('coffee wrong: ' + G().energy + ' ' + G().hunger);
+    // an energy drink: big boost, no fullness, then a dip
+    G().items.energy = 1; G().energy = 30; G().hunger = 60; G().crash = []; const t0 = G().t; api.useItem('energy'); if (G().energy < 64 || G().hunger > 60 || G().crash.length !== 1) errs.push('energy drink wrong: ' + JSON.stringify({ e: G().energy, h: G().hunger, c: G().crash }));
+    const e1 = G().energy; G().t = t0 + 100; api.crashTick(); if (G().energy !== e1) errs.push('the dip came too soon'); G().t = t0 + 190; api.crashTick(); if (G().energy !== e1 - 12 || G().crash.length) errs.push('the dip did not arrive: ' + G().energy);
+    // snacks feed, water does both a little
+    G().items.sandwich = 1; G().hunger = 30; api.useItem('sandwich'); if (G().hunger < 53) errs.push('sandwich ' + G().hunger); G().items.chips = 1; G().hunger = 30; api.useItem('chips'); if (G().hunger < 38 || G().hunger > 42) errs.push('chips ' + G().hunger);
+    // the Bag shows items and offers to use them
+    G().items = { coffee: 2, flowers: 1 }; api.bag(); if (!/Coffee/.test(text()) || !btn(/Use an item/)) errs.push('Bag does not list or offer items'); if (/Use an item[\s\S]*Flowers/.test(btn(/Use an item/).innerText)) errs.push('gifts offered as consumables');
+    // equipment: bought once, flags set, effects felt
+    G().items = {}; ['sneakers', 'umbrella'].forEach(id => { buy('Everyday', new RegExp('^' + api.GOODS[id].n)); if (!G().fx[id]) errs.push(id + ' not bought') });
+    api.generalStore(api.POIS.market, api.NPC.mina, () => 0); btn(/^Everyday/).click(); if (!btn(/^Sneakers/).disabled) errs.push('sneakers can be bought twice');
+    buy('Tools', /^Work gloves/); buy('Tools', /^Toolkit/); if (!G().fx.gloves || !G().fx.toolkit) errs.push('tools not bought');
+    // speed: sneakers 10%
+    let dock = null; for (let y = 0; y < api.H && !dock; y++) for (let x = 0; x < api.W; x++) if (api.map[y][x] === api.T.ROAD) { dock = [x, y]; break }
+    const dist = () => { api.closeMenu(); const p = G().p; p.x = dock[0]; p.y = dock[1]; p.path = [[dock[0], dock[1] + 8]]; const y0 = p.y; api.tick(.04); return Math.abs(p.y - y0) };
+    G().t = 12 * 60; G().energy = 90; G().hunger = 90; G().fx.sneakers = false; G().mod.flood = []; const d0 = dist(); G().fx.sneakers = true; const d1 = dist(); if (Math.abs(d1 / d0 - 1.1) > .03) errs.push('sneakers factor ' + (d1 / d0).toFixed(2));
+    // umbrella in a flood
+    const fl = api.district(dock[0], dock[1]); G().fx.sneakers = false; G().mod.flood = [fl]; G().fx.umbrella = false; const f0 = dist(); G().fx.umbrella = true; const f1 = dist(); if (!(f1 / f0 > 1.3 && f1 / f0 < 1.6)) errs.push('umbrella factor ' + (f1 / f0).toFixed(2)); G().mod.flood = [];
+    // gloves and toolkit on pay
+    G().energy = 100; G().fx.gloves = false; let c = G().cash; api.gig(null, { hrs: 3, base: 100, rep: 'Grid', label: 'x' }); const base = G().cash - c; G().energy = 100; G().fx.gloves = true; c = G().cash; api.gig(null, { hrs: 3, base: 100, rep: 'Grid', label: 'x' }); const gl = G().cash - c; if (Math.round(base * 1.1) !== gl) errs.push('gloves pay ' + base + ' -> ' + gl);
+    // gifts: once a day, per person, with an effect
+    G().items = { flowers: 2, card: 1 }; const wren = api.NPC.wren, s = api.npcS(wren); s.m = 0; s.gift = -1; api.talk(wren); if (!btn(/Give a gift/)) errs.push('no gift button'); btn(/Give a gift/).click(); btn(/^Flowers/).click(); if (s.m !== 10 || api.itemCount('flowers') !== 1) errs.push('flowers did not land: ' + s.m);
+    api.talk(wren); if (!btn(/Give a gift/).disabled) errs.push('a second gift the same day was allowed'); G().t += 1440; api.talk(wren); btn(/Give a gift/).click(); btn(/^Greeting card/).click(); if (s.m !== 14) errs.push('next-day gift ' + s.m);
+    // the Bag lists equipment and an old save is given the fields
+    G().fx.sneakers = true;
+    api.bag(); if (!/Sneakers/.test(text())) errs.push('Bag does not list owned equipment');
+    win.eval('delete G.items;delete G.crash;migrate()'); if (!G().items || !Array.isArray(G().crash)) errs.push('old save not given item fields');
+    win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (!G().fx.sneakers) errs.push('equipment lost in a save');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

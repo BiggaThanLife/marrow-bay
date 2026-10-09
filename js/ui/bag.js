@@ -3,7 +3,7 @@
 /* ================= BAG / TOWN / BIZ OVERVIEW / GO ================= */
 function bag(msg){
   const b=BG[G.bg],tg=tagsNow();
-  const inv=Object.keys(NAMES).filter(k=>!CROP_EXTRA.includes(k)||G.inv[k]>0).map(k=>`<div><span>${NAMES[k]}</span><b>${G.inv[k]}</b></div>`).join('');
+  const inv=Object.keys(NAMES).filter(k=>!CROP_EXTRA.includes(k)||G.inv[k]>0).map(k=>`<div><span>${NAMES[k]}</span><b>${G.inv[k]}</b></div>`).join('')+Object.keys(GOODS).filter(id=>!GOODS[id].fx&&itemCount(id)>0).map(id=>`<div><span>${GOODS[id].n}</span><b>${itemCount(id)}</b></div>`).join('')+Object.keys(GOODS).filter(id=>goodOwned(id)).map(id=>`<div><span>${GOODS[id].n}</span><b>yes</b></div>`).join('');
   const st=Object.keys(G.rep).map(d=>`<div><span>${d}</span><b>${standing(G.rep[d])}</b></div>`).join('');
   const btns=[];
   if(G.inv.meals>0)btns.push({label:'Eat a meal',sub:'Restores 45 fullness',fn:()=>{G.inv.meals--;G.hunger=clamp(G.hunger+45,0,100);advance(15,false,true);hud();bag()}});
@@ -12,6 +12,7 @@ function bag(msg){
   ['radish','tomato','pumpkin'].forEach(id=>{const c=CROPS[id];if(G.inv[c.key]>0)btns.push({label:`Eat a ${c.one}`,sub:`Restores ${c.eat} fullness`,cls:'',fn:()=>{G.inv[c.key]--;G.hunger=clamp(G.hunger+c.eat,0,100);hud();bag()}})});
   if(G.inv.candy>0)btns.push({label:'Eat thoughts and prayers candy',sub:'Chalky. Clears a little heat, fixes nothing',cls:'',fn:eatCandy});
   if(G.inv.plaque>0)btns.push({label:'Place a commemorative plaque',sub:`You have ${G.inv.plaque}`,cls:'',fn:()=>plaqueMenu()});
+  if(usableItems().length)btns.push({label:'Use an item',sub:usableItems().map(id=>`${GOODS[id].n} ${itemCount(id)}`).join(', '),cls:'',fn:()=>itemsMenu()});
   btns.push({label:'Wait one hour',cls:btns.length?'':'primary',fn:()=>{advance(60);bag()}});
   btns.push({label:'Close',cls:'quiet',fn:closeMenu},{label:'Quit to title',cls:'quiet',fn:()=>ask('Quit to title?','Your game is saved automatically.','Quit',()=>{save();title()},bag)});
   const hp=homePoi();

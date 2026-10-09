@@ -22,7 +22,7 @@ function info(poi){ui(`<h2>${esc(poi.name)}</h2><p>Residents live here. Nobody a
 function gig(n,{hrs,base,mult=1,rep,label}){
   if(G.energy<hrs*7)return `You are too tired for ${hrs} hours of work.`;
   engageAdd(rep,2);
-  const pay=Math.round(base*mult*(n?payF(n):1)*(G.quirk==='iron-stomach'?.95:1));
+  const pay=Math.round(base*mult*(G.fx.gloves?1.1:1)*(n?payF(n):1)*(G.quirk==='iron-stomach'?.95:1));
   G.cash+=pay;advance(hrs*60);G.energy=clamp(G.energy-hrs*4,0,100);
   G.rep[rep]=clamp(G.rep[rep]+1,-100,100);
   return `You worked ${label} for ${hrs} hours and earned ${money(pay)}.`;
