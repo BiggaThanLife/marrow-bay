@@ -33,6 +33,7 @@ function recomputeMods(){
 function startEvent(t){
   const o=t.mk(),dur=ri(t.dur[0],t.dur[1]);
   G.evs.push({id:t.id,sev:t.sev,name:o.name,desc:o.desc,mod:o.mod||{},until:day()+dur});
+  if(t.sev>=4)histAdd('ev:'+t.id,`Lived through: ${o.name}. HARBOR has you down as "present."`,10);
   recomputeMods();
   let extra='';
   if(o.start){const r=o.start();if(r)extra=r}

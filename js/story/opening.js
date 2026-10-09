@@ -75,6 +75,7 @@ function openingChoose(keep){
   if(keep){G.cash+=40;G.inv.trinkets=(G.inv.trinkets||0)+1;memAdd(n.id,-3)}
   else{G.cash+=10;memAdd(n.id,8)}
   o.kept=keep;o.step='consequence';o.at=G.t+60;
+  histAdd('crate',keep?'Kept a crate from the flats. Nobody saw. HARBOR did.':'Handed in a crate from the flats. HARBOR is suspicious of how nice that was.')
   ui(`<h2>${keep?'Finders keepers':'Handed in'}</h2><p>${keep?'The lock gives on the third try. Inside: coins, a brass trinket and a smell like old harbour. You pocket it all.':`You carry it to ${esc(n.name.split(' ')[0])}, who turns it over twice. "Huh. Most people would not have."`}</p>`,[{label:'Continue',keep:true,fn:closeMenu}]);
 }
 /* an hour later: a rumor, a different line from the neighbour, and a reason to come back tomorrow */

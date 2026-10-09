@@ -19,7 +19,7 @@ function resMenu(id,msg){
        :{label:'Rent it',sub:`${money(dep)} now, then every month`,off:cur||G.cash<dep,fn:()=>{G.cash-=dep;G.home=id;resMenu(id,'You rented the place and moved in.')}},
     {label:own?'Sell your unit':'Buy a unit',sub:own?`Get ${money(RENT[id]*28*.7)}`:`${money(price)}`,off:!own&&G.cash<price,cls:'',fn:()=>{
       if(own)return ask('Sell your unit?',`You get ${money(RENT[id]*28*.7)}.`+(G.home===id?' You live here, so you will move to the Bunkhouse.':''),'Yes, sell',()=>{G.cash+=Math.round(RENT[id]*28*.7);delete G.owned[id];if(G.home===id)G.home='bunk';resMenu(id,'Sold.')},()=>resMenu(id));
-      ask('Buy this unit?',`It costs ${money(price)} and you move in right away.`,'Yes, buy',()=>{G.cash-=price;G.owned[id]=true;G.home=id;resMenu(id,'It is yours. You moved in.')},()=>resMenu(id))}},
+      ask('Buy this unit?',`It costs ${money(price)} and you move in right away.`,'Yes, buy',()=>{G.cash-=price;G.owned[id]=true;G.home=id;histAdd('buy:'+id,`Bought a home and moved in for ${money(price)}. HARBOR has updated your address and its expectations.`);resMenu(id,'It is yours. You moved in.')},()=>resMenu(id))}},
     {label:'Back',cls:'quiet',fn:resList}]);
 }
 function buildingList(){
@@ -35,14 +35,14 @@ function vacantMenu(b,msg){
   const price=Math.round(PRICE[d]*buyF(lou));
   ui(`<h2>Empty building, ${d}</h2><p class="muted">Foot traffic here: ${TR[d]>=30?'heavy':TR[d]>=20?'steady':'light'}. Convert it into a café, bar, workshop, rental, farm, or home after buying.</p>${msgP(msg)}`,[
     {label:`Buy for ${money(price)}`,sub:`Property tax about ${money(price*.01)} a month`,off:G.cash<price,fn:()=>{
-      ask('Buy this building?',`It costs ${money(price)}. Property tax applies every month.`,'Yes, buy',()=>{G.cash-=price;G.biz.push({key:b.key,d,type:null,price,workers:[],supplies:0,till:0,level:1,mk:1,store:0,auto:true,last:null});advance(30);quip('buy');bizMenu(bizOf(b.key),'You own it now.')},()=>vacantMenu(b))}},
+      ask('Buy this building?',`It costs ${money(price)}. Property tax applies every month.`,'Yes, buy',()=>{G.cash-=price;G.biz.push({key:b.key,d,type:null,price,workers:[],supplies:0,till:0,level:1,mk:1,store:0,auto:true,last:null});advance(30);quip('buy');histAdd('buy:'+b.key,`Acquired a building in ${d} for ${money(price)}. HARBOR has updated the property register and its opinion of you.`);bizMenu(bizOf(b.key),'You own it now.')},()=>vacantMenu(b))}},
     {label:'Close',cls:'quiet',fn:closeMenu}]);
 }
 function propertyMenu(b){const biz=bizOf(b.key);if(biz)bizMenu(biz);else vacantMenu(b)}
 function bizMenu(biz,msg){
   if(!biz.type){
     return ui(`<h2>Empty building, ${biz.d}</h2><p class="muted">Choose what to turn it into.</p>${msgP(msg)}`,[
-      ...Object.entries(BT).filter(([k])=>k!=='farm'||biz.d==='Greenbelt').map(([k,t],i)=>({label:`${t.n}, fit-out ${money(t.fit)}`,sub:t.d,cls:i?'':'primary',off:G.cash<t.fit,fn:()=>ask(`Convert to a ${t.n.toLowerCase()}?`,`The fit-out costs ${money(t.fit)}.`,'Yes, convert',()=>{G.cash-=t.fit;biz.paid=(biz.paid||biz.price)+t.fit;biz.type=k;news(`A new ${t.n.toLowerCase()} opens in ${biz.d}.`,2);advance(120);bizMenu(biz,`Now a ${t.n.toLowerCase()}.`)},()=>bizMenu(biz))})),
+      ...Object.entries(BT).filter(([k])=>k!=='farm'||biz.d==='Greenbelt').map(([k,t],i)=>({label:`${t.n}, fit-out ${money(t.fit)}`,sub:t.d,cls:i?'':'primary',off:G.cash<t.fit,fn:()=>ask(`Convert to a ${t.n.toLowerCase()}?`,`The fit-out costs ${money(t.fit)}.`,'Yes, convert',()=>{G.cash-=t.fit;biz.paid=(biz.paid||biz.price)+t.fit;biz.type=k;news(`A new ${t.n.toLowerCase()} opens in ${biz.d}.`,2);histAdd('open:'+biz.key+':'+k,`Opened a ${t.n.toLowerCase()} in ${biz.d}. HARBOR has added it to the list of things that can go wrong.`);advance(120);bizMenu(biz,`Now a ${t.n.toLowerCase()}.`)},()=>bizMenu(biz))})),
       {label:'Sell it back',sub:`Get ${money(biz.price*.7)}`,cls:'quiet',fn:()=>sellBiz(biz)},{label:'Close',cls:'quiet',fn:closeMenu}]);
   }
   if(biz.type==='rental')ensureRental(biz);

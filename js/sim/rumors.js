@@ -7,7 +7,7 @@ const knowersNear=(dist,n=1)=>NPCS.filter(x=>x.d===dist).slice(0,n).map(x=>x.id)
 function addRumor(type,ids,opts){
   let r=G.rumors.find(x=>x.type===type);
   if(r){r.str=100;ids.forEach(i=>{if(!r.knows.includes(i))r.knows.push(i)});if(day()-(r.lastPost||-99)>=3)r.posted=0}
-  else{r={type,str:100,knows:[...new Set(ids)]};G.rumors.push(r)}
+  else{r={type,str:100,knows:[...new Set(ids)]};G.rumors.push(r);if(RUM[type])histAdd('rum:'+type,`Word got around. ${RUM[type].t} HARBOR did not start it.`,15)}
   if(opts)Object.assign(r,opts);
   rumorPost(r);
 }

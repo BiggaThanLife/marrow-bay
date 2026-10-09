@@ -9,7 +9,7 @@ const COMP_PERKS={
 const hasComp=id=>G.companion===id;
 function recruit(n){
   G.companion=n.id;n.indoors=true;n.path=[];compTrail=[];recomputeMods();
-  news(`${n.name} is now travelling with you.`,1);
+  news(`${n.name} is now travelling with you.`,1);histAdd('comp:'+n.id,`${n.name} is now travelling with you. HARBOR suspects a friendship.`,10);
 }
 function dismissComp(){
   const n=NPC[G.companion];G.companion=null;compTrail=[];recomputeMods();if(n)assign(n,true);

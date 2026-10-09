@@ -13,6 +13,7 @@ function phone(msg){
     {label:'City',sub:'Districts and factions',cls:'',fn:cityMenu},
     {label:'FLACK',sub:`${FLACK_BANDS[flackBand()].n} coverage`,cls:'',fn:()=>flackMenu()},
     ...(G.biz.some(b=>b.type==='rental')?[{label:'Tenants',sub:issueTotal()?`${issueTotal()} problem${issueTotal()>1?'s':''} waiting`:'Your apartment buildings',badge:issueTotal(),cls:'',fn:()=>tenantsOverview()}]:[]),
+    {label:'Your story',sub:`${storyEntries().length} entr${storyEntries().length===1?'y':'ies'} on file`,cls:'',fn:storyMenu},
     {label:'Career',sub:`${G.titles.length} title${G.titles.length===1?'':'s'}. Net worth ${money(netWorth())}`,cls:'',fn:()=>careerMenu()},
     ...(G.companion?[{label:NPC[G.companion].name,sub:'Your companion',cls:'',fn:()=>companionMenu()}]:[]),
     ...(G.arc?[{label:ARCS[G.arc.id].title,sub:ARCS[G.arc.id].phases[G.arc.i].name+'. Tap to act.',cls:'primary',fn:()=>arcMenu()}]:[]),

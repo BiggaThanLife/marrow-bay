@@ -1,0 +1,53 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay your story test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Your story</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* histAdd records a moment once per gap; the history is capped; the Phone page merges moments with finished arcs and personal threads, newest first;
+   the real acts (eviction, arrest, release, collapse, rumors, warm and hostile turns, the opening crate, companions) write entries; saves keep it. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,NPC,NPCS,start,closeMenu,popClear,histAdd,histTier,storyEntries,storyMenu,phone,addRumor,evictTenant,release,collapse,recruit,openingChoose,day,migrate,HIST_CAP,talk,startEvent,EVT})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, has = rx => (G().hist || []).some(h => rx.test(h.t));
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().hist = [];
+    // basics
+    api.histAdd('a', 'First thing.'); api.histAdd('a', 'Same thing again.', 5); if (G().hist.length !== 1) errs.push('the gap did not stop a repeat'); api.histAdd('b', 'Second thing.'); if (G().hist.length !== 2) errs.push('a different key was blocked');
+    for (let i = 0; i < 120; i++) api.histAdd('k' + i, 'filler ' + i); if (G().hist.length !== api.HIST_CAP) errs.push('history not capped: ' + G().hist.length);
+    // the page: empty, then merged and newest first
+    G().hist = []; G().arcsDone = []; G().threads.done = []; api.phone(); if (![...doc.querySelectorAll('#sheet #actions button')].some(b => /Your story\n0 entries/.test(b.innerText))) errs.push('Phone row missing or wrong: ' + [...doc.querySelectorAll('#sheet #actions button')].map(b => b.innerText.replace(/\n/g, '|')).join(' / '));
+    api.storyMenu(); if (!/Nothing on file/.test(text())) errs.push('empty page wrong');
+    G().t = 5 * 1440; G().hist = [{ day: 2, key: 'x', t: 'An old moment.' }, { day: 9, key: 'y', t: 'A newer moment.' }];
+    G().arcsDone = [{ id: 'dockstrike', title: 'The Dock Strike', out: 'x', name: 'Settled', text: 'The piers reopened.', day: 6 }]; G().threads.done = [{ tid: 'rival', title: 'The Rival', end: 'Truce', day: 4 }];
+    const e = api.storyEntries(); if (e.length !== 4 || e.map(x => x.day).join() !== '9,6,4,2') errs.push('merge or order wrong: ' + JSON.stringify(e.map(x => x.day)));
+    api.storyMenu(); if (!/4 entries/.test(text()) || !/Dock Strike: Settled/.test(text()) || !/Rival: Truce/.test(text()) || text().indexOf('A newer moment') > text().indexOf('An old moment')) errs.push('page content wrong');
+    // real acts
+    G().hist = [];
+    const b = { d: 'Grid', key: '1,1', tenants: [{ id: 't1', name: 'A B' }], issues: [] }; api.evictTenant(b, b.tenants[0], 'evict'); if (!has(/Evicted a tenant/)) errs.push('eviction not recorded');
+    G().jail = { start: G().t - 1440, until: G().t }; api.release(false); api.popClear(); if (!has(/Released from the Penitentiary/)) errs.push('release not recorded');
+    api.collapse(); api.popClear(); if (!has(/Collapsed in the street/)) errs.push('collapse not recorded');
+    G().rumors = []; api.addRumor('thief', ['mina', 'reyes']); if (!has(/Word got around/)) errs.push('a new rumor was not recorded'); const n0 = G().hist.length; api.addRumor('thief', ['mina', 'teo']); if (G().hist.length !== n0) errs.push('an existing rumor recorded twice');
+    api.recruit(api.NPC.mina); if (!has(/Mina Okafor is now travelling/)) errs.push('companion not recorded');
+    G().opening = { step: 'tide', npc: 'wren', bg: 'farm', kept: null }; api.openingChoose(true); api.popClear(); api.closeMenu(); if (!has(/Kept a crate/)) errs.push('crate not recorded');
+    api.startEvent(api.EVT.find(t => t.sev >= 4)); if (!has(/Lived through/)) errs.push('big event not recorded');
+    // warm and hostile turns are noticed on talking, never on the first meeting
+    G().tierSeen = {}; G().hist = []; const wren = api.NPC.wren;
+    api.histTier(wren, 1); if (G().hist.length) errs.push('first meeting recorded a turn');
+    api.histTier(wren, 3); if (!has(/thinks well of you/)) errs.push('a warm turn was not recorded'); api.histTier(wren, 0); if (!has(/will no longer deal with you/)) errs.push('a hostile turn was not recorded');
+    // and talking really does call it
+    G().tierSeen = {}; G().hist = []; win.eval('npcS(NPC.wren).m=-500'); api.talk(wren); api.closeMenu(); win.eval('npcS(NPC.wren).m=500'); api.talk(wren); api.closeMenu(); if (!has(/thinks well of you/)) errs.push('talking did not notice a warm turn');
+    // a save keeps it
+    win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (!G().hist.length) errs.push('history lost on save');
+    api.storyMenu(); if (!/entries/.test(text())) errs.push('page broke after a save');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>
