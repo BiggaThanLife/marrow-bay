@@ -16,7 +16,9 @@ function assign(n,instant){
     if(instant){n.indoors=true;n.path=[];n.x=homeP.ex;n.y=homeP.ey}
     else if(!n.indoors){goto(n,[homeP.ex,homeP.ey]);n.goHome=true}
   }else{
-    const s=spotNear(POIS[a==='work'?n.work:n.hang],n.id);
+    /* at low tide the Dockside crowd heads to the pier when they are off work, and the dock workers stay there */
+    const pier=n.d==='Dockside'&&POIS.dock&&tideV()<-.45&&(a==='hang'||n.work==='dock');
+    const s=spotNear(pier?POIS.dock:POIS[a==='work'?n.work:n.hang],n.id);
     if(instant){n.indoors=false;n.x=s[0];n.y=s[1];n.path=[]}
     else{
       if(n.indoors){n.indoors=false;n.x=homeP.ex;n.y=homeP.ey}

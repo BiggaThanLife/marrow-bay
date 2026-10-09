@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay tide test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>The tide matters (gently)</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* At high tide the dock planks slow you by a fifth, at low tide the Dockside crowd heads for the pier in their free hours, the waterfront says what the tide is doing,
+   and the exposed flats sometimes hide a strongbox. Nothing is ever blocked. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,NPC,POIS,T,get map(){return map},W,H,start,closeMenu,popClear,tick,assign,waterfront,tideV,tideName,ri})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btn = rx => [...doc.querySelectorAll('#sheet #actions button')].find(x => rx.test(x.innerText));
+  const when = (cond, from = 0) => { for (let m = from; m < from + 3 * 1440; m += 5) if (cond(m)) return m; return null };
+  const hi = m => api.tideV(m) > .5, lo = m => api.tideV(m) < -.5, mid = m => Math.abs(api.tideV(m)) < .2;
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; G().energy = 90; G().hunger = 90; win.eval('SET.hints=false');
+    // find a dock plank
+    let dock = null; for (let y = 0; y < api.H && !dock; y++) for (let x = 0; x < api.W; x++) if (api.map[y][x] === api.T.DOCK) { dock = [x, y]; break }
+    if (!dock) errs.push('no dock tiles'); else {
+      const dist = t => { G().t = t; const p = G().p; p.x = dock[0]; p.y = dock[1]; p.path = [[dock[0] + 6, dock[1]]]; p.onArrive = null; const x0 = p.x; api.tick(.04); return Math.abs(p.x - x0) };
+      const tHi = when(hi), tMid = when(mid), tLo = when(lo);
+      const dHi = dist(tHi), dMid = dist(tMid), dLo = dist(tLo); stats.speed = [dHi, dMid, dLo].map(v => Math.round(v * 1000) / 1000);
+      if (!(dHi > 0 && dMid > 0)) errs.push('no movement measured'); else if (Math.abs(dHi / dMid - .8) > .05) errs.push('high tide slow-down is ' + (dHi / dMid).toFixed(2) + ', expected 0.8'); if (Math.abs(dLo / dMid - 1) > .05) errs.push('low tide should not slow you: ' + (dLo / dMid).toFixed(2));
+    }
+    // who is where: in the evening Gus is at the pier at low tide and at the bar otherwise
+    const d = (n, p) => Math.hypot(n.x - p.ex, n.y - p.ey);
+    const evening = (cond) => { for (let day = 0; day < 4; day++) for (let h = 17; h < 22; h++) { const m = day * 1440 + h * 60 + 10; if (cond(m)) return m } return null };
+    const eLo = evening(lo), eHi = evening(hi);
+    if (eLo == null || eHi == null) errs.push('no evening tide found'); else {
+      const gus = api.NPC.gus; G().t = eLo; api.assign(gus, true); const atPierLow = d(gus, api.POIS.dock) < d(gus, api.POIS.gull);
+      G().t = eHi; api.assign(gus, true); const atBarHigh = d(gus, api.POIS.gull) < d(gus, api.POIS.dock);
+      if (!atPierLow) errs.push('Gus not at the pier at low tide'); if (!atBarHigh) errs.push('Gus not at the bar at high tide');
+      const duarte = api.NPC.duarte; G().t = when(lo, 10 * 60) ; api.assign(duarte, true); if (d(duarte, api.POIS.dock) > 4) errs.push('Duarte left the docks at low tide');
+    }
+    // the waterfront says what the tide is doing
+    G().t = when(lo); api.waterfront(); if (!/mud is exposed/.test(text())) errs.push('low tide not described'); G().t = when(hi); api.waterfront(); if (!/pier is awash/.test(text())) errs.push('high tide not described');
+    // a strongbox sometimes turns up in the mud, never otherwise
+    G().t = when(lo); G().energy = 90; api.waterfront(); const cash0 = G().cash, orig = win.Math.random; win.Math.random = () => .01; const sb = btn(/Scavenge the mudflats/); if (!sb || sb.disabled) errs.push('scavenge button missing at low tide'); else { sb.click(); if (!/strongbox/.test(text()) || G().cash <= cash0) errs.push('no strongbox on a lucky roll') }
+    win.Math.random = () => .99; G().t = when(lo); G().energy = 90; api.waterfront(); const c1 = G().cash; btn(/Scavenge the mudflats/).click(); if (/strongbox/.test(text()) || G().cash !== c1) errs.push('strongbox on an unlucky roll'); win.Math.random = orig;
+    // old saves are unaffected: nothing new is saved
+    win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (!G()) errs.push('save broke');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

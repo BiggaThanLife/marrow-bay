@@ -28,7 +28,8 @@ function walkerPlan(w,instant){
     return;
   }
   const pois=Object.values(POIS).filter(p=>p.d===w.d&&p.ex!=null);
-  const spot=()=>{const p=pois.length&&Math.random()<.85?pick(pois):null;return p?[p.ex,p.ey]:[dr[0]+ri(-3,3),dr[1]+ri(0,2)]};
+  const spot=()=>{if(w.d==='Dockside'&&POIS.dock&&tideV()<-.45&&Math.random()<.6)return [POIS.dock.ex,POIS.dock.ey];
+    const p=pois.length&&Math.random()<.85?pick(pois):null;return p?[p.ex,p.ey]:[dr[0]+ri(-3,3),dr[1]+ri(0,2)]};
   if(instant){
     if(Math.random()<.5){w.indoors=true;w.x=dr[0];w.y=dr[1];w.path=[]}
     else{const s=spot();w.indoors=false;w.x=s[0];w.y=s[1];w.path=[]}

@@ -25,6 +25,7 @@ function tick(dt){
   if(v.fuel&&(G.veh.fuel[G.veh.active]||0)<=0)sp=3;
   if(G.energy<15||G.hunger<10)sp=Math.min(sp,2.6);
   if(G.mod.flood.includes(district(Math.round(p.x),Math.round(p.y))))sp*=.55;
+  if(tideV()>.45&&map[Math.round(p.y)]&&map[Math.round(p.y)][Math.round(p.x)]===T.DOCK)sp*=.8; /* the pier is awash at high tide */
   const bx=p.x,by=p.y,was=p.path.length>0;
   moveEnt(p,dt,sp);
   if(G.companion&&(p.x!==bx||p.y!==by)){compTrail.push([p.x,p.y]);if(compTrail.length>22)compTrail.shift()}

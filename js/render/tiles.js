@@ -26,7 +26,8 @@ function drawTile(tx,ty,now){
   }else if(t===T.DOCK){
     cx.fillStyle='#8b6a47';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#6e5236';
     for(let i=0;i<TS;i+=4)cx.fillRect(sx+i,sy,1,TS);
-    if(tideV()>.45){cx.fillStyle='rgba(44,91,120,.4)';cx.fillRect(sx,sy+8,TS,8)}
+    if(tideV()>.45){cx.fillStyle='rgba(44,91,120,.5)';cx.fillRect(sx,sy+5,TS,11);cx.fillStyle='rgba(225,238,242,.5)';cx.fillRect(sx,sy+5,TS,1)}
+    else if(tideV()<-.45){cx.fillStyle='rgba(74,56,38,.35)';cx.fillRect(sx,sy+10,TS,6);cx.fillStyle='rgba(30,22,14,.35)';cx.fillRect(sx+3,sy+12,3,1);cx.fillRect(sx+10,sy+14,4,1)}
   }else if(t===T.LOT){
     cx.fillStyle='#b3a587';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#9a8d70';cx.fillRect(sx+3,sy+5,2,1);cx.fillRect(sx+10,sy+11,3,1);
   }else if(t===T.BLD){
