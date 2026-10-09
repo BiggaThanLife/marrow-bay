@@ -7,7 +7,7 @@ const INTRO_BG={
  banker:'HARBOR has your file. Former occupation: banker. Current occupation: cautionary tale. HARBOR admires how quickly the Highline stopped returning your calls.',
  artist:'HARBOR has your file. Occupation: street artist. Fixed address: none until today. Congratulations on becoming a statistic with a postcode.'
 };
-function finishIntro(){G.flags.onboarded=true;save();worldPanel();notify('Tap the map to walk. Tap buildings, plots, stops, or people.')}
+function finishIntro(){G.flags.onboarded=true;openingBegin();save();worldPanel();notify('Tap the map to walk. Tap buildings, plots, stops, or people.')}
 function intro(i,k){
   const b=BG[G.bg],h=POIS[b.home];
   const next=n=>()=>intro(n,k);
@@ -19,5 +19,5 @@ function intro(i,k){
     <p class="muted">HARBOR is the city's records office. It is also, you may notice, listening.</p>`,[{label:'Continue',fn:next(3)}],true,false);
   ui(`<h2>Your accommodation</h2><p>You live at <b>${esc(h.name)}</b>. Rent is ${money(RENT[b.home])} a month. HARBOR has noted this. HARBOR notes everything.</p>
     <p class="muted">Citizen onboarding takes about a minute. It is optional, like most of the things that keep you alive.</p>`,
-    [{label:'Begin onboarding',sub:'Recommended. Replay it any time from the Phone.',fn:()=>tutorial(0)},{label:'Skip, I will figure it out',cls:'quiet',fn:finishIntro}],true,false);
+    [{label:'Begin onboarding',sub:'Recommended. Replay it any time from the Phone.',fn:()=>tutorial(0)},{label:'Skip, I will figure it out',cls:'quiet',fn:finishIntro},{label:'I have played before',sub:'Skip onboarding and the scripted first days.',cls:'quiet',fn:()=>{openingSkip();finishIntro()}}],true,false);
 }

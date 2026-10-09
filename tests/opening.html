@@ -1,0 +1,81 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay opening test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>The opening first days</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* For every background, on both paths (keep the crate, hand it in): the neighbour arrives at 8:10 and offers a job; the job pays; the crate waits for low tide;
+   the choice pays and sets a rumor and a feed post an hour later; a pinned suggestion points to tomorrow; the visit at 9 ends the opening.
+   Also: Not now keeps the job on the talk menu, skipping works from the intro and Settings, loaded saves never run it, and it times out. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,NPC,start,closeMenu,popClear,finishIntro,openingTick,openingSkip,openingSuggestion,feedSuggestions,tideName,hourOf,day,waterfront,talk,advance,migrate,settingsMenu,get modal(){return modal},get step(){return G.opening&&G.opening.step}})`);
+  const G = () => api.G, btns = () => [...doc.querySelectorAll('#sheet #actions button')], btn = rx => btns().find(x => rx.test(x.innerText)), text = () => doc.getElementById('sheet').innerText;
+  const clear = () => { api.closeMenu(); api.popClear() };
+  const newGame = bg => { api.start(bg); G().flags.customDone = true; clear(); api.finishIntro(); clear(); win.eval('SET.hints=false'); };
+  const lowTide = from => { for (let m = Math.ceil(from / 5) * 5; m < from + 4 * 1440; m += 5) { const h = Math.floor(m / 60) % 24; if (h >= 9 && h <= 19 && win.eval(`tideName(${m})`) === 'low') return m } return null };
+  try {
+    for (const bg of Object.keys(api.BG)) for (const keep of [true, false]) {
+      const tag = bg + (keep ? '/keep' : '/hand in');
+      newGame(bg); const o = () => G().opening, npc = api.NPC[o().npc];
+      if (api.step !== 'wait') { errs.push(tag + ': not waiting after the intro: ' + api.step); continue }
+      api.openingTick(); if (api.step !== 'wait') errs.push(tag + ': arrived before 8:10');
+      G().t = 8 * 60 + 12; api.openingTick(); if (api.step !== 'tide' || !btns().length || !/\w/.test(text())) errs.push(tag + ': no arrival at 8:10 (' + api.step + ')');
+      if (!text().includes(npc.name)) errs.push(tag + ': wrong neighbour on arrival: ' + text().slice(0, 40));
+      const cash0 = G().cash, mem0 = G().npcs[npc.id].m; G().energy = 90;
+      const job = btns().find(b => !/Not now/.test(b.innerText)); if (!job || job.disabled) { errs.push(tag + ': no job button'); continue } if (!btn(/Not now/)) errs.push(tag + ': no Not now button'); job.click();
+      if (!btn(/Continue/)) errs.push(tag + ': no Continue button after the job');
+      if (G().cash <= cash0 || !o().jobDone || G().npcs[npc.id].m <= mem0) errs.push(tag + ': the job did not pay or please: cash ' + cash0 + ' to ' + G().cash);
+      clear();
+      // wait for low tide, then the crate appears at the waterfront
+      const m = lowTide(G().t + 31); if (!m) { errs.push(tag + ': no low tide found'); continue }
+      G().t = m; api.openingTick(); if (api.step !== 'crate') errs.push(tag + ': no crate at low tide (' + api.step + ') at ' + api.tideName() + ' hour ' + api.hourOf());
+      const s = api.feedSuggestions()[0]; if (!s || !/waterfront/.test(s.t)) errs.push(tag + ': no pinned crate suggestion: ' + JSON.stringify(s));
+      api.waterfront(); const cb = btn(/crate in the mud/); if (!cb) { errs.push(tag + ': no crate button'); continue } cb.click();
+      const c1 = G().cash, mm = G().npcs[npc.id].m; btn(keep ? /keep what is inside/ : /Hand it in/).click(); if (!btn(/Continue/)) errs.push(tag + ': no Continue button after the choice');
+      if (keep ? (G().cash !== c1 + 40 || G().npcs[npc.id].m >= mm) : (G().cash !== c1 + 10 || G().npcs[npc.id].m <= mm)) errs.push(tag + ': the choice paid wrong: ' + (G().cash - c1) + ' / mem ' + (G().npcs[npc.id].m - mm));
+      if (api.step !== 'consequence' || o().kept !== keep) errs.push(tag + ': choice not recorded'); clear();
+      // an hour later: rumor and post
+      const feed0 = G().feed.length; G().t = o().at + 1; api.openingTick();
+      if (api.step !== 'tomorrow') errs.push(tag + ': no consequence step (' + api.step + ')');
+      const rt = keep ? 'crateKept' : 'crateReturned', r = G().rumors.find(x => x.type === rt); if (!r) errs.push(tag + ': no ' + rt + ' rumor');
+      const post = G().feed.slice(feed0).find(p => p.kind === 'rumor'); if (!post || /\{|undefined/.test(post.t)) errs.push(tag + ': no clean rumor post: ' + (post && post.t));
+      if (post && keep && /Stranger/.test(post.t)) errs.push(tag + ': kept rumor named you too early'); if (post && !keep && !/Stranger/.test(post.t)) errs.push(tag + ': handing in did not name you');
+      if (!api.feedSuggestions().some(x => /tomorrow at 9/.test(x.t))) errs.push(tag + ': no pinned reason to return');
+      // talking to the neighbour shows the new line
+      api.talk(npc); if (!/crate|Keep your hands|means something/.test(text())) errs.push(tag + ': neighbour did not mention it'); clear();
+      // tomorrow at 9
+      api.openingTick(); if (api.step !== 'tomorrow') errs.push(tag + ': visit came too early'); G().t = o().meetAt + 1; api.openingTick();
+      const who = keep ? 'Pip' : npc.name; if (!text().includes(who)) errs.push(tag + ': wrong visitor ' + text().slice(0, 40));
+      const fin = btns()[0]; if (!fin) { errs.push(tag + ': no visit button'); continue } fin.click(); clear();
+      if (api.step !== 'done' || !o().done) errs.push(tag + ': opening did not finish'); if (api.feedSuggestions().some(x => /^o:/.test(x.id))) errs.push(tag + ': opening suggestion left behind');
+      stats[tag] = 'ok';
+    }
+    // Not now keeps the job on the talk menu
+    newGame('farm'); G().t = 8 * 60 + 12; api.openingTick(); if (!btn(/Not now/)) { errs.push('no offer in the Not now test: step ' + api.step + ' modal ' + api.modal + ' pop ' + win.eval('popOpen') + ' t ' + G().t); throw new Error('stop') } btn(/Not now/).click(); clear(); const wren = api.NPC.wren; api.talk(wren);
+    if (!btn(/Mend the fence/)) errs.push('job vanished after Not now'); btn(/Mend the fence/).click(); clear(); if (!G().opening.jobDone) errs.push('job from the talk menu did not run');
+    api.talk(wren); if (btn(/Mend the fence/)) errs.push('job still offered after doing it'); clear();
+    // a tired dockhand cannot take the dock job
+    newGame('dock'); G().t = 8 * 60 + 12; G().energy = 5; api.openingTick(); const hb = btn(/Haul cargo/); if (!hb || !hb.disabled) errs.push('tired dockhand can take the haul'); clear();
+    // skipping
+    newGame('farm'); api.openingSkip(); G().t = 8 * 60 + 30; api.openingTick(); if (api.step !== 'done' || btns().length && /Wren/.test(text())) errs.push('skip did not stop the opening'); clear();
+    newGame('farm'); api.settingsMenu(); if (!btn(/Skip the first days/)) errs.push('no skip in Settings'); clear();
+    newGame('farm'); api.openingSkip(); api.settingsMenu(); if (btn(/Skip the first days/)) errs.push('Settings still offers skip after skipping'); clear();
+    // a loaded save never runs it, a game left in the intro waits for the intro
+    newGame('farm'); win.eval('delete G.opening;migrate()'); if (!G().opening || !G().opening.done) errs.push('old save not marked done');
+    api.start('farm'); G().flags.customDone = true; clear(); if (api.step !== 'intro') errs.push('new game not waiting in the intro: ' + api.step); G().t = 9 * 60; api.openingTick(); if (api.step !== 'intro') errs.push('opening ran during the intro');
+    // it times out if ignored
+    newGame('farm'); G().t = 5 * 1440; api.openingTick(); if (api.step !== 'done') errs.push('opening did not time out');
+    // it survives a save
+    newGame('banker'); G().t = 8 * 60 + 12; api.openingTick(); clear(); win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (G().opening.step !== 'tide' || !G().opening.offered) errs.push('opening state lost in save');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 30).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

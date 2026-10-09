@@ -31,7 +31,7 @@ function tick(dt){
   if(v.fuel&&was){const dd=Math.hypot(p.x-bx,p.y-by);G.veh.fuel[G.veh.active]=Math.max(0,(G.veh.fuel[G.veh.active]||0)-dd*.12*vehFuelUse(G.veh.active));if(G.veh.fuel[G.veh.active]<=0&&!G.flags.fuelNote){G.flags.fuelNote=1;notify('Out of fuel. Refuel at Mack\'s Garage.')}if(G.veh.fuel[G.veh.active]>15)G.flags.fuelNote=0}
   if(was&&!p.path.length&&p.onArrive){const f=p.onArrive;p.onArrive=null;f()}
   missT+=dt;if(missT>.25){missT=0;missionTick();gpsTick();if(G.cash>=1000)quip('rich');else if(G.cash<5)quip('broke')}
-  hudT+=dt;if(hudT>.3){hudT=0;hud()}
+  hudT+=dt;if(hudT>.3){hudT=0;hud();try{openingTick()}catch(e){console.error(e)}}
   if(!modal&&(G.energy<=0||G.hunger<=0))collapse();
 }
 let camShiftX=0,camShiftY=0;

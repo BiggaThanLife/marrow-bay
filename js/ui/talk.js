@@ -49,6 +49,7 @@ function talk(n,extra){
   if(shop)btns.push({label:`Visit ${POIS[shop].name}`,cls:'',fn:()=>goPOI(POIS[shop])});
   if(tr>=3&&!G.companion)btns.push({label:`Ask ${n.name.split(' ')[0]} to come along`,sub:COMP_PERKS[n.id],cls:'',fn:()=>{recruit(n);closeMenu();notify(`${n.name} falls in beside you.`)}});
   if(G.companion===n.id)btns.push({label:'Send them home',sub:'They return to their usual day.',cls:'quiet',fn:()=>{const nm=n.name;dismissComp();closeMenu();notify(`${nm} heads back.`)}});
+  btns.push(...openingTalkButtons(n));
   btns.push({label:'Pickpocket',sub:'Risky. Raises your wanted level if caught.',cls:'quiet',fn:()=>pickpocket(n)});
   btns.push(leaveBtn);
   ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}, ${n.d}. Attitude: <span class="${cls}">${LAB[tr]}</span>${needsL.length?`. Seems ${needsL.join(' and ')}.`:'.'}</p>

@@ -17,7 +17,9 @@ Object.assign(RUM,{
  picketHero:{d:8,t:'They say you stood with the pickets.'},
  scab:{d:-8,t:'They say you crossed the picket line.'},
  collapse:{d:3,t:'They say you fainted in the street.'},
- candidate:{d:2,t:'They say you are running for mayor.'}
+ candidate:{d:2,t:'They say you are running for mayor.'},
+ crateKept:{d:-4,t:'They say you kept a crate from the flats.'},
+ crateReturned:{d:8,t:'They say you handed in a crate from the flats.'}
 });
 const RUM_WHO={
  excon:{vex:14,cordelia:-8},vandal:{reyes:-15,gus:6,vex:6},saboteur:{duarte:-14,vex:4},heister:{reyes:-12,vex:10},
@@ -44,5 +46,7 @@ const RUMOR_INFO={
  picketHero:{good:1,named:'{you} stood at the picket gate until sunrise.',line:'I heard you stood at the gate. That means something here.'},
  scab:{vague:'Somebody walked through the picket line at the {dist} gate.',named:'{you} crossed the picket line.',line:'I saw who walked through the line.'},
  collapse:{vagueOnly:1,vague:'Someone fainted outside Teo\'s and was carried in like a sack of flour.',line:'Passed out outside the diner? Eat something, will you.'},
- candidate:{good:1,named:'{you} is running for mayor. The posters are already crooked.',line:'Mayor, is it? Bold. Mind the posters.'}
+ candidate:{good:1,named:'{you} is running for mayor. The posters are already crooked.',line:'Mayor, is it? Bold. Mind the posters.'},
+ crateKept:{vague:'A crate went missing from the flats. A stranger was in the area.',named:'{you} kept the crate from the flats.',line:'Keep your hands where I can see them.'},
+ crateReturned:{good:1,named:'{you} handed in a crate on the flats. {owner} says that is a first.',line:'I heard about the crate. That means something.'}
 };

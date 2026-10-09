@@ -19,7 +19,11 @@ const SUGGESTIONS=[
   {id:'fit',t:'Set up your business',b:'Open your building from Biz, pick a business, hire staff and keep it stocked. Then collect the till.',done:()=>G.biz.some(b=>b.type&&b.type!=='home')}
 ];
 /* the next two suggestions still to do, as posts */
-const feedSuggestions=()=>G&&G.flags&&G.flags.onboarded?SUGGESTIONS.filter(s=>!s.done()).slice(0,2).map(s=>({id:'s:'+s.id,kind:'suggest',dist:'',by:'HARBOR',t:s.t+'. '+s.b})):[];
+const feedSuggestions=()=>{
+  if(!G||!G.flags||!G.flags.onboarded)return [];
+  const o=typeof openingSuggestion==='function'?openingSuggestion():null;
+  return (o?[o]:[]).concat(SUGGESTIONS.filter(s=>!s.done()).map(s=>({id:'s:'+s.id,kind:'suggest',dist:'',by:'HARBOR',t:s.t+'. '+s.b}))).slice(0,2);
+};
 function feedUnread(){
   if(!G)return 0;
   const saved=(G.feed||[]).filter(p=>p.id>(G.feedSeen||0)).length,s=feedSuggestions()[0];

@@ -24,6 +24,7 @@ function plazaMenu(msg){
 function waterfront(msg){
   const tn=tideName(),fs=G.fishStock,fl=G.flats;
   ui(`<h2>Waterfront</h2><p class="muted">The tide is ${tn}. Fish look ${fs<30?'scarce':fs>70?'plentiful':'steady'}. The flats look ${fl<30?'picked clean':fl>70?'full of scrap':'workable'}.</p>${msgP(msg)}`,[
+    ...openingWaterfrontButtons(),
     {label:'Fish from the pier',sub:'2 hours. Best at high tide.',need:14,fn:()=>{
       if(G.energy<14)return waterfront('You are too tired.');
       let n=tn==='high'?ri(2,4):tn==='low'?ri(0,1):ri(1,2);if(has('working-class'))n++;n+=rodLevel();
