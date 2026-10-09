@@ -53,7 +53,16 @@ f.addEventListener('load', async () => {
     // selling and the Bag
     G().inv.radish = 5; G().inv.tomato = 5; G().inv.pumpkin = 5; G().inv.crops = 5; api.sellScreen(1, 'Market Hall', () => api.closeMenu()); const sellText = text(); ['radishes', 'tomatoes', 'pumpkins'].forEach(k => { if (!sellText.includes(k)) errs.push('market does not buy ' + k) });
     api.closeMenu(); G().inv.radish = 0; G().inv.tomato = 0; G().inv.pumpkin = 0; api.bag(); if (/radishes|tomatoes|pumpkins|seeds/.test(text().replace(/\bseeds\b/, '')) && /radishes/.test(text())) errs.push('unused crops clutter the Bag');
-    G().inv.tomato = 2; api.bag(); if (!/tomatoes/.test(text()) || !btn(/Eat a tomato/)) errs.push('owned tomatoes not shown or edible'); const h0 = G().hunger = 40; btn(/Eat a tomato/).click(); if (G().hunger !== h0 + 9 || G().inv.tomato !== 1) errs.push('eating a tomato did the wrong thing');
+    G().inv.tomato = 2; api.bag(); if (!/tomatoes/.test(text()) || !btn(/Eat a tomato/)) errs.push('owned tomatoes not shown or edible'); const h0 = G().hunger = 40; btn(/Eat a tomato/).click(); if (G().hunger !== h0 + 16 || G().inv.tomato !== 1) errs.push('eating a tomato did the wrong thing');
+    // stalls sell the new crops too
+    const sp = (() => { const p = G().p; for (let r = 1; r < 9; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = Math.round(p.x) + dx, y = Math.round(p.y) + dy; if (api.canBuild(x, y)) return [x, y] } })();
+    win.eval('placing="stall"'); api.tryPlace(sp[0], sp[1]); const stall = G().structs.find(s => s.type === 'stall'); ['radish', 'tomato', 'pumpkin'].forEach(k => { if (stall.stock[k] !== 0) errs.push('new stall has no ' + k + ' slot') });
+    G().inv.pumpkin = 4; api.structMenu(stall); if (!/pumpkins/.test(text()) || !btn(/Stock pumpkins/)) errs.push('stall menu does not offer pumpkins'); btn(/Stock pumpkins/).click();
+    win.eval('qtyMenu'); const put = btns().find(b => /^Stock all|^Stock this many/.test(b.innerText)); if (put) { put.click(); if (stall.stock.pumpkin < 1) errs.push('could not stock a pumpkin: ' + JSON.stringify(stall.stock)) } else errs.push('no stock button: ' + btns().map(b => b.innerText.split('\n')[0]).join('|'));
+    delete stall.stock.tomato; win.eval('migrate()'); if (stall.stock.tomato !== 0) errs.push('an old stall was not given the new slots');
+    // a hungry friend nearby buys one
+    const fr = api.NPC.teo; api.npcS(fr).m = 120; api.npcS(fr).cash = 80; api.npcS(fr).hunger = 5; fr.x = stall.x; fr.y = stall.y; stall.stock.pumpkin = 3; stall.stock.meals = 0; stall.stock.crops = 0; stall.stock.radish = 0; stall.stock.tomato = 0; stall.stock.fish = 0; stall.stock.smoked = 0;
+    win.eval('npcEat(NPC.teo,npcS(NPC.teo))'); if (stall.stock.pumpkin !== 2 || api.npcS(fr).hunger < 30) errs.push('a friend did not buy a pumpkin: ' + JSON.stringify({ p: stall.stock.pumpkin, h: api.npcS(fr).hunger }));
     // a save
     win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (typeof G().inv.seedRadish !== 'number') errs.push('seed fields missing after a save');
     win.eval('delete G.inv.radish;delete G.inv.seedPumpkin;migrate()'); if (G().inv.radish !== 0 || G().inv.seedPumpkin !== 0) errs.push('old save not given the new inventory fields');

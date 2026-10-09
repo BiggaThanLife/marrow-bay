@@ -6,7 +6,7 @@ function npcEat(n,s){
   G.structs.forEach(st=>{
     if(st.type!=='stall')return;
     const rng=signNear(st)?26:13;if(Math.hypot(st.x-n.x,st.y-n.y)>rng)return;
-    ['meals','smoked','fish','crops'].forEach(k=>{
+    ['meals','smoked','fish','crops','radish','tomato','pumpkin'].forEach(k=>{
       if(!(st.stock[k]>0))return;
       const pr=Math.round(FAIR[k]*MK[st.mk]),max=FAIR[k]*(.95+.12*tr)*pat;
       if(tr<1||pr>max||pr>s.cash)return;

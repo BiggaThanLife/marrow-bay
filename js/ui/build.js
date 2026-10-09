@@ -32,7 +32,7 @@ function tryPlace(tx,ty){
   if(G.cash<cost)return notify(`You need ${money(cost)} to build that in ${d}.`);
   G.cash-=cost;
   const st={id:Date.now()+Math.random(),type:placing,x:tx,y:ty,paid:cost};
-  if(placing==='stall'){st.stock={meals:0,smoked:0,fish:0,crops:0,trinkets:0};st.mk=1;st.stored=0;st.earned=0}
+  if(placing==='stall'){st.stock=Object.fromEntries(Object.keys(FAIR).map(k=>[k,0]));st.mk=1;st.stored=0;st.earned=0}
   if(placing==='planter'){st.s=0;st.d=0}
   G.structs.push(st);
   const nm=STRUCTS[placing].n;placing=null;advance(60);G.energy=clamp(G.energy-5,0,100);
