@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay move structures test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Moving built structures</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Every built structure has a Move button; it enters a placing mode, a bad tile keeps you in it, a good tile moves the same structure for free (a little time and energy),
+   and stock, takings, crop progress and a house you live in all go with it. Building again cancels. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},get placing(){return placing},BG,STRUCTS,start,closeMenu,popClear,structMenu,tryPlace,canBuild,structAt,district,hud,homePoi})`);
+  const G = () => api.G, btn = rx => [...doc.querySelectorAll('#sheet #actions button')].find(x => rx.test(x.innerText));
+  const free = (skip = []) => { const p = G().p; for (let r = 1; r < 9; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = Math.round(p.x) + dx, y = Math.round(p.y) + dy; if (api.canBuild(x, y) && !skip.some(s => s[0] === x && s[1] === y)) return [x, y] } return null };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; G().cash = 99999;
+    for (const type of Object.keys(api.STRUCTS)) {
+      const a = free(); if (!a) { errs.push('no free tile to build ' + type); continue }
+      win.eval(`placing=${JSON.stringify(type)}`); api.tryPlace(a[0], a[1]);
+      const st = G().structs.find(s => s.x === a[0] && s.y === a[1]); if (!st) { errs.push('could not build ' + type); continue }
+      if (type === 'stall') { st.stock.fish = 7; st.stored = 33; st.earned = 50; st.mk = 2 }
+      if (type === 'planter') { st.s = 1; st.d = 2 }
+      if (type === 'house') G().home = 'S:' + st.id;
+      api.structMenu(st); const mv = btn(/^Move/); if (!mv) { errs.push(type + ' has no Move button'); continue }
+      const cash = G().cash, id = st.id; mv.click();
+      if (api.placing !== 'move') errs.push(type + ': Move did not start placing');
+      // a bad tile (its own tile, now occupied) keeps you in move mode
+      api.tryPlace(a[0], a[1]); if (api.placing !== 'move' || st.x !== a[0] || st.y !== a[1]) errs.push(type + ': a bad tile moved it or ended the move');
+      const b = free([[a[0], a[1]]]); if (!b) { errs.push('no second tile for ' + type); win.eval('placing=null'); continue }
+      const t0 = G().t, e0 = G().energy; api.tryPlace(b[0], b[1]);
+      if (api.placing !== null) errs.push(type + ': still placing after a move'); if (st.x !== b[0] || st.y !== b[1] || st.id !== id) errs.push(type + ' did not move');
+      if (G().cash !== cash) errs.push(type + ' cost cash to move'); if (G().t <= t0 || G().energy >= e0) errs.push(type + ' took no time or energy');
+      if (G().structs.filter(s => s.x === a[0] && s.y === a[1]).length) errs.push(type + ' left a copy behind'); if (api.structAt(a[0], a[1])) errs.push('old tile still occupied by ' + type);
+      if (type === 'stall' && (st.stock.fish !== 7 || st.stored !== 33 || st.earned !== 50 || st.mk !== 2)) errs.push('stall lost its stock or takings');
+      if (type === 'planter' && (st.s !== 1 || st.d !== 2)) errs.push('greenhouse lost its crop');
+      if (type === 'house') { if (G().home !== 'S:' + st.id) errs.push('house stopped being home'); const hp = api.homePoi(); if (hp.ex !== b[0] || hp.ey !== b[1]) errs.push('home door did not move with the house') }
+      stats[type] = 'ok';
+    }
+    // Build again cancels a move
+    const st2 = G().structs[0]; api.structMenu(st2); btn(/^Move/).click(); if (api.placing !== 'move') errs.push('could not start a second move'); doc.getElementById('b-build').click(); if (api.placing !== null) errs.push('Build did not cancel the move');
+    // it survives a save
+    win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (G().structs.length !== Object.keys(api.STRUCTS).length) errs.push('structures lost on save');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>
