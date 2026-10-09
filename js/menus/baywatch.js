@@ -21,12 +21,13 @@ const feedWhen=d=>{const n=day()-d;return n<=0?'today':n===1?'yesterday':n+' day
 function baywatchMenu(){
   const seen=G.feedSeen||0,sugSeen=G.sugSeen;
   const saved=(G.feed||[]).filter(p=>day()-p.day<=6).slice().reverse().slice(0,12);
-  const sug=feedSuggestions(),chat=baywatchPosts().map(p=>({kind:'chatter',dist:p.dist,t:p.t,day:day()}));
+  const opps=(G.opps||[]).filter(o=>o.until>=day()),oppSeen=G.oppSeen||0,sug=feedSuggestions(),chat=baywatchPosts().map(p=>({kind:'chatter',dist:p.dist,t:p.t,day:day()}));
   const row=(p,isNew)=>`<p><span class="muted small">${isNew?'<b class="amber">New</b> · ':''}${FEED_KINDS[p.kind]||'Post'}${p.by?' · '+esc(p.by):''}${p.dist?' · '+esc(p.dist):''}${p.kind==='suggest'?'':' · '+feedWhen(p.day)}</span><br>${esc(p.t)}</p>`;
   feedMarkRead();
   ui(`<h2>Bay-Watch Feed</h2><p class="muted">What the city is saying. Nobody here has anything better to do.</p>
   ${sug.map(p=>row(p,p.id!==sugSeen&&p===sug[0])).join('')}
+  ${opps.map(o=>row({kind:'opp',dist:o.dist,t:o.t,day:o.day},o.id>oppSeen)).join('')}
   ${saved.map(p=>row(p,p.id>seen)).join('')}
   <p class="amber"><b>Patrol watch:</b> ${esc(baywatchIntel())}</p>
-  ${chat.map(p=>row(p,false)).join('')}`,[{label:'Back',fn:()=>phone()}]);
+  ${chat.map(p=>row(p,false)).join('')}`,[...opps.map(o=>({label:o.act.label,sub:'Today. Optional.',cls:'',fn:()=>oppAct(o)})),{label:'Back',fn:()=>phone()}]);
 }

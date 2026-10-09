@@ -3,7 +3,7 @@
    'rumor' and 'event' are saved (G.feed, newest last, capped), 'suggest' posts are pinned HARBOR suggestions worked out live from the game state
    and tick themselves off, 'chatter' is the daily petty complaints made from the day number and never saved.
    feedAdd() is the only way to post. Unread = saved posts newer than G.feedSeen, plus a new suggestion nobody has looked at yet. */
-const FEED_CAP=40,FEED_KINDS={suggest:'Suggested',rumor:'Rumor',event:'Event',chatter:'Chatter'};
+const FEED_CAP=40,FEED_KINDS={suggest:'Suggested',opp:'Today',rumor:'Rumor',event:'Event',chatter:'Chatter'};
 function feedAdd(p){
   G.feed=G.feed||[];G.feedId=(G.feedId||0)+1;
   G.feed.push({id:G.feedId,day:day(),kind:p.kind||'event',dist:p.dist||'',t:p.t,by:p.by||''});
@@ -27,9 +27,9 @@ const feedSuggestions=()=>{
 function feedUnread(){
   if(!G)return 0;
   const saved=(G.feed||[]).filter(p=>p.id>(G.feedSeen||0)).length,s=feedSuggestions()[0];
-  return saved+(s&&G.sugSeen!==s.id?1:0);
+  return saved+(s&&G.sugSeen!==s.id?1:0)+(typeof oppUnread==='function'?oppUnread():0);
 }
-function feedMarkRead(){G.feedSeen=G.feedId||0;const s=feedSuggestions()[0];if(s)G.sugSeen=s.id}
+function feedMarkRead(){G.feedSeen=G.feedId||0;G.oppSeen=G.oppId||0;const s=feedSuggestions()[0];if(s)G.sugSeen=s.id}
 /* fill in the feed fields on a new game or an old save; posts that used to live in G.bwExtra move across once and count as read */
 function feedInit(){
   const fresh=G.feedSeen===undefined;

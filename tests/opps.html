@@ -1,0 +1,51 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay daily opportunities test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Today's opportunities</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Each morning up to three opportunities of different kinds appear, drawn from the tide, a district, a rumor and someone who needs help; they last three days,
+   show at the top of the feed with an action button, light the unread dot, are cleared by acting, and save. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,NPC,POIS,METERS,start,closeMenu,popClear,oppsDaily,oppAct,oppUnread,baywatchMenu,feedUnread,addRumor,phone,hud,migrate,day,npcS})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')];
+  const setDay = d => { G().t = (d - 1) * 1440 + 600 };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false');
+    G().opening = { step: 'done', done: true }; setDay(3);
+    // a quiet new game: only the tide is always available
+    api.oppsDaily(); stats.first = G().opps.map(o => o.kind); if (!G().opps.length || !G().opps.some(o => o.kind === 'tide')) errs.push('no tide opportunity on a quiet day: ' + JSON.stringify(stats.first));
+    // make the city interesting: a booming district, a rumor, a hungry friend
+    G().meters.Dockside = 90; G().meters.Grid = 10; api.addRumor('thief', ['mina', 'reyes']); G().met.mina = 1; api.npcS(api.NPC.mina).hunger = 10;
+    G().opps = []; G().oppId = 0; G().oppSeen = 0; setDay(4); api.oppsDaily();
+    const k = G().opps.map(o => o.kind); stats.second = k; if (G().opps.length !== 3) errs.push('expected three opportunities, got ' + G().opps.length); if (new Set(k).size !== k.length) errs.push('a kind repeated: ' + k);
+    G().opps.forEach(o => { if (!o.t || /\{|undefined/.test(o.t) || !o.act || !o.act.label) errs.push('bad opportunity ' + o.kind + ': ' + o.t); if (o.until !== o.day + 2) errs.push('life is not three days for ' + o.kind) });
+    // every kind can be generated and acted on
+    const kinds = ['tide', 'district', 'rumor', 'person'], seen = {};
+    for (let d = 5; d < 60; d++) { G().opps = []; setDay(d); api.oppsDaily(); G().opps.forEach(o => { seen[o.kind] = o }) }
+    kinds.forEach(x => { if (!seen[x]) errs.push('kind never generated: ' + x) });
+    // unread and the feed
+    G().opps = []; G().oppId = 0; G().oppSeen = 0; setDay(6); api.oppsDaily(); G().feedSeen = G().feedId || 0; G().sugSeen = ''; const u = api.feedUnread(); if (u < 1) errs.push('no unread dot for new opportunities');
+    api.baywatchMenu(); if (!/Today/.test(text())) errs.push('feed does not show Today posts'); if (api.oppUnread() !== 0) errs.push('opening the feed did not clear unread');
+    const bt = btns().map(b => b.innerText.replace(/\n.*/, '')); const want = G().opps.map(o => o.act.label); want.forEach(w => { if (!bt.includes(w)) errs.push('no button: ' + w) });
+    // acting on one removes it and does the thing
+    const walkOpp = G().opps.find(o => o.act.type === 'walk'), n0 = G().opps.length; if (walkOpp) { api.oppAct(walkOpp); if (G().opps.length !== n0 - 1) errs.push('acting did not clear it'); if (!G().p.path.length && !(Math.round(G().p.x) === walkOpp.act.x && Math.round(G().p.y) === walkOpp.act.y)) errs.push('walk did not start') }
+    const talkOpp = Object.values(seen).find(o => o.act.type === 'talk'); if (talkOpp) { G().opps = [talkOpp]; api.oppAct(talkOpp); if (G().opps.length) errs.push('talk opportunity not cleared') }
+    G().opps = [Object.values(seen).find(o => o.act.type === 'bag')]; api.oppAct(G().opps[0]); if (!/Standing|Bag/i.test(text())) errs.push('rumor action did not open the Bag');
+    // they expire after three days and are replaced
+    api.closeMenu(); G().opps = []; setDay(10); api.oppsDaily(); const born = G().opps.map(o => o.id); setDay(13); api.oppsDaily(); if (G().opps.some(o => born.includes(o.id))) errs.push('opportunities did not expire after three days');
+    // old saves and saves
+    win.eval('delete G.opps;delete G.oppId;delete G.oppSeen;migrate()'); if (!Array.isArray(G().opps) || G().oppSeen !== G().oppId) errs.push('old save not given opportunity fields');
+    G().opps = []; setDay(20); api.oppsDaily(); win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (!G().opps.length) errs.push('opportunities lost in a save');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>
