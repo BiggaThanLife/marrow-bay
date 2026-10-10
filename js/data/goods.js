@@ -24,10 +24,17 @@ const GOODS={
   gloves:{n:'Work gloves',price:30,fx:'gloves',d:'Shift work pays 10% more.'},
   toolkit:{n:'Toolkit',price:45,fx:'toolkit',d:'Repair shifts pay 20% more.'}
 };
-const CROP_KEYS=Object.values(CROPS).map(c=>c.key),CROP_EXTRA=['radish','tomato','pumpkin','seedRadish','seedTomato','seedPumpkin'];
-const NAMES={crops:'crops',radish:'radishes',tomato:'tomatoes',pumpkin:'pumpkins',seedRadish:'radish seeds',seedTomato:'tomato seeds',seedPumpkin:'pumpkin seeds',meals:'meals',fish:'fish',smoked:'smoked fish',scrap:'scrap',trinkets:'trinkets',seeds:'seeds',loot:'hot goods',parts:'parts',jammers:'jammers',candy:'prayer candy',plaque:'plaques'};
-const FAIR={meals:12,smoked:12,fish:7,crops:5,radish:3,tomato:9,pumpkin:26,trinkets:30};
-const HUNG={meals:45,smoked:35,fish:20,crops:12,radish:8,tomato:16,pumpkin:36};
+const CROP_KEYS=Object.values(CROPS).map(c=>c.key),CROP_EXTRA=['radish','tomato','pumpkin','seedRadish','seedTomato','seedPumpkin','salad','soup','pie'];
+/* Quality dishes cooked at home from the newer crops. from is what one batch takes, yield how many dishes it makes, fill the fullness one gives (also what a hungry buyer gets),
+   price the market and stall price: a little under twice a plain meal. A café turns one into sup supply units. */
+const DISHES={
+  salad:{n:'Radish salad',key:'salad',from:{radish:4},yield:1,fill:28,price:22,sup:4},
+  soup:{n:'Tomato soup',key:'soup',from:{tomato:2},yield:1,fill:38,price:25,sup:5},
+  pie:{n:'Pumpkin pie',key:'pie',from:{pumpkin:1,crops:1},yield:2,fill:42,price:26,sup:5}
+};
+const NAMES={salad:'radish salads',soup:'tomato soups',pie:'pumpkin pies',crops:'crops',radish:'radishes',tomato:'tomatoes',pumpkin:'pumpkins',seedRadish:'radish seeds',seedTomato:'tomato seeds',seedPumpkin:'pumpkin seeds',meals:'meals',fish:'fish',smoked:'smoked fish',scrap:'scrap',trinkets:'trinkets',seeds:'seeds',loot:'hot goods',parts:'parts',jammers:'jammers',candy:'prayer candy',plaque:'plaques'};
+const FAIR={meals:12,smoked:12,fish:7,crops:5,radish:3,tomato:9,pumpkin:26,salad:22,soup:25,pie:26,trinkets:30};
+const HUNG={meals:45,smoked:35,fish:20,crops:12,radish:8,tomato:16,pumpkin:36,salad:28,soup:38,pie:42};
 const MK=[.7,1,1.25],MKN=['Low','Fair','High'];
 const VEH={
  none:{n:'On foot',sp:4.8,price:0,ins:0,fuel:false},

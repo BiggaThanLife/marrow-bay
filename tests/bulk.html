@@ -43,6 +43,26 @@ f.addEventListener('load', async () => {
     if (G().inv.scrap !== 4 || G().inv.trinkets !== 2 || G().energy > 78) errs.push('trinkets wrong: ' + JSON.stringify({ s: G().inv.scrap, t: G().inv.trinkets, e: G().energy }));
     // the workshop counter uses it too
     G().inv.scrap = 9; api.closeMenu(); api.MENUS.workshop(api.POIS.workshop, api.NPC.mack || api.NPC.priya, ''); if (!btn(/^Craft trinkets/)) errs.push('workshop has no Craft trinkets');
+    // quality dishes from the newer crops
+    const api2 = win.eval('({DISHES,dishMenu,dishMax,sellScreen,depositMenu,bag,npcEat,npcS,NPC,FAIR,HUNG,BT})');
+    G().inv.radish = 9; G().inv.tomato = 5; G().inv.pumpkin = 2; G().inv.crops = 3; G().inv.salad = 0; G().inv.soup = 0; G().inv.pie = 0; api.closeMenu(); home();
+    if (!btn(/^Cook quality meals/) || btn(/^Cook quality meals/).disabled) errs.push('no Cook quality meals'); btn(/^Cook quality meals/).click();
+    if (btns().filter(b => /^Cook (radish|tomato|pumpkin)/.test(b.innerText)).length !== 3) errs.push('three dishes expected: ' + btns().map(b => b.innerText.split('\n')[0]).join('|'));
+    btn(/^Cook radish salad/).click(); if (!/up to 2/.test(text())) errs.push('salad cap should be 2 from 9 radishes: ' + text().slice(0, 100)); setQty(2); btn(/^Cook these meals/).click(); if (G().inv.radish !== 1 || G().inv.salad !== 2) errs.push('salad wrong ' + JSON.stringify({ r: G().inv.radish, s: G().inv.salad }));
+    btn(/^Cook tomato soup/).click(); setQty(2); btn(/^Cook these meals/).click(); if (G().inv.tomato !== 1 || G().inv.soup !== 2) errs.push('soup wrong');
+    btn(/^Cook pumpkin pie/).click(); setQty(2); btn(/^Cook these meals/).click(); if (G().inv.pumpkin !== 0 || G().inv.crops !== 1 || G().inv.pie !== 4) errs.push('pie wrong ' + JSON.stringify({ p: G().inv.pumpkin, c: G().inv.crops, pie: G().inv.pie }));
+    // worth about a little under twice a plain meal
+    Object.values(api2.DISHES).forEach(d => { if (!(d.price >= 20 && d.price <= 27)) errs.push(d.n + ' price ' + d.price); if (api2.FAIR[d.key] !== d.price || api2.HUNG[d.key] !== d.fill) errs.push(d.n + ' stall values differ') });
+    // sold at the market
+    api.closeMenu(); api2.sellScreen(1, 'Market Hall', () => api.closeMenu()); ['radish salads', 'tomato soups', 'pumpkin pies'].forEach(k => { if (!text().includes(k)) errs.push('market does not buy ' + k) }); api.closeMenu();
+    // a café can use them as supplies
+    G().biz = [{ key: 'k', d: 'Grid', type: 'cafe', level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, price: 1, paid: 1, add: [], hist: [] }]; api2.depositMenu(G().biz[0]); if (!/Add some radish salads/.test(text()) || !/Add some pumpkin pies/.test(text())) errs.push('café does not accept dishes: ' + text().slice(0, 140));
+    // eaten from the Bag
+    G().hunger = 20; api2.bag(); if (!btn(/^Eat radish salad/)) errs.push('Bag cannot eat salad'); const sa = G().inv.salad; btn(/^Eat radish salad/).click(); if (G().inv.salad !== sa - 1 || G().hunger < 45) errs.push('eating salad: ' + G().hunger);
+    // bought by a hungry friend at a stall
+    const sp = (() => { const p = G().p; for (let r = 1; r < 9; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = Math.round(p.x) + dx, y = Math.round(p.y) + dy; if (api.canBuild(x, y) && !G().structs.some(s => s.x === x && s.y === y)) return [x, y] } })();
+    win.eval('placing="stall"'); api.tryPlace(sp[0], sp[1]); const stall = G().structs.find(s => s.type === 'stall'); ['salad', 'soup', 'pie'].forEach(k => { if (stall.stock[k] !== 0) errs.push('stall has no ' + k + ' slot') });
+    const fr = api2.NPC.teo; api2.npcS(fr).m = 120; api2.npcS(fr).cash = 80; api2.npcS(fr).hunger = 5; fr.x = stall.x; fr.y = stall.y; Object.keys(stall.stock).forEach(k => stall.stock[k] = 0); stall.stock.pie = 3; api2.npcEat(fr, api2.npcS(fr)); if (stall.stock.pie !== 2) errs.push('a friend did not buy a pie');
   } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
   const v = document.getElementById('verdict');
   v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
