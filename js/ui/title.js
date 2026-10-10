@@ -12,7 +12,7 @@ function title(){
 }
 function continueSave(saved){
   placing=null;dest=null;alertQ=[];popClear();gpsPath=[];
-  buildWorld(saved.seed||0);G=saved;migrate();G.p.path=[];G.p.onArrive=null;initNPCs();recomputeMods();hud();worldPanel();
+  buildWorld(saved.seed||0,!!saved.extras);G=saved;migrate();G.p.path=[];G.p.onArrive=null;initNPCs();recomputeMods();hud();worldPanel();
   if(G.flags.customDone===false){draft=null;G.flags.onboarded?customize(null,true):customize(G.bg)}
 }
 function chooseBg(){
@@ -20,9 +20,9 @@ function chooseBg(){
     Object.entries(BG).map(([k,v],i)=>({label:v.n,sub:`${v.perk} Starts with ${money(v.cash)}.`,cls:i?'':'primary',fn:()=>start(k)})),true,false);
 }
 function start(k){
-  const seed=1+Math.floor(Math.random()*2147483646);buildWorld(seed);
+  const seed=1+Math.floor(Math.random()*2147483646);buildWorld(seed,true);
   const b=BG[k],h=POIS[b.home];
-  G={seed,bg:k,opening:{step:'intro'},cash:b.cash,hunger:80,energy:90,t:8*60,
+  G={seed,extras:true,bg:k,opening:{step:'intro'},cash:b.cash,hunger:80,energy:90,t:8*60,
      rep:{Greenbelt:0,Highline:0,Grid:0,Dockside:0,'Neon Mile':0,'Foundry Row':0,...b.rep},
      inv:{crops:0,meals:0,fish:0,smoked:0,scrap:0,trinkets:0,seeds:0,loot:0,...b.inv},
      home:b.home,owned:{},debt:0,arrears:0,loanDay:0,loanTerm:10,structs:[],biz:[],pool:[],plots:FARM_TILES.map(([x,y])=>({x,y,s:0,d:0})),

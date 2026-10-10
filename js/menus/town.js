@@ -19,6 +19,7 @@ MENUS.diner=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} is behind the grill.</p>${msgP(msg)}`,[
     {label:'Order a meal',sub:`${money(price)}. Restores 45 fullness.`,off:G.cash<price,fn:()=>{G.cash-=price;G.hunger=clamp(G.hunger+45,0,100);G.demand+=1;advance(30);MENUS.diner(poi,n,'You eat a hot meal.')}},
     {label:'Takeaway meals',sub:`${money(price)} each. Choose how many for your bag.`,off:G.cash<price,cls:'',fn:()=>qtyMenu({title:'Takeaway meals',intro:'Packed in paper. Eat them later.',price,max:30,mode:'buy',onConfirm:q=>{G.cash-=Math.round(price*q);G.inv.meals+=q;G.demand+=q*.5;advance(10);return `You take ${q} meal${q>1?'s':''} away.`},back:m=>MENUS.diner(poi,n,m)})},
+    ...(POIS.fastfood?[]:[{label:'The fast counter',sub:'Fries, burgers and a combo. Cheap and quick.',cls:'',fn:()=>fastFoodMenu(poi,n,()=>MENUS.diner(poi,n))}]),
     {label:'Work a kitchen shift',sub:`4 hours, about ${money(22*payF(n))}`,need:28,cls:'',fn:()=>MENUS.diner(poi,n,gig(n,{hrs:4,base:22,rep:'Grid',label:'the grill'}))},
     ...shopBtn(poi,n),leaveBtn]);
 };

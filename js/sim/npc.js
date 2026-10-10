@@ -8,6 +8,8 @@ function actFor(n){
   return a;
 }
 function goto(n,s){n.path=bfs(Math.round(n.x),Math.round(n.y),s[0],s[1])||[]}
+const POI_FALLBACK={corner:'market',fastfood:'diner'};
+const poiFor=id=>POIS[id]||POIS[POI_FALLBACK[id]]||POIS.plaza;
 function assign(n,instant){
   if(G.companion===n.id){n.indoors=true;n.path=[];return}
   const a=actFor(n);n.act=a;
@@ -18,7 +20,7 @@ function assign(n,instant){
   }else{
     /* at low tide the Dockside crowd heads to the pier when they are off work, and the dock workers stay there */
     const pier=n.d==='Dockside'&&POIS.dock&&tideV()<-.45&&(a==='hang'||n.work==='dock');
-    const s=spotNear(pier?POIS.dock:POIS[a==='work'?n.work:n.hang],n.id);
+    const s=spotNear(pier?POIS.dock:poiFor(a==='work'?n.work:n.hang),n.id);
     if(instant){n.indoors=false;n.x=s[0];n.y=s[1];n.path=[]}
     else{
       if(n.indoors){n.indoors=false;n.x=homeP.ex;n.y=homeP.ey}

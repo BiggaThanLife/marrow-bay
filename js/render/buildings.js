@@ -9,6 +9,7 @@ function bKey(b){if(b.poi)return b.kind;const biz=G&&bizOf(b.key);return biz&&bi
 const BSTYLE={
   bank:{roof:'flat',wall:'stone',win:'none',door:'double',kit:0},estate:{roof:'slate',wall:'stone',win:'tall'},club:{roof:'flat',wall:'plaster',win:'curtain',door:'double',kit:0},
   flats:{roof:'pitched',wall:'brick',win:'small'},rental:{roof:'pitched',wall:'brick',win:'small'},realty:{roof:'flat',wall:'plaster',win:'listing',awn:1,kit:0},
+  corner:{roof:'flat',wall:'plaster',win:'shop',awn:1,kit:0},fastfood:{roof:'flat',wall:'plaster',win:'strip',awn:1,kit:0},
   market:{roof:'glass',wall:'plaster',win:'shop'},diner:{roof:'flat',wall:'plaster',win:'strip',kit:0},studio:{roof:'saw',wall:'plaster',win:'tall'},
   workshop:{roof:'metal',wall:'metal',win:'roll'},cityhall:{roof:'flat',wall:'stone',win:'tall',door:'double',kit:0},clinic:{roof:'flat',wall:'plaster',win:'blue',kit:0},
   dock:{roof:'metal',wall:'metal',win:'std'},bunk:{roof:'pitched',wall:'wood',win:'small'},gull:{roof:'pitched',wall:'tudor',win:'std'},
@@ -192,7 +193,7 @@ function bLandmark(key,o){
 }
 /* glows at night, for the light map: [x, y, radius, 'r,g,b', strength] relative to the block */
 function bGlows(key){
-  return({diner:[[49,12,18,'255,90,90',.5]],foundry:[[46,52,22,'255,140,50',.7],[11,-8,9,'255,140,50',.25]],club:[[24,58,14,'255,210,120',.5]],casino:[[32,24,30,'255,220,140',.55]],
+  return({corner:[[32,52,18,'200,255,240',.4]],fastfood:[[32,12,22,'255,200,60',.55]],diner:[[49,12,18,'255,90,90',.5]],foundry:[[46,52,22,'255,140,50',.7],[11,-8,9,'255,140,50',.25]],club:[[24,58,14,'255,210,120',.5]],casino:[[32,24,30,'255,220,140',.55]],
     gull:[[32,51,10,'255,200,120',.55]],cityhall:[[32,1,10,'255,240,200',.5]],velvet:[[32,24,28,'255,80,200',.5]],loft:[[32,43,24,'150,130,255',.35]],prison:[[52,-4,10,'255,250,210',.6]],
     pawn:[[8,50,8,'255,210,120',.35]],barn:[[24,30,11,'255,200,120',.55],[24,55,7,'255,200,120',.3]],tower:[[32,52,22,'255,210,140',.3]]})[key]||[];
 }

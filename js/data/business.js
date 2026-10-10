@@ -15,4 +15,4 @@ const TRAITS=['reliable','sticky','charming','guard','quick'];
 const TRAITN={reliable:'Reliable',sticky:'Sticky fingers',charming:'Charming',guard:'Guard',quick:'Quick'};
 const WN=['Ana','Ben','Cleo','Dev','Eli','Fay','Gil','Hana','Ivo','Jo','Kai','Lena','Milo','Nia','Omar','Pia'];
 const LN=['Reed','Park','Cruz','Hale','Ito','Voss','Bryce','Lund','Moss','Shah'];
-const WAGE={cordelia:60,halloran:40,mina:30,teo:28,duarte:38,pip:6,wren:20,reyes:36,ashgrove:70,gus:26,bell:45,vex:80,mack:50,ines:60,lou:55,kofi:34,priya:36};
+const WAGE={cordelia:60,halloran:40,mina:30,teo:28,duarte:38,pip:6,wren:20,reyes:36,ashgrove:70,gus:26,bell:45,vex:80,mack:50,ines:60,lou:55,kofi:34,priya:36,sana:30,dee:24};

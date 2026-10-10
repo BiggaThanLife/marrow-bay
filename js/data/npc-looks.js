@@ -18,5 +18,7 @@ const NPC_LOOK={
   ines:{skin:2,hair:0,style:5,fem:true},
   lou:{skin:0,hair:1,style:0,beard:false},
   kofi:{skin:4,hair:0,style:2,beard:true},
-  priya:{skin:3,hair:0,style:4,fem:true}
+  priya:{skin:3,hair:0,style:4,fem:true},
+  sana:{skin:3,hair:0,style:5,fem:true,hat:'cap'},
+  dee:{skin:5,hair:0,style:2,beard:false}
 };

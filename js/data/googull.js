@@ -3,6 +3,12 @@
    cat: category line. tag: one-line snippet. about: knowledge panel text. base: typical star rating.
    faq: "People also ask" pairs. rev: three reviews [who, stars, text]. */
 const GG={
+  corner:{cat:'Convenience store',tag:'Everything you forgot, at the price of having forgotten.',about:'Kelp Corner Shop sells the things you need at the hours you need them. The shelves are arranged by a logic Sana will not explain. There is a cat. The cat is not for sale.',base:4.4,
+    faq:[['Are they open late?','Until eleven. After that the cat takes over.'],['Do they sell energy drinks?','Yes. Do not buy three.']],
+    rev:[['Night shift Nina',5,'Coffee at 5am and nobody judged me.'],['Dock Dave',4,'Bought one thing. Left with four. Gravity.'],['The cat',5,'Warm window. Excellent staff.']]},
+  fastfood:{cat:'Fast food restaurant',tag:'Hot, fast and legally food.',about:'Fry Hard serves fries, burgers and a combo that has never once been described as a meal. The manager, Dee, runs it like a ship. The fryer has a name.',base:3.6,
+    faq:[['Is it healthy?','It is hot.'],['Do they hire?','Always. Ask for Dee. Do not touch the oil.']],
+    rev:[['Foreman D.',4,'Fast. Salty. Nobody talks to me. Perfect.'],['Pip',5,'Three dollars for fries and I counted the salt. It was a lot.'],['A gull',5,'Dropped fries. Best day of my life.']]},
   estate:{cat:'Mansion, tax avoidance',tag:'A very large house for a very small number of people.',about:'Ashgrove Estate sits at the top of the Highline, where the tide has never been seen. Staff are friendly in the way a locked gate is friendly.',base:4.6,
     faq:[['Can I visit the Estate?','Only if invited, employed or lost.'],['Why does it never flood?','Money, mostly.']],
     rev:[['Cordelia V.',5,'Immaculate lawns. Zero visible poor people.'],['Dock Dave',1,'Asked for a job and was handed a leaflet about "gratitude."'],['A concerned gull',2,'Nothing to eat. Beautiful bins though.']]},

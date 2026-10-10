@@ -5,6 +5,9 @@
 const SCENE_RULES=[
   [/^(Sit it out for six hours|Walk the yard)/,'jail','','Behind bars'],
   [/^Haul cargo/,'work','crate','Hauling cargo'],
+  [/^Work a counter shift/,'work','pan','At the fryer'],
+  [/^Work the till/,'cash','','Ringing it up'],
+  [/^(Fries|Burger|Combo)/,'eat','plate','A quick bite'],
   [/^Work a kitchen shift/,'work','pan','Working the grill'],
   [/^Tend the gardens/,'work','rake','Tending the gardens'],
   [/^Repair shift/,'work','spanner','Fixing things'],

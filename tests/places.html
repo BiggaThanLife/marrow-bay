@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay corner store and fast food test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Corner store and fast food</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* A new city has both buildings (corner store in the Grid, fast food in Dockside) with owners, hours, a drawing and a GPS entry; the same city rebuilds identically from its seed;
+   a city built without the extras is byte-for-byte what it was; the store sells the goods; the fast food place feeds and employs you; an old city gets the same things at Mina's and Teo's. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,NPC,NPCS,POIS,OPEN,OWNER,GG,SIGN,COL,BSTYLE,start,closeMenu,popClear,MENUS,openPOI,buildWorld,get blocks(){return blocks},initNPCs,gpsList,isOpen,fastFoodMenu,generalStore,assign,drawWorld,migrate,advance,district,hud})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], btn = rx => btns().find(x => rx.test(x.innerText));
+  const layout = () => JSON.stringify(Object.values(api.POIS).map(p => [p.id, p.bx, p.by]).sort());
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().opening = { step: 'done', done: true }; G().cash = 500; G().energy = 90; G().hunger = 40;
+    // the buildings
+    const c = api.POIS.corner, ff = api.POIS.fastfood; if (!c || !ff) throw new Error('a new city has no corner store or fast food place');
+    if (c.d !== 'Grid' || ff.d !== 'Dockside') errs.push('wrong districts ' + c.d + ' ' + ff.d);
+    if (api.OWNER.corner !== 'sana' || api.OWNER.fastfood !== 'dee' || !api.NPC.sana || !api.NPC.dee) errs.push('owners missing');
+    if (!api.OPEN.corner || !api.OPEN.fastfood || !api.SIGN.corner || !api.SIGN.fastfood || !api.COL.corner || !api.COL.fastfood || !api.BSTYLE.corner || !api.BSTYLE.fastfood || !api.GG.corner || !api.GG.fastfood) errs.push('a look, sign, hours or Googull entry is missing');
+    ['corner', 'fastfood'].forEach(k => { const p = api.POIS[k]; if (api.blocks.filter(b => b.key === p.bx + ',' + p.by).length !== 1) errs.push(k + ' block missing or duplicated'); if (!api.gpsList().some(d => d.id === k)) errs.push(k + ' not in the GPS list'); if (typeof api.MENUS[k] !== 'function') errs.push('no menu for ' + k) });
+    // the same seed rebuilds the same city, and without extras they are gone and nothing else moved
+    const seed = G().seed, a = layout(); api.buildWorld(seed, true); if (layout() !== a) errs.push('rebuilding with extras moved something');
+    api.buildWorld(seed, false); const plain = layout(); if (api.POIS.corner || api.POIS.fastfood) errs.push('extras present without the flag'); const a2 = JSON.parse(a).filter(x => x[0] !== 'corner' && x[0] !== 'fastfood').map(x => x[0]).sort().join(), p2 = JSON.parse(plain).map(x => x[0]).sort().join(); if (a2 !== p2) errs.push('other places changed without extras');
+    api.buildWorld(seed, true);
+    // drawing every state at their position does not fail
+    G().p.x = c.ex; G().p.y = c.ey; win.eval('camX=Math.max(0,Math.round(G.p.x*TS-VW/2));camY=Math.max(0,Math.round(G.p.y*TS-VH/2))'); [8 * 60, 23 * 60].forEach(t => { G().t = t; try { api.drawWorld(1000) } catch (e) { errs.push('draw failed: ' + e.message) } });
+    G().p.x = ff.ex; G().p.y = ff.ey; win.eval('camX=Math.max(0,Math.round(G.p.x*TS-VW/2));camY=Math.max(0,Math.round(G.p.y*TS-VH/2))'); try { api.drawWorld(1000) } catch (e) { errs.push('draw failed at fast food: ' + e.message) }
+    // the store
+    G().t = 12 * 60; api.openPOI(c); if (!/Sana Rahimi/.test(text())) errs.push('corner store menu: ' + text().slice(0, 50)); btn(/Browse the shelves/).click(); if (!btn(/^Drinks and snacks/)) errs.push('goods not on offer');
+    btn(/^Drinks and snacks/).click(); btn(/^Coffee/).click(); const bb = btns().find(x => /^Buy|Confirm|Yes/i.test(x.innerText)); if (bb) bb.click(); if ((G().items.coffee || 0) < 1) errs.push('could not buy coffee at the corner store');
+    api.closeMenu(); G().energy = 90; G().hunger = 40; const c0 = G().cash; api.openPOI(c); btn(/Work the till/).click(); if (G().cash <= c0) errs.push('the till shift paid nothing');
+    // the fast food place
+    api.closeMenu(); G().hunger = 30; G().t = 14 * 60; api.openPOI(ff); if (!/Fry Hard/.test(text()) || !/Dee Okoro/.test(text())) errs.push('fast food menu: ' + text().slice(0, 60));
+    const h0 = G().hunger, m0 = G().cash; btn(/^Burger/).click(); if (G().hunger < h0 + 20 || G().cash >= m0) errs.push('burger did nothing: ' + G().hunger);
+    const c1 = G().cash; G().energy = 90; btn(/Work a counter shift/).click(); if (G().cash <= c1) errs.push('the counter shift paid nothing'); api.closeMenu();
+    // closed outside its hours
+    G().t = 7 * 60; api.openPOI(ff); if (!/Closed/.test(text())) errs.push('fast food open at 7 am'); api.closeMenu();
+    // an old city: no buildings, but the same goods and food, and the people still have somewhere to be
+    api.buildWorld(seed, false); G().extras = false; api.initNPCs(); [api.NPC.sana, api.NPC.dee].forEach(n => { if (!(isFinite(n.x) && isFinite(n.y))) errs.push(n.id + ' has no position in an old city') });
+    G().t = 12 * 60; api.openPOI(api.POIS.market); if (!btn(/General goods/)) errs.push('old city market has no goods');
+    api.closeMenu(); api.openPOI(api.POIS.diner); const fc = btn(/The fast counter/); if (!fc) errs.push('old city diner has no fast counter'); else { fc.click(); if (!btn(/^Fries/)) errs.push('fast counter shows no food'); btn(/Back/).click(); if (!/Teo/.test(text())) errs.push('fast counter Back does not return to the diner') }
+    api.buildWorld(seed, true); G().extras = true; api.initNPCs(); api.closeMenu(); api.openPOI(api.POIS.diner); if (btn(/The fast counter/)) errs.push('diner still has a fast counter next to a fast food place');
+    // saves keep the flag
+    win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (G().extras !== true) errs.push('extras flag lost in a save');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

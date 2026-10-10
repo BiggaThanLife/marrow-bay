@@ -38,7 +38,7 @@ function talk(n,extra){
   const heard=G.rumors.filter(r=>r.knows.includes(n.id)).map(r=>RUM[r.type].t);
   const needsL=[];if(s.hunger<40)needsL.push('hungry');if(s.cash<15)needsL.push('short on cash');
   const cls=tr>=3?'good':tr===0?'bad':tr===1?'amber':'';
-  const shop=Object.keys(OWNER).find(k=>OWNER[k]===n.id);
+  const shop=Object.keys(OWNER).find(k=>OWNER[k]===n.id&&POIS[k]);
   const btns=[
     {label:'Chat',sub:s.chat===day()?'You already chatted today':'Small talk builds trust',off:s.chat===day()||tr===0,
      fn:()=>{s.chat=day();s.m+=3;advance(G.quirk==='neighborly'?25:10);talk(n,n.topic)}},

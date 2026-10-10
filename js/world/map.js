@@ -47,7 +47,7 @@ function defaultContent(c){
 }
 function seedRng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 /* Builds the buildings. Seed 0 is the classic layout. Any other seed reshuffles what stands where inside each district (the plaza stays put), so districts, roads, trams and the bridge stay valid. */
-function buildWorld(seed){
+function buildWorld(seed,extras){
   blocks.length=0;for(const k of Object.keys(POIS))delete POIS[k];
   CELLS.forEach(c=>fill(c.bx,c.by,T.GRASS));
   const content={};CELLS.forEach(c=>{content[c.cx+','+c.cy]=defaultContent(c)});
@@ -68,6 +68,15 @@ function buildWorld(seed){
     else if(k.t==='poi')addPOI(k.id,k.name,k.id,bx,by);
     else{blocks.push({x:bx,y:by,kind:(c.d==='Dockside'||c.d==='Foundry Row')?'warehouse':'tower',poi:null,key:bx+','+by});fill(bx,by,T.BLD)}
   });
+  /* new cities only: a corner store in the Grid and a fast food place in Dockside take over two empty buildings. A city made before they existed never gets them, so its streets and saved building keys stay exactly as they were. */
+  if(extras){
+    const rng=seedRng((seed||1)^0x5eed1e5);
+    [['corner','Kelp Corner Shop','Grid'],['fastfood','Fry Hard','Dockside']].forEach(([id,name,d])=>{
+      const c=blocks.filter(b=>!b.poi&&(b.kind==='tower'||b.kind==='warehouse')&&district(b.x+1,b.y+1)===d);
+      if(!c.length)return;
+      const b=c[Math.floor(rng()*c.length)];blocks.splice(blocks.indexOf(b),1);addPOI(id,name,id,b.x,b.y);
+    });
+  }
   addPOI('barn','Briar Barn','barn',2,11);
   [[4,3],[4,28]].forEach(([x,y])=>{blocks.push({x,y,kind:'farmstead',poi:null,key:x+','+y});fill(x,y,T.BLD)});
   POIS.plaza={id:'plaza',name:'Central Plaza',kind:'plaza',d:'Grid',ex:22,ey:15};

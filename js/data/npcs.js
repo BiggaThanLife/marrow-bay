@@ -86,6 +86,16 @@ const NPCS=[
   tier:['Priya pins a hem and does not look up.','Priya glances over. "Browse. Do not touch the good wool."','Priya smiles. "That colour is wrong for you. Wait here."','Priya holds up a jacket. "I made this for you. I just did not know it yet."'],
   react:{creative:'"You have an eye. Most people just point."',broke:'"Everything here was owned by someone. It is all fully laundered."',smooth:'"You carry a suit well. Let me fix the shoulders."','known-thief':'"If anything in the shop goes missing, I will know whose hem it was."'},
   topic:'"I measure people all day. You can tell a lot from a waistline and a nervous laugh."'}
+ ,{id:'sana',name:'Sana Rahimi',role:'Corner shop owner',d:'Grid',home:'flats',work:'corner',hang:'diner',col:'#3f8f9a',
+  aff:{hardworking:8,'working-class':6,outsider:8,educated:3,creative:4,shopkeeper:8,'local-hero':8,broke:2,'in-debt':-4,disgraced:-4,'known-thief':-35},
+  tier:['Sana watches your hands, not your face.','Sana nods. "Basket is by the door."','Sana smiles. "I put your usual aside."','Sana slides a coffee over. "On me. Do not tell the others."'],
+  react:{outsider:'"New here? Welcome. Everything is where it should be, except the stock count."',hardworking:'"Early riser. I can tell by the way you hold the door."','known-thief':'"There is a camera over the till. It is pointed at you."',shopkeeper:'"Another shopkeeper. We should compare margins and sigh."'},
+  topic:'"Everyone comes in for one thing and leaves with four. That is not a business model. That is gravity."'}
+ ,{id:'dee',name:'Dee Okoro',role:'Fast food manager',d:'Dockside',home:'bunk',work:'fastfood',hang:'gull',col:'#d08a2a',
+  aff:{hardworking:10,'working-class':8,broke:6,creative:6,strong:4,union:4,smooth:-4,educated:-4,disgraced:-4,'known-thief':-25,'local-hero':6},
+  tier:['Dee does not look up from the fryer.','Dee shrugs. "Order at the counter."','Dee grins. "Extra salt, right?"','Dee boxes something warm and pushes it over. "Staff meal. You are staff."'],
+  react:{'working-class':'"You know the shift. Do not touch the oil."',broke:'"Short on cash? Fries are three bucks and I do not count the salt."',creative:'"Draw on the napkins. Everybody does. I keep the good ones."',smooth:'"Smooth talk does not get you a faster burger. I tried."'},
+  topic:'"Nobody asks the fry cook how the city is doing. We know exactly how it is doing. It is Thursday and it is doing grease."'}
 ];
 const NPC={};
 NPCS.forEach(n=>{NPC[n.id]=n;n.wage=WAGE[n.id];if(n.id==='cordelia'||n.id==='ashgrove')n.wants='trinkets'});
