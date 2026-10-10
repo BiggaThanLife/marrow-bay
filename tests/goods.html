@@ -32,7 +32,7 @@ f.addEventListener('load', async () => {
     // snacks feed, water does both a little
     G().items.sandwich = 1; G().hunger = 30; api.useItem('sandwich'); if (G().hunger < 53) errs.push('sandwich ' + G().hunger); G().items.chips = 1; G().hunger = 30; api.useItem('chips'); if (G().hunger < 38 || G().hunger > 42) errs.push('chips ' + G().hunger);
     // the Bag shows items and offers to use them
-    G().items = { coffee: 2, flowers: 1 }; api.bag(); if (!/Coffee/.test(text()) || !btn(/Use an item/)) errs.push('Bag does not list or offer items'); if (/Use an item[\s\S]*Flowers/.test(btn(/Use an item/).innerText)) errs.push('gifts offered as consumables');
+    G().items = { coffee: 2, flowers: 1 }; api.bag('', 'carry'); if (!/Coffee/.test(text()) || !/Flowers/.test(text())) errs.push('Bag does not list items'); api.bag('', 'use'); if (!btn(/Use coffee/)) errs.push('Bag does not offer to use coffee'); if (btn(/Use flowers/)) errs.push('gifts offered as consumables');
     // equipment: bought once, flags set, effects felt
     G().items = {}; ['sneakers', 'umbrella'].forEach(id => { buy('Everyday', new RegExp('^' + api.GOODS[id].n)); if (!G().fx[id]) errs.push(id + ' not bought') });
     api.generalStore(api.POIS.market, api.NPC.mina, () => 0); btn(/^Everyday/).click(); if (!btn(/^Sneakers/).disabled) errs.push('sneakers can be bought twice');

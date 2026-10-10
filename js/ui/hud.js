@@ -65,7 +65,7 @@ const leaveBtn={label:'Leave',cls:'quiet',fn:closeMenu};
 $('#xbtn').addEventListener('click',()=>{if(dismissable)closeMenu()});
 const msgP=m=>m?`<p class="amber">${esc(m)}</p>`:'';
 
-$('#b-bag').addEventListener('click',()=>{if(G){placing=null;bag()}});
+$('#b-bag').addEventListener('click',()=>{if(G){placing=null;bag('','carry',null)}});
 $('#b-comp').addEventListener('click',()=>{if(G&&G.companion){placing=null;talk(NPC[G.companion])}});
 $('#b-phone').addEventListener('click',()=>{if(G){placing=null;phone()}});
 $('#b-biz').addEventListener('click',()=>{if(G){placing=null;bizOverview()}});

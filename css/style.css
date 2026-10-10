@@ -148,3 +148,15 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .cl-ad{border:2px dashed var(--line);padding:6px 8px;margin:6px 0 10px}
 .cl-msg{padding:6px 0;border-top:1px solid var(--line)}
 .cl-msg.them{padding-left:12px}
+/* the Bag: tabs and an icon grid */
+.bagtabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0 10px}
+.bagtab{font:700 .78rem "DM Sans",system-ui,sans-serif;padding:8px 2px;background:transparent;color:var(--muted);border:2px solid var(--line);border-radius:0;min-height:38px}
+.bagtab.on{color:var(--text);border-color:var(--accent);background:rgba(79,209,181,.12)}
+.bagrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px -44px 8px 0}
+.bagcell{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px 4px;background:rgba(255,255,255,.04);color:var(--text);border:2px solid var(--line);border-radius:0;min-height:74px}
+.bagcell.on{border-color:var(--accent);background:rgba(79,209,181,.14)}
+.bagcell svg{image-rendering:pixelated}
+.bagcell b{position:absolute;right:3px;top:2px;font-size:.72rem;background:rgba(0,0,0,.55);padding:0 4px}
+.bagcell span{font-size:.68rem;line-height:1.1;text-align:center;word-break:break-word}
+.bagdetail{border:2px solid var(--line);padding:6px 8px;margin:0 0 8px;background:rgba(255,255,255,.03)}
+.bagdetail h3{margin:0 0 2px}

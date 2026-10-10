@@ -46,6 +46,6 @@ function oppAct(o){
   const a=o.act;
   if(a.type==='walk')return walkTo(a.x,a.y);
   if(a.type==='talk'){const n=NPC[a.id];return n?goTalk(n):undefined}
-  if(a.type==='bag')return bag();
+  if(a.type==='bag')return bag('','standing');
 }
 const oppUnread=()=>(G.opps||[]).filter(o=>o.id>(G.oppSeen||0)).length;

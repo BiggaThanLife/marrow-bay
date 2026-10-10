@@ -1,0 +1,53 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay bag test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>The Bag</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Four tabs; Carry is an icon grid of what you own with counts and a detail panel for the one you tap; Eat and use lists actions; You and Standing hold the rest;
+   every item that can exist has an icon; tabs and selection survive using something; the toolbar opens on Carry. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,NAMES,GOODS,CROPS,DISHES,BAG_ICON,BAG_SHAPES,start,closeMenu,popClear,bag,bagIcon,bagThings,bagActions,addRumor,MENUS,POIS})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], btn = rx => btns().find(x => rx.test(x.innerText));
+  const tab = n => doc.querySelector('.bagtab[data-tab="' + n + '"]'), cells = () => [...doc.querySelectorAll('.bagcell')], cell = id => doc.querySelector('.bagcell[data-sel="' + id + '"]');
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().opening = { step: 'done', done: true };
+    // every possible thing has an icon with a real shape
+    const ids = [...Object.keys(api.NAMES), ...Object.keys(api.GOODS)]; ids.forEach(id => { const ic = api.BAG_ICON[id]; if (!ic) errs.push('no icon for ' + id); else if (!api.BAG_SHAPES[ic[0]] || api.BAG_SHAPES[ic[0]].length !== 8 || api.BAG_SHAPES[ic[0]].some(r => r.length !== 8)) errs.push('bad shape for ' + id) });
+    if (!/<svg/.test(api.bagIcon('crops')) || (api.bagIcon('crops').match(/<rect/g) || []).length < 20) errs.push('icon did not draw');
+    // an empty bag
+    Object.keys(G().inv).forEach(k => G().inv[k] = 0); G().items = {}; G().fx = {}; api.bag(); if (!/bag is empty/i.test(text())) errs.push('empty bag message missing'); if (cells().length) errs.push('cells in an empty bag');
+    // four tabs and the grid
+    ['carry', 'use', 'you', 'standing'].forEach(t => { if (!tab(t)) errs.push('no tab ' + t) });
+    G().inv.crops = 5; G().inv.fish = 2; G().inv.meals = 3; G().inv.tomato = 2; G().inv.seedPumpkin = 1; G().inv.salad = 1; G().items = { coffee: 2, flowers: 1 }; G().fx = { sneakers: true };
+    api.bag(); if (cells().length !== 9) errs.push('expected 9 cells, got ' + cells().length + ': ' + cells().map(c => c.innerText.replace(/\n/g, ' ')).join('|'));
+    if (!cell('crops').querySelector('svg') || !/5/.test(cell('crops').innerText)) errs.push('crops cell wrong: ' + cell('crops').innerText);
+    if (!/owned/.test(cell('sneakers').innerText)) errs.push('equipment not shown as owned');
+    // tap one: detail and its action
+    cell('meals').click(); if (!/Meals/.test(text()) || !/Sells for about \$14/.test(text())) errs.push('detail panel wrong: ' + text().slice(0, 200)); if (!btn(/^Eat a meal/)) errs.push('no Eat a meal beside the detail');
+    const h0 = G().hunger = 30; btn(/^Eat a meal/).click(); if (G().inv.meals !== 2 || G().hunger < 70) errs.push('eating from the detail did not work: ' + G().hunger); if (!cell('meals') || !/Meals/.test(text())) errs.push('selection lost after eating');
+    cell('meals').click(); if (/Sells for about/.test(text())) errs.push('tapping again did not deselect');
+    // an item with no action has no button but has a description
+    cell('fish').click(); if (btn(/^Eat/)) errs.push('fish should have no eat action'); if (!/Smoke it/.test(text())) errs.push('fish description missing');
+    // eat and use tab
+    tab('use').click(); if (!/Energy/.test(text()) || !btn(/^Eat a meal/) || !btn(/^Eat a tomato/) || !btn(/^Use coffee/) || !btn(/^Eat radish salad/)) errs.push('use tab missing actions: ' + btns().map(b => b.innerText.split('\n')[0]).join('|'));
+    if (btn(/flowers/i)) errs.push('gifts listed as things to use'); const en = G().energy = 40; btn(/^Use coffee/).click(); if (G().energy <= en || !tab('use').classList.contains('on')) errs.push('coffee did not work or the tab changed');
+    // you and standing
+    tab('you').click(); if (!/How people see you/.test(text()) || !btn(/^Wardrobe/) || !btn(/Quit to title/)) errs.push('you tab wrong');
+    G().rumors = []; api.addRumor('thief', ['mina', 'reyes']); G().rep.Grid = 40; G().dirty = 50; tab('standing').click(); if (!/What people say/.test(text()) || !/Market Hall|robbed/.test(text()) || !/Grid/.test(text()) || !/Dirty cash/.test(text())) errs.push('standing tab wrong: ' + text().slice(0, 200));
+    // the toolbar opens on Carry, not on the last tab
+    api.closeMenu(); doc.getElementById('b-bag').click(); if (!tab('carry').classList.contains('on')) errs.push('toolbar Bag did not open on Carry');
+    // bills show on every tab
+    G().arrears = 40; api.bag('', 'you'); if (!/Bills owed/.test(text())) errs.push('bills hidden on a tab');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

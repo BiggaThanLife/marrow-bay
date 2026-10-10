@@ -37,7 +37,7 @@ f.addEventListener('load', () => {
     api.MENUS.pawn(p, pn); click(/^Fence hot goods/); if (!(G().dirty > 0) || G().inv.loot !== 0) errs.push('fence did not pay dirty cash');
     const d1 = G().dirty, c1 = G().cash; api.MENUS.pawn(p, pn); click(/^Cash exchange/); if (G().dirty !== 0 || G().cash !== c1 + Math.round(d1 * .6)) errs.push('exchange wrong');
     // bag
-    api.bag(); if (!/Dirty cash/.test(sheet()) || !/Police file/.test(sheet())) errs.push('bag lacks dirty cash or police file rows'); api.closeMenu();
+    api.bag('', 'standing'); if (!/Dirty cash/.test(sheet()) || !/Police file/.test(sheet())) errs.push('bag lacks dirty cash or police file rows'); api.closeMenu();
     // notoriety
     G().notor = 0; G().heat = 3; G().lawSeen = 0; const n0 = G().notor; api.lawHourly(); if (!(G().notor > n0)) errs.push('heat did not raise notoriety'); flush();
     G().heat = 0; G().notor = 20; api.lawHourly(); if (!(G().notor < 20)) errs.push('notoriety did not fade'); flush();

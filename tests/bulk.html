@@ -58,7 +58,7 @@ f.addEventListener('load', async () => {
     // a café can use them as supplies
     G().biz = [{ key: 'k', d: 'Grid', type: 'cafe', level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, price: 1, paid: 1, add: [], hist: [] }]; api2.depositMenu(G().biz[0]); if (!/Add some radish salads/.test(text()) || !/Add some pumpkin pies/.test(text())) errs.push('café does not accept dishes: ' + text().slice(0, 140));
     // eaten from the Bag
-    G().hunger = 20; api2.bag(); if (!btn(/^Eat radish salad/)) errs.push('Bag cannot eat salad'); const sa = G().inv.salad; btn(/^Eat radish salad/).click(); if (G().inv.salad !== sa - 1 || G().hunger < 45) errs.push('eating salad: ' + G().hunger);
+    G().hunger = 20; api2.bag('', 'use'); if (!btn(/^Eat radish salad/)) errs.push('Bag cannot eat salad'); const sa = G().inv.salad; btn(/^Eat radish salad/).click(); if (G().inv.salad !== sa - 1 || G().hunger < 45) errs.push('eating salad: ' + G().hunger);
     // bought by a hungry friend at a stall
     const sp = (() => { const p = G().p; for (let r = 1; r < 9; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = Math.round(p.x) + dx, y = Math.round(p.y) + dy; if (api.canBuild(x, y) && !G().structs.some(s => s.x === x && s.y === y)) return [x, y] } })();
     win.eval('placing="stall"'); api.tryPlace(sp[0], sp[1]); const stall = G().structs.find(s => s.type === 'stall'); ['salad', 'soup', 'pie'].forEach(k => { if (stall.stock[k] !== 0) errs.push('stall has no ' + k + ' slot') });
