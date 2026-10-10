@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay bulk making test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Cooking, smoking and crafting by the batch</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Cooking meals, cooking stew, smoking fish and crafting trinkets all ask how many with a live description, cap at what your ingredients allow, spend exactly the right ingredients,
+   give the right amount, and take less time per item after the first. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,POIS,MENUS,start,closeMenu,popClear,homeMenu,structMenu,tryPlace,canBuild,bulkMin,minText,advance,craftTrinkets,MENUS,NPC})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], btn = rx => btns().find(x => rx.test(x.innerText));
+  const setQty = n => { const i = doc.getElementById('qty'); i.value = n; i.dispatchEvent(new win.Event('input')) };
+  const home = () => api.homeMenu(api.POIS[G().home]);
+  try {
+    api.start('farm'); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().opening = { step: 'done', done: true }; G().energy = 90; G().hunger = 90;
+    // the time rule
+    if (api.bulkMin(60, 1) !== 60 || api.bulkMin(60, 4) !== 181 || api.minText(150) !== '2 hr 30 min' || api.minText(45) !== '45 minutes') errs.push('time maths: ' + api.bulkMin(60, 4) + ' ' + api.minText(150));
+    // cook meals
+    G().decor = {}; G().inv.crops = 9; G().inv.meals = 0; home(); if (!btn(/^Cook meals/)) errs.push('no Cook meals'); btn(/^Cook meals/).click();
+    if (!/up to 4/.test(text())) errs.push('cap should be 4 from 9 crops: ' + text().slice(0, 120)); setQty(3); if (!/3 meals from 6 crops/.test(text())) errs.push('live description wrong: ' + text());
+    const t0 = G().t; btn(/^Cook these meals/).click(); if (G().inv.crops !== 3 || G().inv.meals < 3) errs.push('3 meals cost wrong: crops ' + G().inv.crops + ' meals ' + G().inv.meals); if (G().t - t0 !== 140) errs.push('three meals should take 140 minutes, took ' + (G().t - t0));
+    if (!/You cooked/.test(text())) errs.push('no result message');
+    // cooking with too few crops
+    G().inv.crops = 1; home(); if (!btn(/^Cook meals/).disabled) errs.push('Cook meals enabled with one crop');
+    // stew: pairs of fish and crops
+    G().inv.crops = 5; G().inv.fish = 3; G().inv.meals = 0; home(); btn(/^Cook stew/).click(); if (!/up to 3/.test(text())) errs.push('stew cap'); setQty(2); if (!/2 pots: 4 meals/.test(text())) errs.push('stew description: ' + text()); btn(/^Cook this stew/).click();
+    if (G().inv.fish !== 1 || G().inv.crops !== 3 || G().inv.meals !== 4) errs.push('stew wrong: ' + JSON.stringify(G().inv));
+    // "As many as I can"
+    G().inv.crops = 7; home(); btn(/^Cook meals/).click(); btn(/As many as I can/).click(); if (!/3 meals from 6 crops/.test(text())) errs.push('all button did not go to the cap: ' + text());
+    api.closeMenu();
+    // smoker and bench in the world
+    const spot = () => { const p = G().p; for (let r = 1; r < 9; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = Math.round(p.x) + dx, y = Math.round(p.y) + dy; if (api.canBuild(x, y) && !G().structs.some(s => s.x === x && s.y === y)) return [x, y] } };
+    G().cash = 9999; ['smoker', 'bench'].forEach(t => { const s = spot(); win.eval(`placing=${JSON.stringify(t)}`); api.tryPlace(s[0], s[1]) });
+    const smoker = G().structs.find(s => s.type === 'smoker'), bench = G().structs.find(s => s.type === 'bench');
+    G().inv.fish = 7; G().inv.smoked = 0; api.structMenu(smoker); btn(/^Smoke fish/).click(); if (!/up to 3/.test(text())) errs.push('smoker cap: ' + text().slice(0, 100)); setQty(3); const ts = G().t; btn(/^Smoke these fish/).click();
+    if (G().inv.fish !== 1 || G().inv.smoked !== 6) errs.push('smoking wrong: ' + JSON.stringify({ f: G().inv.fish, s: G().inv.smoked })); if (G().t - ts !== 211) errs.push('smoking time ' + (G().t - ts));
+    G().inv.scrap = 10; G().inv.trinkets = 0; G().energy = 90; api.structMenu(bench); btn(/^Craft trinkets/).click(); if (!/up to 3/.test(text())) errs.push('bench cap'); setQty(2); btn(/^Craft these trinkets/).click();
+    if (G().inv.scrap !== 4 || G().inv.trinkets !== 2 || G().energy > 78) errs.push('trinkets wrong: ' + JSON.stringify({ s: G().inv.scrap, t: G().inv.trinkets, e: G().energy }));
+    // the workshop counter uses it too
+    G().inv.scrap = 9; api.closeMenu(); api.MENUS.workshop(api.POIS.workshop, api.NPC.mack || api.NPC.priya, ''); if (!btn(/^Craft trinkets/)) errs.push('workshop has no Craft trinkets');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

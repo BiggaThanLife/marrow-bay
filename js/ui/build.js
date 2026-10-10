@@ -73,8 +73,8 @@ function structMenu(st,msg){
     else if(st.s===1)ui(`<h2>${nm}</h2><p>${esc(cropOf(st).n)}: ${st.d} day${st.d>1?'s':''} until harvest.</p>`,[leaveBtn,mv,rm]);
     else ui(`<h2>${nm}</h2><p class="good">Ready to harvest: ${esc(cropOf(st).n.toLowerCase())}.</p>`,[{label:'Harvest',fn:()=>{const m=harvestCrop(st,true);advance(20);structMenu(st,m)}},leaveBtn,mv,rm]);
   }else if(st.type==='smoker'){
-    ui(`<h2>${nm}</h2><p class="muted">Smoked fish keep and sell for more.</p>${msgP(msg)}`,[{label:'Smoke 2 fish',sub:`You have ${G.inv.fish} fish. 90 minutes.`,off:G.inv.fish<2,fn:()=>{G.inv.fish-=2;G.inv.smoked+=2;advance(90);structMenu(st,'You smoked two fish.')}},leaveBtn,mv,rm]);
+    ui(`<h2>${nm}</h2><p class="muted">Smoked fish keep and sell for more.</p>${msgP(msg)}`,[{label:'Smoke fish',sub:`2 fish make 2 smoked. You have ${G.inv.fish} fish. Choose how many.`,off:G.inv.fish<2,fn:()=>bulkMake({title:'Smoke fish',intro:'Two fish go in, two smoked fish come out.',max:Math.floor(G.inv.fish/2),base:90,confirm:'Smoke these fish',allLabel:'As many as I can',sayFn:n=>`${n} batch${n>1?'es':''}: ${2*n} fish, about ${minText(bulkMin(90,n))}`,run:n=>{G.inv.fish-=2*n;G.inv.smoked+=2*n;advance(bulkMin(90,n));return `You smoked ${2*n} fish.`},back:m=>structMenu(st,m)})},leaveBtn,mv,rm]);
   }else if(st.type==='bench'){
-    ui(`<h2>${nm}</h2><p class="muted">A bench you can use anywhere in the city.</p>${msgP(msg)}`,[{label:'Craft a trinket',sub:`Uses 3 scrap, 2 hours. You have ${G.inv.scrap}.`,off:G.inv.scrap<3,fn:()=>{craftTrinket();structMenu(st,'You made a trinket.')}},leaveBtn,mv,rm]);
+    ui(`<h2>${nm}</h2><p class="muted">A bench you can use anywhere in the city.</p>${msgP(msg)}`,[{label:'Craft trinkets',sub:`3 scrap and 2 hours each. You have ${G.inv.scrap}. Choose how many.`,off:G.inv.scrap<3,fn:()=>craftTrinkets(m=>structMenu(st,m))},leaveBtn,mv,rm]);
   }else ui(`<h2>${nm}</h2><p class="muted">Stalls within 5 tiles draw shoppers from twice as far.</p>`,[leaveBtn,mv,rm]);
 }

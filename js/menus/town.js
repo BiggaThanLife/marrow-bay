@@ -32,9 +32,15 @@ MENUS.estate=(poi,n,msg)=>{
     leaveBtn]);
 };
 function craftTrinket(){G.inv.scrap-=3;G.inv.trinkets++;advance(120);G.energy=clamp(G.energy-6,0,100)}
+/* the same, by the batch: asks how many and takes a little less time for each one after the first */
+function craftTrinkets(back){
+  bulkMake({title:'Craft trinkets',intro:'3 scrap make 1 trinket.',max:Math.floor(G.inv.scrap/3),base:120,confirm:'Craft these trinkets',allLabel:'As many as I can',
+    sayFn:n=>`${n} trinket${n>1?'s':''} from ${3*n} scrap, about ${minText(bulkMin(120,n))}`,
+    run:n=>{G.inv.scrap-=3*n;G.inv.trinkets+=n;advance(bulkMin(120,n));G.energy=clamp(G.energy-6*n,0,100);return `You made ${n} trinket${n>1?'s':''}.`},back});
+}
 MENUS.workshop=(poi,n,msg)=>{
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">Benches, tools, and the smell of solder.</p>${msgP(msg)}`,[
-    {label:'Craft a trinket',sub:`Uses 3 scrap, 2 hours. You have ${G.inv.scrap}.`,off:G.inv.scrap<3,fn:()=>{craftTrinket();MENUS.workshop(poi,n,'You made a trinket.')}},
+    {label:'Craft trinkets',sub:`3 scrap and 2 hours each. You have ${G.inv.scrap}. Choose how many.`,off:G.inv.scrap<3,fn:()=>craftTrinkets(m=>MENUS.workshop(poi,n,m))},
     {label:'Repair shift',sub:'3 hours, about $18',need:21,cls:'',fn:()=>MENUS.workshop(poi,n,gig(null,{hrs:3,base:18,mult:(has('creative')?1.2:1)*(G.fx.toolkit?1.2:1),rep:'Grid',label:'repairs'}))},
     {label:'Crafting bench',sub:'Parts, jammers, and vehicle upgrades',cls:'',fn:()=>craftMenu(()=>MENUS.workshop(poi,n))},
     leaveBtn]);
