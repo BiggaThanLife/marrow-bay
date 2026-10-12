@@ -5,6 +5,7 @@ function person(x,y,col,isP,moving,now,headOnly,look){
   const sw=moving&&Math.floor(now/140)%2;
   if(isP&&G&&G.look)return drawPlayer(cx,px,py,G.look,sw,headOnly,Math.floor(now/300)%2);
   if(look&&!isP)return drawNpc(cx,px,py,look,col,sw,headOnly);
+  if(RS>=2)return drawPersonHD(cx,px,py,{skin:'#e8c39e',hair:'#2b2118',style:0,col,sw,headOnly,collar:!!isP,marker:isP?Math.floor(now/300)%2:null});
   if(!headOnly){
     cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(px-3,py,7,2);
     cx.fillStyle='#2b2118';cx.fillRect(px-3+(sw?1:0),py-3,2,3);cx.fillRect(px+1-(sw?1:0),py-3,2,3);
@@ -17,6 +18,7 @@ function person(x,y,col,isP,moving,now,headOnly,look){
 /* Named NPCs and tenants: skin tone, hair, build and clothes vary so the crowd does not look like one person. */
 function drawNpc(c,px,py,l,col,sw,headOnly){
   const skin=SKIN[l.skin]||SKIN[1],hair=HAIR[l.hair]||HAIR[0];
+  if(RS>=2&&c===cx)return drawPersonHD(c,px,py,{skin,hair,style:l.style||0,hat:l.hat,col,fem:l.fem,beard:l.beard,collar:true,sw,headOnly});
   if(!headOnly){
     c.fillStyle='rgba(0,0,0,.25)';c.fillRect(px-3,py,7,2);
     if(l.fem){

@@ -8,6 +8,7 @@ function drawHat(c,px,py,hat){
   else if(hat==='brim'){c.fillStyle='#5a4326';c.fillRect(px-4,py-13,8,1);c.fillRect(px-2,py-16,4,3)}
 }
 function drawPlayer(c,px,py,l,sw,headOnly,t){
+  if(RS>=2&&c===cx)return drawPersonHD(c,px,py,{skin:SKIN[l.skin]||SKIN[1],hair:HAIR[l.hair]||HAIR[0],style:l.style||0,hat:l.hat,col:outfitOf(l.outfit).c,collar:true,sw,headOnly,marker:t||0});
   if(!headOnly){
     c.fillStyle='rgba(0,0,0,.25)';c.fillRect(px-3,py,7,2);
     c.fillStyle='#2b2118';c.fillRect(px-3+(sw?1:0),py-3,2,3);c.fillRect(px+1-(sw?1:0),py-3,2,3);

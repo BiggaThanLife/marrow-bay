@@ -21,7 +21,7 @@ function cell(g, label, w, h, scale) { const c = document.createElement('div'); 
 f.addEventListener('load', () => {
   const win = f.contentWindow, errs = [];
   win.eval(`start(Object.keys(BG)[0]);G.flags.customDone=true;closeMenu();popClear();G.flags.onboarded=true;SET.depth=true;SET.hints=false;G.opening={step:'done',done:true}`);
-  const A = win.eval(`({get G(){return G},blocks,BSTYLE,POIS,NPCS,NPC,NPC_LOOK,VEH,STRUCTS,SKIN,HAIR,HATS,OUTFITS,BAG_ICON,drawNpc,drawPlayer,drawBlockDepth,drawWorld,drawVeh,drawStruct,drawRide,cx,TS,BAG_SHAPES,bagIcon,SCENE_RULES,SCENE_DRAW,SCENE_MS,
+  const A = win.eval(`({get G(){return G},blocks,BSTYLE,POIS,NPCS,NPC,NPC_LOOK,VEH,STRUCTS,SKIN,HAIR,HATS,OUTFITS,BAG_ICON,drawNpc,drawPlayer,drawTreeDepth,hash,drawBlockDepth,drawWorld,drawVeh,drawStruct,drawRide,cx,TS,BAG_SHAPES,bagIcon,SCENE_RULES,SCENE_DRAW,SCENE_MS,
     setCam(x,y){camX=x;camY=y},get VW(){return VW},get VH(){return VH},sc:document.getElementById('scene'),get RS(){return RS},district,METERS})`);
   const G = A.G, scene = A.sc, now = win.performance.now(), RS = A.RS;
   /* a canvas that holds a crop of the map canvas (which has RS real pixels per map unit), shown w*scale wide */
@@ -58,13 +58,20 @@ f.addEventListener('load', () => {
   G.biz = [];
   /* 3. people */
   g = sec('People', 'The 19 named neighbours, then every skin tone, hat and outfit the player can pick.', 2);
+  const ps = +q.get('ps') || 3, bg = () => { A.setCam(0, 0); A.cx.fillStyle = '#1b2a33'; A.cx.fillRect(0, 0, 40, 40) };
   A.NPCS.forEach(n => {
-    const c = cell(g, n.name.split(' ').pop() + ' (' + n.role + ')', 24, 26, 3);
-    try { A.drawNpc(c, 12, 23, A.NPC_LOOK[n.id] || { skin: 1, hair: 0, style: 0 }, n.col, 0, false) } catch (e) { errs.push('npc ' + n.id + ': ' + e.message) }
+    bg(); try { A.drawNpc(A.cx, 12, 25, A.NPC_LOOK[n.id] || { skin: 1, hair: 0, style: 0 }, n.col, 0, false) } catch (e) { errs.push('npc ' + n.id + ': ' + e.message) }
+    crop(g, n.name.split(' ').pop() + ' (' + n.role + ')', 24, 28, ps);
   });
-  A.SKIN.forEach((s, i) => { const c = cell(g, 'Skin ' + i, 24, 26, 3); try { A.drawPlayer(c, 12, 23, Object.assign({}, G.look, { skin: i, hat: 'none' }), 0, false, 0) } catch (e) { errs.push('skin ' + e.message) } });
-  A.HATS.forEach(h => { const c = cell(g, 'Hat: ' + h.n, 24, 26, 3); try { A.drawPlayer(c, 12, 23, Object.assign({}, G.look, { hat: h.id }), 0, false, 0) } catch (e) { errs.push('hat ' + e.message) } });
-  if (A.OUTFITS) (Array.isArray(A.OUTFITS) ? A.OUTFITS : Object.values(A.OUTFITS)).forEach(o => { const c = cell(g, 'Outfit: ' + (o.n || o.id), 24, 26, 3); try { A.drawPlayer(c, 12, 23, Object.assign({}, G.look, { outfit: o.id, hat: 'none' }), 0, false, 0) } catch (e) { errs.push('outfit ' + e.message) } });
+  A.SKIN.forEach((s, i) => { bg(); try { A.drawPlayer(A.cx, 12, 25, Object.assign({}, G.look, { skin: i, hat: 'none' }), 0, false, 0) } catch (e) { errs.push('skin ' + e.message) } crop(g, 'Skin ' + i, 24, 28, ps) });
+  A.HATS.forEach(h => { bg(); try { A.drawPlayer(A.cx, 12, 25, Object.assign({}, G.look, { hat: h.id }), 0, false, 0) } catch (e) { errs.push('hat ' + e.message) } crop(g, 'Hat: ' + h.n, 24, 28, ps) });
+  if (A.OUTFITS) (Array.isArray(A.OUTFITS) ? A.OUTFITS : Object.values(A.OUTFITS)).forEach(o => { bg(); try { A.drawPlayer(A.cx, 12, 25, Object.assign({}, G.look, { outfit: o.id, hat: 'none' }), 0, false, 0) } catch (e) { errs.push('outfit ' + e.message) } crop(g, 'Outfit: ' + (o.n || o.id), 24, 28, ps) });
+  g = sec('Trees', 'Canopy sizes and colours that come from where they stand.');
+  [[3,2],[4,5],[8,3],[9,9],[13,4],[16,7],[21,6],[30,5]].forEach(([tx, ty]) => {
+    A.setCam((tx - 2) * A.TS, (ty - 2) * A.TS); A.cx.fillStyle = '#6f9a58'; A.cx.fillRect(0, 0, 80, 60);
+    try { A.drawTreeDepth(tx, ty) } catch (e) { errs.push('tree ' + e.message) }
+    crop(g, 'Tree ' + tx + ',' + ty, 80, 56, ps);
+  });
   /* 4. vehicles and structures */
   g = sec('Vehicles', 'Everything you can ride or drive, drawn on the map.');
   Object.keys(A.VEH).filter(k => k !== 'none').forEach(k => {

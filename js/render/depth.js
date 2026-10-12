@@ -72,10 +72,11 @@ const treeSize=(tx,ty)=>10+hash(tx*3,ty*7)%5;
 function drawTreeDepth(tx,ty){
   const bx=tx*TS-camX+8,by=ty*TS-camY+14,s=treeSize(tx,ty),h=hash(tx,ty),r=Math.round(s*.5);
   const dark=['#2f5a2e','#355f2c','#2c5236'][h%3],mid=['#3f7a3a','#4a8442','#3c7046'][h%3],hi=['#5d9a4e','#6aa85a','#58905e'][h%3];
-  dpFill('#3e2a18',bx-1,by-6,3,7);dpFill('#5b3d24',bx-1,by-6,1,7);
   const cyy=by-6-r;
   /* fade the canopy when the player is standing behind it */
   let fade=false;if(G&&G.p){const px=G.p.x*TS+8-camX,py=G.p.y*TS+14-camY;fade=G.p.y<ty&&Math.abs(px-bx)<r+3&&py>cyy-r-2&&py<by}
+  if(RS>=2)return drawTreeHD(tx,ty,bx,by,s,h,r,fade);
+  dpFill('#3e2a18',bx-1,by-6,3,7);dpFill('#5b3d24',bx-1,by-6,1,7);
   if(fade)cx.globalAlpha=.55;
   dsc(cx,OUT,bx,cyy,r+1);dsc(cx,dark,bx,cyy,r);dsc(cx,mid,bx-1,cyy-1,r-1.5);dsc(cx,hi,bx-2,cyy-2,Math.max(1,r-3.5));
   dpFill('rgba(0,0,0,.18)',bx-r+1,cyy+r-2,r*2-1,1);
