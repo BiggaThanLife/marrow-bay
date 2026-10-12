@@ -1,7 +1,7 @@
 "use strict";
 /* Talking to NPCs and pickpocketing. */
 /* ================= TALK ================= */
-function worldLines(){
+function worldLines(n){
   const r=[];
   if(G.ev)r.push(`${G.ev.name}: ${G.ev.desc}`);
   if(G.fishStock<30)r.push('Fish are scarce. Too many lines in the water.');
@@ -11,7 +11,8 @@ function worldLines(){
   const open=G.projects.filter(p=>!p.done);
   if(open.length){const p=pick(open),d=PROJECTS.find(x=>x.id===p.id);r.push(`${d.name} is ${projPct(p)}% funded.`)}
   if(G.arc&&ARCS[G.arc.id].phases[G.arc.i].name!=='Rumbles')r.push(`${ARCS[G.arc.id].title}: ${ARCS[G.arc.id].status(G.arc)}`);
-  r.push(pick(TIPS));
+  const own=n&&NPC_LINES[n.id]&&NPC_LINES[n.id].town;
+  if(own&&own.length){const l=pick(own);r.push(l,l)}else r.push(pick(TIPS));
   return r;
 }
 function pickpocket(n){
@@ -41,8 +42,8 @@ function talk(n,extra){
   const shop=Object.keys(OWNER).find(k=>OWNER[k]===n.id&&POIS[k]);
   const btns=[
     {label:'Chat',sub:s.chat===day()?'You already chatted today':'Small talk builds trust',off:s.chat===day()||tr===0,
-     fn:()=>{s.chat=day();s.m+=3;advance(G.quirk==='neighborly'?25:10);talk(n,n.topic)}},
-    {label:'Ask about town',sub:tr>=2?'Rumors and tips':'They will not talk about that yet',off:tr<2,fn:()=>{advance(5);talk(n,`"${pick(worldLines())}"`)}},
+     fn:()=>{s.chat=day();s.m+=3;advance(G.quirk==='neighborly'?25:10);talk(n,chatLine(n,tr))}},
+    {label:'Ask about town',sub:tr>=2?'Rumors and tips':'They will not talk about that yet',off:tr<2,fn:()=>{advance(5);talk(n,`"${pick(worldLines(n))}"`)}},
     {label:'Give a meal',sub:G.inv.meals>0?`You have ${G.inv.meals}`:'You have none',off:G.inv.meals<1,cls:'',fn:()=>{
       const nb=G.quirk==='neighborly';G.inv.meals--;s.m+=nb?15:12;s.hunger=Math.min(100,s.hunger+45);G.rep[n.d]=clamp(G.rep[n.d]+(nb?3:2),-100,100);G.gifts++;
       if(G.gifts===3||G.gifts%5===0)addRumor('generous',[n.id]);
@@ -56,6 +57,6 @@ function talk(n,extra){
   btns.push({label:'Pickpocket',sub:'Risky. Raises your wanted level if caught.',cls:'quiet',fn:()=>pickpocket(n)});
   btns.push(leaveBtn);
   ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}, ${n.d}. Attitude: <span class="${cls}">${LAB[tr]}</span>${needsL.length?`. Seems ${needsL.join(' and ')}.`:'.'}</p>
-  <p>${esc(n.tier[tr])}</p>${best?`<p>${esc(n.react[best])}</p>`:''}${heard.length?`<p class="amber">${esc(n.name.split(' ')[0])} has heard: ${esc(heard[0])}</p>`:''}${rumorLine(n)?`<p>"${esc(rumorLine(n))}"</p>`:''}${extra?`<p class="amber">${esc(extra)}</p>`:''}
+  <p>${esc(n.tier[tr])}</p>${best?`<p>${esc(n.react[best])}</p>`:''}${heard.length&&!rumorLine(n)?`<p class="amber">${esc(n.name.split(' ')[0])} has heard: ${esc(heard[0])}</p>`:''}${rumorLine(n)?`<p>"${esc(rumorLine(n))}"</p>`:''}${extra?`<p class="amber">${esc(extra)}</p>`:''}
   ${why.length?`<p class="muted small">Shaped by: ${why.map(esc).join(', ')}.</p>`:''}`,btns);sceneCtx({who:n});
 }

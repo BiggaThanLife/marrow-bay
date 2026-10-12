@@ -1,5 +1,5 @@
 "use strict";
-/* The 15 NPCs, their tag affinities and lines, plus tips. */
+/* The 19 NPCs, their tag affinities and lines, plus tips. */
 const NPCS=[
  {id:'cordelia',name:'Cordelia Vance',role:'Banker',d:'Highline',home:'flats',work:'bank',hang:'club',col:'#6b4590',
   aff:{educated:12,smooth:8,disgraced:-30,rural:-12,'in-debt':-18,landowner:12,shopkeeper:5,'known-thief':-30,broke:-6,'local-hero':6,employer:6},
@@ -101,11 +101,10 @@ const NPC={};
 NPCS.forEach(n=>{NPC[n.id]=n;n.wage=WAGE[n.id];if(n.id==='cordelia'||n.id==='ashgrove')n.wants='trinkets'});
 const TIPS=[
  'Fish bite best at high tide. At low tide the flats are full of scrap.',
- "Old Wren's plots grow in three days. Greenbelt hands get more out of them.",
  'Highline crowds tip well during a gala.',
  'The bank lends to people who look respectable. Owing money changes how everyone treats you.',
  'A low price wins customers from the diner. A high price only sells to people who like you.',
  'Empty buildings are for sale at Lou\'s Realty. A café with two staff pays for itself fast.',
  'A bike or the tram beats walking. Vex pays well for couriers, if you are quick.',
- 'Constable Reyes gives up the chase if you outrun her and lay low at home.'
+ 'Heat cools if you lay low at home. Constable Reyes gives up the chase if you outrun her.'
 ];

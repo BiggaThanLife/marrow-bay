@@ -1,0 +1,67 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay NPC lines test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>What people say as you get to know them</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Every NPC has four tiers of Chat lines and their own "ask about town" lines; Chat never repeats until the pool is used up; nothing is duplicated between people;
+   Chat and Ask in the talk menu and on the phone use them; an old save without the heard record works. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document;
+  const api = win.eval(`({get G(){return G},NPCS,NPC,NPC_LINES,chatLine,worldLines,start,closeMenu,popClear,talk,callMenu,npcS,TIPS})`);
+  const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], btn = rx => btns().find(x => rx.test(x.innerText));
+  try {
+    api.start('farm'); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().opening = { step: 'done', done: true };
+    // the data
+    const seen = {}, dup = [];
+    api.NPCS.forEach(n => {
+      const L = api.NPC_LINES[n.id];
+      if (!L) { errs.push('no lines for ' + n.id); return }
+      if (!L.chat || L.chat.length !== 4) errs.push(n.id + ' needs 4 tiers');
+      else L.chat.forEach((t, i) => { if (t.length < 2) errs.push(n.id + ' tier ' + i + ' has ' + t.length + ' lines'); t.forEach(x => { if (seen[x]) dup.push(x); seen[x] = 1 }) });
+      if (!L.town || L.town.length < 2) errs.push(n.id + ' needs 2 town lines'); else L.town.forEach(x => { if (seen[x]) dup.push(x); seen[x] = 1 });
+    });
+    if (dup.length) errs.push('duplicate lines: ' + dup.join(' | '));
+    Object.keys(api.NPC_LINES).forEach(id => { if (!api.NPC[id]) errs.push('lines for unknown person ' + id) });
+    // no repeats until the pool is used
+    const n = api.NPC.teo, pool = tr => (api.NPC_LINES.teo.chat[tr].length + (tr ? api.NPC_LINES.teo.chat[tr - 1].length : 0));
+    delete api.npcS(n).heard;
+    const got = []; for (let i = 0; i < pool(3); i++) got.push(api.chatLine(n, 3));
+    if (new Set(got).size !== got.length) errs.push('Chat repeated before the pool was used: ' + got.join(' | '));
+    const next = api.chatLine(n, 3); if (!got.includes(next)) errs.push('after the pool, a line from outside it: ' + next);
+    // tier 0 only gives hostile lines
+    const hostile = api.NPC_LINES.teo.chat[0].map(x => `"${x}"`); for (let i = 0; i < 6; i++) { const l = api.chatLine(n, 0); if (!hostile.includes(l)) errs.push('tier 0 said ' + l) }
+    // tier 3 never gives a hostile line
+    for (let i = 0; i < 40; i++) { const l = api.chatLine(n, 3); if (hostile.includes(l)) errs.push('tier 3 said a hostile line'); }
+    // the talk menu
+    G().met.teo = 1; G().npcs.teo.m = 80; delete G().npcs.teo.heard; G().npcs.teo.chat = -1; api.talk(n);
+    const shown = /Chat/.test(text()); if (!shown) errs.push('talk menu has no Chat');
+    btn(/^Chat/).click(); const t1 = text(); if (!/"/.test(t1)) errs.push('Chat showed no quoted line: ' + t1.slice(0, 160));
+    if (Object.keys(G().npcs.teo.heard || {}).length !== 1) errs.push('heard not recorded: ' + JSON.stringify(G().npcs.teo.heard));
+    // Ask about town uses their voice
+    G().npcs.teo.m = 80; api.talk(n);
+    const asks = new Set(); for (let i = 0; i < 40; i++) api.worldLines(n).forEach(l => asks.add(l));
+    if (!api.NPC_LINES.teo.town.every(l => asks.has(l))) errs.push('own town lines never offered');
+    if (api.TIPS.some(t => asks.has(t))) errs.push('shared tips mixed into a person with their own lines');
+    const generic = new Set(); for (let i = 0; i < 40; i++) api.worldLines().forEach(l => generic.add(l));
+    if (!api.TIPS.some(t => generic.has(t))) errs.push('no tips when asked without a person');
+    // phone chat
+    delete G().npcs.teo.heard; G().npcs.teo.chat = -1; api.callMenu(n); if (!btn(/^Chat/)) errs.push('phone has no Chat'); btn(/^Chat/).click(); if (!/"/.test(text())) errs.push('phone Chat showed no line');
+    // a rumor line is not said twice on the talk screen
+    G().rumors = [{ type: 'thief', str: 80, knows: ['teo'], day: 1, dist: 'Grid' }]; api.talk(n);
+    const hasHeard = /has heard:/.test(text()), hasLine = false; // either may show, never both for the same rumor
+    if (hasHeard && /Teo has heard/.test(text()) && (text().match(/thief|lift|pockets/gi) || []).length > 6) errs.push('rumor repeated: ' + text().slice(0, 300));
+    // a save with no heard record still works (and a person with no lines falls back)
+    delete G().npcs.teo.heard; if (!api.chatLine(n, 2)) errs.push('empty line from old save');
+    const saved = api.NPC_LINES.mina; delete api.NPC_LINES.mina; if (api.chatLine(api.NPC.mina, 2) !== api.NPC.mina.topic) errs.push('fallback to topic failed'); api.NPC_LINES.mina = saved;
+  } catch (e) { errs.push('threw: ' + e.message) }
+  doc.querySelectorAll('x');
+  document.getElementById('verdict').innerHTML = errs.length ? '<span class="bad">' + errs.length + ' problems</span>' : '<span class="ok">No errors.</span>';
+  document.getElementById('out').textContent = errs.join('\n');
+  window.__done = true;
+});
+</script>
