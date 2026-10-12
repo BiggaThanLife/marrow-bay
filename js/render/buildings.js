@@ -22,10 +22,11 @@ const BSTYLE={
   cages:{roof:'flat',wall:'concrete',win:'cage'},wellness:{roof:'flat',wall:'plaster',win:'blue',awn:1,kit:0}
 };
 const bF=dpFill;
-function bWin(x,y,w,h,lit,tint){bF('rgba(0,0,0,.5)',x-1,y-1,w+2,h+2);bF(lit?'#ffd88a':tint||'#2c3440',x,y,w,h);bF(lit?'#fff3c8':'rgba(255,255,255,.14)',x,y,w,1);if(!lit)bF('rgba(255,255,255,.2)',x+w-2,y+1,1,Math.max(1,Math.min(3,h-2)));bF('rgba(255,255,255,.22)',x-1,y+h+1,w+2,1)}
+function bWin(x,y,w,h,lit,tint){if(RS>=2)return bWinHD(x,y,w,h,lit,tint);bF('rgba(0,0,0,.5)',x-1,y-1,w+2,h+2);bF(lit?'#ffd88a':tint||'#2c3440',x,y,w,h);bF(lit?'#fff3c8':'rgba(255,255,255,.14)',x,y,w,1);if(!lit)bF('rgba(255,255,255,.2)',x+w-2,y+1,1,Math.max(1,Math.min(3,h-2)));bF('rgba(255,255,255,.22)',x-1,y+h+1,w+2,1)}
 function bText(t,x,y,col){cx.font='7px Silkscreen, monospace';cx.textAlign='center';cx.fillStyle=col;cx.fillText(t,x,y);cx.textAlign='left'}
 /* ----- materials on the front wall ----- */
 function bWall(k,c,sx,eave,base,ww,L){
+  if(RS>=2&&bWallHD(k,c,sx,eave,base,ww,L))return;
   const y0=eave+3,h=base-2-y0;
   if(k==='stone'){for(let y=y0;y<base-2;y+=5){bF('rgba(255,255,255,.16)',L,y,ww,1);for(let x=L+((y-y0)/5%2)*5;x<L+ww;x+=10)bF('rgba(0,0,0,.1)',x,y+1,1,4)}}
   else if(k==='brick'){for(let y=y0;y<base-2;y+=3){bF('rgba(0,0,0,.16)',L,y,ww,1);for(let x=L+((y-y0)/3%2)*3;x<L+ww;x+=6)bF('rgba(0,0,0,.12)',x,y,1,3)}}
@@ -58,6 +59,7 @@ function bWindows(k,sx,sy,eave,base,lit,c,hs){
 }
 /* ----- doors ----- */
 function bDoor(k,sx,sy,base,lit,c){
+  if(RS>=2)return bDoorHD(k,sx,sy,base,lit,c);
   const dx=sx+TS+3,dy=sy+52;
   if(k==='double'){bF('rgba(0,0,0,.55)',dx-3,dy-3,16,13);bF('#3a2616',dx-2,dy-2,14,12);bF('#5a3a20',dx-1,dy-1,5,10);bF('#5a3a20',dx+6,dy-1,5,10);bF('#d8b04a',dx+4,dy+4,1,1);bF('#d8b04a',dx+5,dy+4,1,1);bF('rgba(255,255,255,.22)',dx-4,base-1,18,1)}
   else if(k==='steel'){bF('rgba(0,0,0,.6)',dx-2,dy-2,14,12);bF('#6a7078',dx-1,dy-1,12,11);bF('#8a9098',dx-1,dy-1,12,1);for(const [x,y] of [[0,1],[9,1],[0,8],[9,8]])bF('#3a3e44',dx+x,dy+y,1,1);bF('#1e2128',dx+3,dy+2,4,2)}
@@ -258,9 +260,10 @@ function drawBlockDepth(b,lit,now){
   bWindows(s.win,sx,sy,eave,base,lit||(G&&districtDayLit(b,hs)),c,hs);
   if(G)districtBoards(b,biz,sx,sy,hs);
   bDoor(s.door||'std',sx,sy,base,lit,c);
-  if(s.awn){const dx=sx+TS+3,dy=sy+52;for(let i=0;i<5;i++)bF(i%2?'#f4efe2':c[0],dx-4+i*4,dy-5,4,3);bF('rgba(0,0,0,.28)',dx-4,dy-2,20,1)}
+  if(s.awn&&RS>=2)bAwningHD(c,sx,sy);else if(s.awn){const dx=sx+TS+3,dy=sy+52;for(let i=0;i<5;i++)bF(i%2?'#f4efe2':c[0],dx-4+i*4,dy-5,4,3);bF('rgba(0,0,0,.28)',dx-4,dy-2,20,1)}
   /* roof */
   bRoof(s.roof,s,sx,sy,L,ww,top,eave,c,hs);
+  if(RS>=2)bRoofHD(s.roof,sx,sy,L,ww,top,eave,c,hs);
   bF('rgba(255,255,255,.18)',L,eave-3,ww,1);bF('rgba(0,0,0,.38)',L,eave-1,ww,1);bF('rgba(0,0,0,.18)',Rr-3,top,3,eave-top);bF('rgba(255,255,255,.12)',L,top,1,eave-top);
   /* the sign hangs on the eave */
   const label=b.poi?SIGN[b.kind]:bt?bt.sign:null,sy0=eave-14;

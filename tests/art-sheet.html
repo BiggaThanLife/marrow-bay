@@ -42,7 +42,9 @@ f.addEventListener('load', () => {
   /* 2. buildings */
   g = sec('Buildings', 'Every building style with depth on: places, the businesses you can run, and the filler blocks. Each also has a lit-window night look.');
   const filler = A.blocks.filter(b => !b.poi && b.kind === 'tower');
+  const only = (q.get('only') || '').split(',').filter(Boolean);
   Object.keys(A.BSTYLE).forEach((k, i) => {
+    if (only.length && !only.includes(k)) return;
     let b = A.blocks.find(x => x.poi && x.kind === k) || (['warehouse', 'farmstead', 'tower'].includes(k) ? A.blocks.find(x => !x.poi && x.kind === k) : null), mine = false;
     G.biz = [];
     if (!b) { b = filler[i % filler.length]; mine = true; G.biz = [{ key: b.key, d: 'Grid', price: 1, paid: 1, type: k, level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, auto: false, last: null, tenants: [] }] }
@@ -51,7 +53,7 @@ f.addEventListener('load', () => {
     t(night ? 23 : 15);
     try { A.drawBlockDepth(b, night, now) } catch (e) { errs.push('building ' + k + ': ' + e.message) }
     if (night) { cx.fillStyle = 'rgba(10,14,40,.45)'; cx.fillRect(0, 0, 90, 90) }
-    crop(g, k + (mine ? ' (your business)' : b.poi ? '' : ' (filler)'), 84, 84, 2);
+    crop(g, k + (mine ? ' (your business)' : b.poi ? '' : ' (filler)'), 84, 84, +q.get('bs') || 2);
   });
   G.biz = [];
   /* 3. people */
