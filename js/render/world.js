@@ -1,6 +1,7 @@
 "use strict";
 /* Draws the whole world each frame. */
 function drawWorld(now){
+  cx.setTransform(RS,0,0,RS,0,0);cx.imageSmoothingEnabled=false;
   const x0=Math.floor(camX/TS),y0=Math.floor(camY/TS),deep=depthOn();dpTrees=[];
   for(let ty=y0;ty<=y0+Math.ceil(VH/TS);ty++)for(let tx=x0;tx<=x0+Math.ceil(VW/TS);tx++){
     if(tx<0||ty<0||tx>=W||ty>=H)continue;

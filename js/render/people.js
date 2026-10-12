@@ -53,6 +53,7 @@ function drawVeh(k,x,y,now,mv){
     cx.fillStyle='#1c1c1c';cx.fillRect(px-6,py-2,3,3);cx.fillRect(px+3,py-2,3,3);
   }else{
     const c=G&&G.veh&&G.veh.paint&&G.veh.paint[k]?[G.veh.paint[k],shade(G.veh.paint[k],.75)]:k==='coupe'?['#d04030','#a02a20']:['#3a7ad0','#2a5aa0'];
+    if(RS>=2){drawCarHD(px,py,k,c,sp);return}
     cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(px-9,py,19,2);
     cx.fillStyle=c[0];cx.fillRect(px-9,py-7,18,6);cx.fillStyle=c[1];cx.fillRect(px-5,py-11,10,5);
     cx.fillStyle='#bfe3f0';cx.fillRect(px-4,py-10,8,3);

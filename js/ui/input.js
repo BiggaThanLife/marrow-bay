@@ -7,7 +7,8 @@ function fitCanvas(){
   const r=stage.getBoundingClientRect();if(!r.width)return;
   if(r.width>r.height*1.25){const s=r.height/128;VH=128;VW=Math.min(W*TS,Math.round(r.width/s))}
   else{VW=176;const s=r.width/VW;VH=Math.max(96,Math.round(r.height/s))}
-  if(cv.width!==VW)cv.width=VW;if(cv.height!==VH)cv.height=VH;
+  if(cv.width!==VW*RS)cv.width=VW*RS;if(cv.height!==VH*RS)cv.height=VH*RS;
+  cx.setTransform(RS,0,0,RS,0,0);cx.imageSmoothingEnabled=false;
 }
 new ResizeObserver(fitCanvas).observe(stage);window.addEventListener('resize',fitCanvas);fitCanvas();
 

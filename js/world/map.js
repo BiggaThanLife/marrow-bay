@@ -4,6 +4,8 @@
 const TS=16,W=64,H=38;
 let VW=176;
 let VH=200;
+/* render scale: the map canvas has RS real pixels for every map unit (a tile is TS units). All the drawing code still works in map units; the context is scaled by RS, so art can use half-unit (or finer) detail. */
+let RS=2;
 const T={WATER:0,ROAD:1,BLD:2,GRASS:3,FARM:4,PLAZA:5,DOCK:6,LOT:7,PARK:8};
 const PASSABLE=new Set([1,3,4,5,6,7,8]);
 const XS=[10,15,20,25,30,35,40,45,50,55,60],HY=[2,7,12,17,22,27,32];

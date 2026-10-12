@@ -1,0 +1,92 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay art sheet</title>
+<style>
+[hidden]{display:none!important}
+body{font:13px system-ui;margin:14px;background:#10202a;color:#e6efe9;width:1180px}
+h1{margin:0 0 4px;font-size:22px}h2{margin:22px 0 6px;font-size:16px;border-bottom:2px solid #2f4a5b;padding-bottom:3px;color:#9fe3d2}
+p{margin:2px 0 8px;color:#a9bcc4}.g{display:flex;flex-wrap:wrap;gap:8px}.c{text-align:center;font-size:11px;color:#cfe0e6}
+canvas{image-rendering:pixelated;display:block;border:2px solid #2f4a5b;background:#1b2a33;margin:0 auto 2px}
+.b{display:inline-block;width:70px;height:72px;text-align:center;font-size:10px;line-height:1.1;color:#cfe0e6}.b svg{display:block;margin:0 auto 2px;image-rendering:pixelated}
+</style>
+<h1 id="ttl">Marrow Bay: art in the game right now</h1>
+<p>Everything on this sheet is drawn in code, no image files. Not a pass or fail test. Add ?night=1 to see buildings at night, ?sec=Vehicles to show one section, ?vs=6 to enlarge vehicles.</p>
+<div id="out"></div>
+<iframe id="game" src="../index.html" style="position:absolute;left:-9999px;top:0;width:400px;height:720px"></iframe>
+<script>
+const f = document.getElementById('game'), out = document.getElementById('out'), q = new URLSearchParams(location.search), night = !!q.get('night');
+const PART = +q.get('part') || 0; let curPart = 1;
+function sec(title, note, part) { curPart = part || curPart; const keep = (!PART || PART === curPart) && (!q.get('sec') || q.get('sec') === title); const h = document.createElement('h2'); h.textContent = title; out.appendChild(h); h.hidden = !keep; if (note) { const p = document.createElement('p'); p.textContent = note; out.appendChild(p); p.hidden = !keep } const g = document.createElement('div'); g.className = 'g'; out.appendChild(g); g.hidden = !keep; return g }
+function cell(g, label, w, h, scale) { const c = document.createElement('div'); c.className = 'c'; const cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.style.width = w * scale + 'px'; cv.style.height = h * scale + 'px'; c.appendChild(cv); c.appendChild(document.createTextNode(label)); g.appendChild(c); return cv.getContext('2d') }
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [];
+  win.eval(`start(Object.keys(BG)[0]);G.flags.customDone=true;closeMenu();popClear();G.flags.onboarded=true;SET.depth=true;SET.hints=false;G.opening={step:'done',done:true}`);
+  const A = win.eval(`({get G(){return G},blocks,BSTYLE,POIS,NPCS,NPC,NPC_LOOK,VEH,STRUCTS,SKIN,HAIR,HATS,OUTFITS,BAG_ICON,drawNpc,drawPlayer,drawBlockDepth,drawWorld,drawVeh,drawStruct,drawRide,cx,TS,BAG_SHAPES,bagIcon,SCENE_RULES,SCENE_DRAW,SCENE_MS,
+    setCam(x,y){camX=x;camY=y},get VW(){return VW},get VH(){return VH},sc:document.getElementById('scene'),get RS(){return RS},district,METERS})`);
+  const G = A.G, scene = A.sc, now = win.performance.now(), RS = A.RS;
+  /* a canvas that holds a crop of the map canvas (which has RS real pixels per map unit), shown w*scale wide */
+  const crop = (g, label, w, h, scale) => { const c = cell(g, label, w * RS, h * RS, scale / RS); c.drawImage(scene, 0, 0, w * RS, h * RS, 0, 0, w * RS, h * RS); return c };
+  const t = h => { G.t = Math.floor(G.t / 1440) * 1440 + h * 60 };
+  /* 1. the map, one view per district */
+  let g = sec('The map, by district', 'Ground, roads, plazas, trees, buildings and the lighting, as a player sees it by day (and one view by night).');
+  const dists = Object.keys(A.METERS || {});
+  const done = {};
+  Object.values(A.POIS).forEach(p => { if (done[p.d]) return; done[p.d] = p });
+  const view = (p, hour, label) => {
+    t(hour); A.setCam(Math.max(0, p.ex * A.TS - A.VW / 2), Math.max(0, p.ey * A.TS - A.VH / 2));
+    try { A.cx.clearRect(0, 0, A.VW, A.VH); A.drawWorld(now) } catch (e) { errs.push('view ' + label + ': ' + e.message) }
+    crop(g, label, A.VW, A.VH, 2);
+  };
+  Object.keys(done).forEach(d => view(done[d], 15, d + ' (day)'));
+  const first = Object.values(done)[0]; if (first) view(first, 23, first.d + ' (night)');
+  /* 2. buildings */
+  g = sec('Buildings', 'Every building style with depth on: places, the businesses you can run, and the filler blocks. Each also has a lit-window night look.');
+  const filler = A.blocks.filter(b => !b.poi && b.kind === 'tower');
+  Object.keys(A.BSTYLE).forEach((k, i) => {
+    let b = A.blocks.find(x => x.poi && x.kind === k) || (['warehouse', 'farmstead', 'tower'].includes(k) ? A.blocks.find(x => !x.poi && x.kind === k) : null), mine = false;
+    G.biz = [];
+    if (!b) { b = filler[i % filler.length]; mine = true; G.biz = [{ key: b.key, d: 'Grid', price: 1, paid: 1, type: k, level: 1, workers: [], till: 0, supplies: 0, mk: 1, store: 0, auto: false, last: null, tenants: [] }] }
+    A.setCam(b.x * A.TS - 10, b.y * A.TS - 14);
+    const cx = A.cx; cx.fillStyle = '#6f9a58'; cx.fillRect(0, 0, 90, 90); cx.fillStyle = '#4b505a'; cx.fillRect(0, 78, 90, 12);
+    t(night ? 23 : 15);
+    try { A.drawBlockDepth(b, night, now) } catch (e) { errs.push('building ' + k + ': ' + e.message) }
+    if (night) { cx.fillStyle = 'rgba(10,14,40,.45)'; cx.fillRect(0, 0, 90, 90) }
+    crop(g, k + (mine ? ' (your business)' : b.poi ? '' : ' (filler)'), 84, 84, 2);
+  });
+  G.biz = [];
+  /* 3. people */
+  g = sec('People', 'The 19 named neighbours, then every skin tone, hat and outfit the player can pick.', 2);
+  A.NPCS.forEach(n => {
+    const c = cell(g, n.name.split(' ').pop() + ' (' + n.role + ')', 24, 26, 3);
+    try { A.drawNpc(c, 12, 23, A.NPC_LOOK[n.id] || { skin: 1, hair: 0, style: 0 }, n.col, 0, false) } catch (e) { errs.push('npc ' + n.id + ': ' + e.message) }
+  });
+  A.SKIN.forEach((s, i) => { const c = cell(g, 'Skin ' + i, 24, 26, 3); try { A.drawPlayer(c, 12, 23, Object.assign({}, G.look, { skin: i, hat: 'none' }), 0, false, 0) } catch (e) { errs.push('skin ' + e.message) } });
+  A.HATS.forEach(h => { const c = cell(g, 'Hat: ' + h.n, 24, 26, 3); try { A.drawPlayer(c, 12, 23, Object.assign({}, G.look, { hat: h.id }), 0, false, 0) } catch (e) { errs.push('hat ' + e.message) } });
+  if (A.OUTFITS) (Array.isArray(A.OUTFITS) ? A.OUTFITS : Object.values(A.OUTFITS)).forEach(o => { const c = cell(g, 'Outfit: ' + (o.n || o.id), 24, 26, 3); try { A.drawPlayer(c, 12, 23, Object.assign({}, G.look, { outfit: o.id, hat: 'none' }), 0, false, 0) } catch (e) { errs.push('outfit ' + e.message) } });
+  /* 4. vehicles and structures */
+  g = sec('Vehicles', 'Everything you can ride or drive, drawn on the map.');
+  Object.keys(A.VEH).filter(k => k !== 'none').forEach(k => {
+    t(15); A.setCam(0, 0); const cx = A.cx; cx.fillStyle = '#4b505a'; cx.fillRect(0, 0, 60, 40);
+    try { (k === 'bike' || k === 'scooter' ? A.drawRide : A.drawVeh)(k, 1, 1, now, false) } catch (e) { errs.push('vehicle ' + k + ': ' + e.message) }
+    crop(g, A.VEH[k].n, 60, 40, +q.get('vs') || 3);
+  });
+  g = sec('Things you build', 'Structures you place in the world.');
+  Object.keys(A.STRUCTS).forEach(k => {
+    t(15); A.setCam(0, 0); const cx = A.cx; cx.fillStyle = '#6f9a58'; cx.fillRect(0, 0, 36, 36);
+    try { A.drawStruct({ x: 1, y: 1, type: k, stock: {}, price: 5, grown: 0, plots: [], bench: 0, built: 1, lit: false }, now) } catch (e) { errs.push('struct ' + k + ': ' + e.message) }
+    crop(g, A.STRUCTS[k].n, 36, 36, 3);
+  });
+  /* 5. bag icons */
+  g = sec('Bag icons', 'The 8 by 8 pixel icons in the Bag grid.');
+  const holder = document.createElement('div'); holder.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px'; g.appendChild(holder);
+  Object.keys(A.BAG_ICON).forEach(id => { const d = document.createElement('div'); d.className = 'b'; let s = ''; try { s = A.bagIcon(id, 40) } catch (e) { errs.push('icon ' + id) } d.innerHTML = s + id; holder.appendChild(d) });
+  /* 6. scenes */
+  g = sec('Action scenes', 'The short scenes that play for work, money, rest and more (one frame each, from the middle of the action).', 3);
+  const seen = new Set();
+  A.SCENE_RULES.forEach(r => { const key = r[1] + ':' + r[2]; if (seen.has(key)) return; seen.add(key);
+    const c = cell(g, key, 160, 80, 2); try { c.clearRect(0, 0, 160, 80); A.SCENE_DRAW[r[1]](c, 700, .5, r[2]) } catch (e) { errs.push('scene ' + key + ': ' + e.message) } });
+  if (errs.length) { const p = document.createElement('p'); p.style.color = '#e08a7a'; p.textContent = 'Could not draw: ' + errs.join('; '); out.appendChild(p) }
+  if (PART) document.getElementById('ttl').textContent += ' (part ' + PART + ' of 3)';
+  window.__errs = errs; window.__done = true;
+});
+</script>
