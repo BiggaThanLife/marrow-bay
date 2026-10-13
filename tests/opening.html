@@ -26,15 +26,22 @@ f.addEventListener('load', async () => {
       api.openingTick(); if (api.step !== 'wait') errs.push(tag + ': arrived before 8:10');
       G().t = 8 * 60 + 12; api.openingTick(); if (api.step !== 'tide' || !btns().length || !/\w/.test(text())) errs.push(tag + ': no arrival at 8:10 (' + api.step + ')');
       if (!text().includes(npc.name)) errs.push(tag + ': wrong neighbour on arrival: ' + text().slice(0, 40));
+      if (!/rent is \$\d+ a month/.test(text())) errs.push(tag + ': offer does not state cash and rent: ' + text().slice(0, 200));
       const cash0 = G().cash, mem0 = G().npcs[npc.id].m; G().energy = 90;
       const job = btns().find(b => !/Not now/.test(b.innerText)); if (!job || job.disabled) { errs.push(tag + ': no job button'); continue } if (!btn(/Not now/)) errs.push(tag + ': no Not now button'); job.click();
       if (!btn(/Continue/)) errs.push(tag + ': no Continue button after the job');
+      if (!/Tide box/.test(text()) || !/LOW/.test(text())) errs.push(tag + ': job result does not point at the tide: ' + text().slice(0, 200));
       if (G().cash <= cash0 || !o().jobDone || G().npcs[npc.id].m <= mem0) errs.push(tag + ': the job did not pay or please: cash ' + cash0 + ' to ' + G().cash);
       clear();
       // wait for low tide, then the crate appears at the waterfront
       const m = lowTide(G().t + 31); if (!m) { errs.push(tag + ': no low tide found'); continue }
       G().t = m; api.openingTick(); if (api.step !== 'crate') errs.push(tag + ': no crate at low tide (' + api.step + ') at ' + api.tideName() + ' hour ' + api.hourOf());
       const s = api.feedSuggestions()[0]; if (!s || !/waterfront/.test(s.t)) errs.push(tag + ': no pinned crate suggestion: ' + JSON.stringify(s));
+      if (!G().gps) errs.push(tag + ': no dotted route to the waterfront when the crate appears');
+      // at high tide the crate is covered and the next low tide is named, then it is back
+      { const keepT = G().t; let hm = null; for (let m = keepT; m < keepT + 1440; m += 5) if (win.eval(`tideName(${m})`) === 'high') { hm = m; break }
+        if (hm == null) errs.push(tag + ': no high tide to check'); else { G().t = hm; api.waterfront(); if (!btn(/under water/) || btn(/crate in the mud/)) errs.push(tag + ': crate still reachable at high tide');
+          const cs = api.feedSuggestions()[0]; if (!cs || !/covered/.test(cs.t) || !/low tide, around/.test(cs.t)) errs.push(tag + ': no covered suggestion naming the next low tide: ' + JSON.stringify(cs)); clear(); G().t = keepT } }
       api.waterfront(); const cb = btn(/crate in the mud/); if (!cb) { errs.push(tag + ': no crate button'); continue } cb.click();
       const c1 = G().cash, mm = G().npcs[npc.id].m; btn(keep ? /keep what is inside/ : /Hand it in/).click(); if (!btn(/Continue/)) errs.push(tag + ': no Continue button after the choice');
       if (keep ? (G().cash !== c1 + 40 || G().npcs[npc.id].m >= mm) : (G().cash !== c1 + 10 || G().npcs[npc.id].m <= mm)) errs.push(tag + ': the choice paid wrong: ' + (G().cash - c1) + ' / mem ' + (G().npcs[npc.id].m - mm));
@@ -51,7 +58,9 @@ f.addEventListener('load', async () => {
       // tomorrow at 9
       api.openingTick(); if (api.step !== 'tomorrow') errs.push(tag + ': visit came too early'); G().t = o().meetAt + 1; api.openingTick();
       const who = keep ? 'Pip' : npc.name; if (!text().includes(who)) errs.push(tag + ': wrong visitor ' + text().slice(0, 40));
-      const fin = btns()[0]; if (!fin) { errs.push(tag + ': no visit button'); continue } fin.click(); clear();
+      const fin = btns()[0]; if (!fin) { errs.push(tag + ': no visit button'); continue } fin.click();
+      if (!btn(/Find honest work/) || !btn(/Own something/) || !btn(/Get to know people/) || !btn(/Work the edge/)) errs.push(tag + ': no card of ways to make a life: ' + text().slice(0, 120));
+      clear();
       if (api.step !== 'done' || !o().done) errs.push(tag + ': opening did not finish'); if (api.feedSuggestions().some(x => /^o:/.test(x.id))) errs.push(tag + ': opening suggestion left behind');
       stats[tag] = 'ok';
     }

@@ -4,7 +4,9 @@
    ignore any step and it moves on, and it times out after a few days. It never runs on a loaded save (cityInit marks those done).
    G.opening = {step, bg, npc, d0, offered, jobDone, readyAt, kept, at, meetAt, done}
    steps: intro (still in the HARBOR intro) > wait (8:10 on day 1) > tide (offer made; waiting for the first low tide) > crate (crate on the flats)
-          > consequence (an hour after the choice) > tomorrow (a visit at 9 the next morning) > done. */
+          > consequence (an hour after the choice) > tomorrow (a visit at 9 the next morning) > done.
+   The tide is the lesson: the job result points at the Tide box, the crate can only be reached while the water is out (it is covered again at high tide, with the next
+   low tide named), a dotted route leads to the waterfront, and the last visit ends with a card of the different lives open to you (openingPaths). */
 const OPEN_NPC={farm:'wren',dock:'duarte',banker:'cordelia',artist:'pip'};
 const OPEN_JOB={
   farm:{ask:'"You are the new one in the barn. My gate has been open since the storm and the hens have opinions. Close it for me and I will pay you."',label:'Mend the fence',sub:'An hour. About $15 and two seeds.',
@@ -28,7 +30,7 @@ function openingTick(){
   const o=G&&G.opening;if(!o||o.done||o.step==='intro')return;
   if(day()>o.d0+3){o.step='done';o.done=true;return}
   if(o.step==='wait'&&G.t>=(o.d0-1)*1440+8*60+10&&openingFree())return openingArrive();
-  if(o.step==='tide'&&G.t>=o.readyAt&&hourOf()>=9&&hourOf()<=19&&tideName()==='low'&&openingFree()){o.step='crate';notify('The tide is out. Something is half buried at the Dockside waterfront.')}
+  if(o.step==='tide'&&G.t>=o.readyAt&&hourOf()>=9&&hourOf()<=19&&tideName()==='low'&&openingFree()){o.step='crate';openingRoute();notify('The tide is out. Something is half buried at the waterfront. A dotted route shows the way.')}
   if(o.step==='consequence'&&G.t>=o.at)openingConsequence();
   if(o.step==='tomorrow'&&G.t>=o.meetAt&&openingFree())openingVisit();
 }
@@ -42,14 +44,18 @@ function openingArrive(){
 }
 function openingOffer(msg){
   const o=G.opening,n=openingNpc(),j=OPEN_JOB[o.bg]||OPEN_JOB.farm;
-  ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}, ${n.d}.</p><p>${esc(j.ask)}</p>${msgP(msg)}`,[
+  ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}, ${n.d}.</p><p>${esc(j.ask)}</p><p class="muted">You have ${money(G.cash)}, and rent is ${money(RENT[BG[G.bg].home])} a month. A morning's work is a start.</p>${msgP(msg)}`,[
     {label:j.label,sub:j.sub,need:j.need,fn:()=>openingDoJob()},
     {label:'Not now',sub:'The offer stays open. Talk to them any time.',cls:'quiet',keep:true,fn:closeMenu}]);
 }
 function openingDoJob(){
   const o=G.opening,n=openingNpc(),j=OPEN_JOB[o.bg]||OPEN_JOB.farm;
   const msg=j.run(n);o.jobDone=true;o.readyAt=G.t+30;
-  ui(`<h2>${esc(n.name)}</h2><p>${esc(msg)}</p>`,[{label:'Continue',keep:true,fn:closeMenu}]);
+  ui(`<h2>${esc(n.name)}</h2><p>${esc(msg)}</p><p class="muted">${openingTideNote()}</p>`,[{label:'Continue',keep:true,fn:closeMenu}]);
+}
+function openingTideNote(){
+  const tn=tideName();
+  return tn==='low'?'The tide is out right now. Watch the Tide box at the top: when it reads LOW, the flats open up.':`The tide is ${tn}. Watch the Tide box at the top. It rises and falls all day, and when it reads LOW the flats open up.`;
 }
 /* the job offer stays on the neighbour's talk menu until it is done */
 function openingTalkButtons(n){
@@ -58,15 +64,22 @@ function openingTalkButtons(n){
   return [{label:j.label,sub:j.sub,need:j.need,cls:'primary',fn:()=>openingDoJob()}];
 }
 /* the waterfront shows the crate once the tide has uncovered it */
+const openingCrateOut=()=>tideV()<-.2;
+/* a dotted route to the waterfront, unless the player is already following one */
+function openingRoute(){
+  if(G.gps)return;
+  const [x,y]=oppDockSpot();G.gps={x,y,name:'The waterfront'};if(typeof gpsTick==='function')gpsTick();
+}
 function openingWaterfrontButtons(){
   const o=G.opening;if(!o||o.step!=='crate')return [];
+  if(!openingCrateOut())return [{label:'The flats are under water',sub:'Whatever was there is covered. It shows again at low tide.',off:true,cls:'quiet',keep:true,fn:closeMenu}];
   return [{label:'Look at the crate in the mud',sub:'Half buried near the pier. HARBOR is unsure whose it is.',cls:'primary',fn:openingCrate}];
 }
 function openingCrate(){
   const o=G.opening,n=openingNpc();
-  ui(`<h2>A crate on the flats</h2><p>It is locked, salt-stained and heavier than it looks. Found property is a legal category. HARBOR is unsure which one.</p><p class="muted">Nobody is watching. For now.</p>`,[
+  ui(`<h2>A crate on the flats</h2><p>It is locked, salt-stained and heavier than it looks. Found property is a legal category. HARBOR is unsure which one.</p><p class="muted">The tide is ${tideName()}. This ground is under water at high tide, and the sea takes back what it leaves. Nobody is watching. For now.</p>`,[
     {label:'Break it open and keep what is inside',sub:'About $40 and a trinket. People may notice.',fn:()=>openingChoose(true)},
-    {label:`Hand it in to ${n.name.split(' ')[0]}`,sub:'About $10, and they will remember.',cls:'',fn:()=>openingChoose(false)},
+    {label:`Hand it in to ${n.name.split(' ').slice(-1)[0]}`,sub:'About $10, and they will remember.',cls:'',fn:()=>openingChoose(false)},
     {label:'Leave it for now',cls:'quiet',keep:true,fn:closeMenu}]);
 }
 function openingChoose(keep){
@@ -76,20 +89,20 @@ function openingChoose(keep){
   else{G.cash+=10;memAdd(n.id,8)}
   o.kept=keep;o.step='consequence';o.at=G.t+60;
   histAdd('crate',keep?'Kept a crate from the flats. Nobody saw. HARBOR did.':'Handed in a crate from the flats. HARBOR is suspicious of how nice that was.')
-  ui(`<h2>${keep?'Finders keepers':'Handed in'}</h2><p>${keep?'The lock gives on the third try. Inside: coins, a brass trinket and a smell like old harbour. You pocket it all.':`You carry it to ${esc(n.name.split(' ')[0])}, who turns it over twice. "Huh. Most people would not have."`}</p>`,[{label:'Continue',keep:true,fn:closeMenu}]);
+  ui(`<h2>${keep?'Finders keepers':'Handed in'}</h2><p>${keep?'The lock gives on the third try. Inside: coins, a brass trinket and a smell like old harbour. You pocket it all.':`You carry it to ${esc(n.name.split(' ').slice(-1)[0])}, who turns it over twice. "Huh. Most people would not have."`}</p>`,[{label:'Continue',keep:true,fn:closeMenu}]);
 }
 /* an hour later: a rumor, a different line from the neighbour, and a reason to come back tomorrow */
 function openingConsequence(){
   const o=G.opening,n=openingNpc(),keep=o.kept;
   o.step='tomorrow';o.meetAt=day()*1440+9*60;
-  addRumor(keep?'crateKept':'crateReturned',keep?[n.id==='pip'?'reyes':'pip',n.id]:[n.id,'teo'],{dist:'Dockside',owner:n.name.split(' ')[0]});
-  notify(keep?'People have noticed the crate.':`${n.name.split(' ')[0]} tells people you handed it in.`);
+  addRumor(keep?'crateKept':'crateReturned',keep?[n.id==='pip'?'reyes':'pip',n.id]:[n.id,'teo'],{dist:'Dockside',owner:n.name.split(' ').slice(-1)[0]});
+  notify(keep?'People have noticed the crate.':`${n.name.split(' ').slice(-1)[0]} tells people you handed it in.`);
 }
 function openingVisit(){
   const o=G.opening,keep=o.kept,n=keep?NPC.pip:openingNpc();
   G.met[n.id]=G.met[n.id]||day();
   n.indoors=false;n.path=[];n.x=G.p.x+.9;n.y=G.p.y;
-  const end=m=>()=>{o.step='done';o.done=true;m&&m();closeMenu()};
+  const end=m=>()=>{o.step='done';o.done=true;m&&m();histAdd('opening','The first two days: a job, a crate on the flats, and a name people have started to use.',999);openingPaths()};
   if(keep)return ui(`<h2>${esc(n.name)}</h2><p>"People are talking about that crate. Vex Calloway hears everything, and he pays people who know when to stay quiet. Velvet Door, after dark, if you want a word."</p>`,[
     {label:'Maybe',sub:'Vex will hear you said so.',fn:end(()=>{memAdd('vex',3)})},{label:'Not for me',cls:'quiet',fn:end()}]);
   if(n.id==='pip')return ui(`<h2>${esc(n.name)}</h2><p>"You handed it in? The fountain crowd heard. Tips will be kinder this week."</p>`,[
@@ -100,10 +113,21 @@ function openingVisit(){
 /* HARBOR's pinned suggestion for wherever the opening has got to */
 function openingSuggestion(){
   const o=G&&G.opening;if(!o||o.done||o.step==='intro'||o.step==='wait')return null;
-  const n=openingNpc(),fn=n.name.split(' ')[0];
+  const n=openingNpc(),fn=n.name.split(' ').slice(-1)[0];
   const say=t=>({id:'o:'+o.step+(o.jobDone?'j':''),kind:'suggest',dist:'',by:'HARBOR',t});
   if(o.step==='tide'&&!o.jobDone)return say(`${fn} has work for you. Talk to ${fn}, or tap them on the map.`);
+  if(o.step==='crate'&&!openingCrateOut()){const m=oppNextLow();return {...say('The tide has covered the crate.'+(m?` It shows again at low tide, around ${fmtHr(Math.floor(m/60))}.`:'')),id:'o:crate-covered'}}
   if(o.step==='crate')return say('The tide is out. Something is half buried at the Dockside waterfront. Tap the pier or the shore.');
   if(o.step==='tomorrow')return say(o.kept?'Pip says to be at your door tomorrow at 9. Somebody wants a word about the crate. He did not say who.':`${fn} has more work for you tomorrow at 9.`);
   return null;
+}
+/* the last word of the opening: the different lives on offer. None is required, and each button just walks you there. */
+function openingPaths(){
+  const go=poi=>()=>{if(poi)goPOI(poi);else closeMenu()};
+  ui(`<h2>Making a life here</h2><p>You have a bed, a little cash and a name that has started to travel. Marrow Bay has room for all kinds of lives, and none of these is required.</p><p class="muted">The tide keeps its own hours. So does the city.</p>`,[
+    {label:'Find honest work',sub:'Shifts on the docks, at the diner, the estate or the foundry.',fn:go(POIS.dock)},
+    {label:'Own something',sub:"Empty buildings are for sale at Lou's Realty.",cls:'',fn:go(POIS.realty)},
+    {label:'Get to know people',sub:'Chat, share a meal, and they will remember.',cls:'',fn:()=>contactsMenu()},
+    {label:'Work the edge',sub:'Vex Calloway pays for people who keep quiet. Velvet Door, after dark.',cls:'',fn:go(POIS.velvet)},
+    {label:'Just look around',cls:'quiet',keep:true,fn:closeMenu}]);
 }
