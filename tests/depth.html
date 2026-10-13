@@ -14,7 +14,7 @@ f.addEventListener('load', () => {
   const win = f.contentWindow, errs = [], doc = win.document, stats = {};
   const api = win.eval(`({get G(){return G},BG,POIS,SET,start,closeMenu,popClear,alertQ,drawWorld,depthOn,DP_LAMPS,settingsMenu,saveSettings,
     get dpTrees(){return dpTrees},setCam(){camX=Math.round(clamp(G.p.x*TS+8-VW/2,0,W*TS-VW));camY=Math.round(clamp(G.p.y*TS+8-VH/2,0,Math.max(0,H*TS-VH)))},
-    setView(w,h){VW=w;VH=h;cv.width=w;cv.height=h},get VW(){return VW},get VH(){return VH},cx,TS,startGps:typeof gpsStart==='function'?gpsStart:null})`);
+    setView(w,h){VW=w;VH=h;cv.width=w*RS;cv.height=h*RS},get VW(){return VW},get VH(){return VH},cx,TS,startGps:typeof gpsStart==='function'?gpsStart:null})`);
   const G = () => api.G, sheet = () => doc.getElementById('sheet').innerText, btns = () => [...doc.querySelectorAll('#sheet #actions button')], flush = () => { api.popClear(); api.alertQ.length = 0; };
   const click = rx => { const b = btns().find(x => rx.test(x.innerText)); if (!b) return false; b.click(); return true };
   const ce = win.console.error, logged = []; win.console.error = (...a) => { logged.push(String(a[0] && a[0].stack || a[0])) };
@@ -38,7 +38,7 @@ f.addEventListener('load', () => {
     api.SET.depth = true; at(12, 5, 18); draw('trees'); const nTrees = api.dpTrees.length; api.SET.depth = false; draw('trees off'); stats.trees = nTrees;
     if (!nTrees) errs.push('no trees collected in Greenbelt'); if (api.dpTrees.length) errs.push('trees collected with depth off');
     // the player stays visible at night: the area around them is not darker than the classic map
-    const lum = () => { const s = api.TS, px = Math.round(G().p.x * s + 8 - win.eval('camX')), py = Math.round(G().p.y * s + 2 - win.eval('camY')); const d = api.cx.getImageData(px - 4, py - 6, 9, 14).data; let t = 0; for (let i = 0; i < d.length; i += 4) t += d[i] + d[i + 1] + d[i + 2]; return t / (d.length / 4) };
+    const lum = () => { const s = api.TS, R = win.eval('RS'), px = Math.round((G().p.x * s + 8 - win.eval('camX')) * R), py = Math.round((G().p.y * s + 2 - win.eval('camY')) * R); const d = api.cx.getImageData(px - 4 * R, py - 6 * R, 9 * R, 14 * R).data; let t = 0; for (let i = 0; i < d.length; i += 4) t += d[i] + d[i + 1] + d[i + 2]; return t / (d.length / 4) };
     api.SET.depth = false; at(23.5, 30, 22); draw('lum classic'); const lc = lum(); api.SET.depth = true; draw('lum depth'); const ld = lum(); stats.playerLum = { classic: Math.round(lc), depth: Math.round(ld) };
     if (ld < lc * .95) errs.push('player darker at night with depth on');
     // cost of a frame

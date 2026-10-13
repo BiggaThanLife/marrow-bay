@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay ground sheet</title>
+<style>
+body{font:12px system-ui;margin:12px;background:#10202a;color:#e6efe9;width:1180px}
+h1{font-size:18px;margin:0 0 6px}p{margin:2px 0 8px;color:#a9bcc4}
+.g{display:flex;flex-wrap:wrap;gap:8px}.c{text-align:center;font-size:10px;color:#cfe0e6}
+canvas{image-rendering:pixelated;display:block;border:1px solid #2f4a5b;margin:0 auto 2px}
+</style>
+<h1>Generated ground tiles</h1>
+<p>Each tile at 3x, then 3 by 3 to check the seams. ?scale=4 to enlarge.</p>
+<div class="g" id="g"></div>
+<h1 style="margin-top:14px">Seams</h1>
+<div class="g" id="t"></div>
+<script>function hash(a, b) { return ((a * 73856093) ^ (b * 19349663)) >>> 0 }</script>
+<script src="../js/render/ground.js"></script>
+<script>
+const q = new URLSearchParams(location.search), S = +q.get('scale') || 3;
+const kinds = { asphalt: 3, cracked: 3, wet: 3, paving: 3, grass: 3, mud: 3, planks: 3, cobbles: 3, rust: 2, drain: 1 };
+const g = document.getElementById('g'), t = document.getElementById('t');
+for (const [k, n] of Object.entries(kinds)) for (let v = 0; v < n; v++) {
+  const c = groundTile(k, v), d = document.createElement('div'); d.className = 'c';
+  const cv = document.createElement('canvas'); cv.width = 32; cv.height = 32; cv.style.width = 32 * S + 'px'; cv.style.height = 32 * S + 'px';
+  cv.getContext('2d').drawImage(c, 0, 0); d.appendChild(cv); d.appendChild(document.createTextNode(k + ' ' + v)); g.appendChild(d);
+  if (v === 0 || (k === 'paving' || k === 'wet')) {
+    const d2 = document.createElement('div'); d2.className = 'c';
+    const c2 = document.createElement('canvas'); c2.width = 96; c2.height = 96; c2.style.width = '96px'; c2.style.height = '96px';
+    const x = c2.getContext('2d'); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) x.drawImage(c, i * 32, j * 32);
+    d2.appendChild(c2); d2.appendChild(document.createTextNode(k + ' ' + v)); t.appendChild(d2);
+  }
+}
+window.__done = true;
+</script>

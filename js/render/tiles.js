@@ -8,7 +8,7 @@ function drawTile(tx,ty,now){
     cx.fillStyle='#2c5b78';cx.fillRect(sx,sy,TS,TS);
     if(Math.sin(now*.002+tx*.9+ty*.7)>.5){cx.fillStyle='#4f86a6';cx.fillRect(sx+3,sy+6,8,1)}
   }else if(t===T.ROAD){
-    cx.fillStyle=ROADC[d];cx.fillRect(sx,sy,TS,TS);
+    if(!drawGround('road',tx,ty,sx,sy,d)){cx.fillStyle=ROADC[d];cx.fillRect(sx,sy,TS,TS)}
     const v=XS.includes(tx),hz=HY.includes(ty)||((ty===17||ty===27)&&tx<10);
     cx.fillStyle=d==='Greenbelt'?'#8f7348':'rgba(240,230,180,.55)';
     if(v&&!hz&&ty%2===0)cx.fillRect(sx+7,sy+3,2,5);
@@ -22,18 +22,18 @@ function drawTile(tx,ty,now){
     if(pl&&pl.s===1){cx.fillStyle='#6fbf5a';cx.fillRect(sx+4,sy+6,2,4);cx.fillRect(sx+10,sy+6,2,4)}
     if(pl&&pl.s===2){cx.fillStyle=cropOf(pl).col;cx.fillRect(sx+3,sy+4,3,7);cx.fillRect(sx+10,sy+4,3,7)}
   }else if(t===T.PLAZA){
-    cx.fillStyle=(tx+ty)%2?'#cfc5ae':'#c4baa2';cx.fillRect(sx,sy,TS,TS);
+    if(!drawGround('plaza',tx,ty,sx,sy,d)){cx.fillStyle=(tx+ty)%2?'#cfc5ae':'#c4baa2';cx.fillRect(sx,sy,TS,TS)}
   }else if(t===T.DOCK){
-    cx.fillStyle='#8b6a47';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#6e5236';
-    for(let i=0;i<TS;i+=4)cx.fillRect(sx+i,sy,1,TS);
+    if(!drawGround('dock',tx,ty,sx,sy,d)){cx.fillStyle='#8b6a47';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#6e5236';
+    for(let i=0;i<TS;i+=4)cx.fillRect(sx+i,sy,1,TS)}
     if(tideV()>.45){cx.fillStyle='rgba(44,91,120,.5)';cx.fillRect(sx,sy+5,TS,11);cx.fillStyle='rgba(225,238,242,.5)';cx.fillRect(sx,sy+5,TS,1)}
     else if(tideV()<-.45){cx.fillStyle='rgba(74,56,38,.35)';cx.fillRect(sx,sy+10,TS,6);cx.fillStyle='rgba(30,22,14,.35)';cx.fillRect(sx+3,sy+12,3,1);cx.fillRect(sx+10,sy+14,4,1)}
   }else if(t===T.LOT){
-    cx.fillStyle='#b3a587';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#9a8d70';cx.fillRect(sx+3,sy+5,2,1);cx.fillRect(sx+10,sy+11,3,1);
+    if(!drawGround('lot',tx,ty,sx,sy,d)){cx.fillStyle='#b3a587';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#9a8d70';cx.fillRect(sx+3,sy+5,2,1);cx.fillRect(sx+10,sy+11,3,1)}
   }else if(t===T.BLD){
     cx.fillStyle='#3b3f48';cx.fillRect(sx,sy,TS,TS);
   }else{
-    cx.fillStyle=GROUND[d];cx.fillRect(sx,sy,TS,TS);
+    if(!drawGround('ground',tx,ty,sx,sy,d)){cx.fillStyle=GROUND[d];cx.fillRect(sx,sy,TS,TS)}
     cx.fillStyle='rgba(0,0,0,.08)';if(h%5===0)cx.fillRect(sx+(h>>3)%12,sy+(h>>5)%12,2,1);
     if(t===T.PARK?h%3===0:(h%9===0&&(d==='Highline'||d==='Greenbelt'))){if(depthOn())depthTree(tx,ty);else tree(sx,sy)}
   }
