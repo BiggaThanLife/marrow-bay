@@ -142,21 +142,52 @@ GROUND_MAKERS.drain=function(v){
   g.fillStyle='#6a7480';g.fillRect(9,10,14,1);g.fillStyle='#2a2d33';g.fillRect(9,21,14,1);
   return c;
 };
+/* the Neon Mile's own road: dark, glossy asphalt; variant 1 and 2 carry a pink or cyan reflection from the signs, 3 is a shallow puddle full of neon */
+GROUND_MAKERS.neon=function(v){return gMake(10000+v*41,({px,fill,r,blob})=>{
+  const n1=gNoise(r,4),D0=hx('#17181f'),D1=hx('#1d1e27'),D2=hx('#24252f');
+  fill((x,y)=>{const t=n1(x,y);return t<.35?D0:t<.75?D1:D2});
+  for(let i=0;i<60;i++)px(r()*32,r()*32,r()<.6?hx('#121318'):hx('#2c2d38'));
+  const streak=(y,x,len,outer,core)=>{for(let j=0;j<len;j++){const c=j===0||j===len-1?outer:core;px(x+j,y,c);if(j>0&&j<len-1&&r()<.4)px(x+j,y+1,outer)}};
+  const PINK=[hx('#3e1f3c'),hx('#a5407a')],CYAN=[hx('#1b3442'),hx('#3a95b4')];
+  if(v===1||v===2){const C=v===1?PINK:CYAN,y0=6+r()*18|0,x0=r()*20|0;for(let k=0;k<3;k++)streak(y0+k*3,x0+(r()*4|0),3+(r()*6|0),C[0],C[1])}
+  if(v===3){blob(16,16,9,(x,y,d)=>px(x,y,d<.8?hx('#0f1016'):D0));
+    for(let k=0;k<3;k++){const C=k%2?CYAN:PINK;streak(12+k*3,10+(r()*6|0),4+(r()*5|0),C[0],C[1])}}
+})};
+/* tilled soil for farm plots: furrows running across, ridges catching the light, clods */
+GROUND_MAKERS.tilled=function(v){return gMake(11000+v*43,({px,fill,r})=>{
+  const n1=gNoise(r,8);
+  fill((x,y)=>{const row=y%4;if(row===0)return GP.m0;if(row===1)return GP.m3;const t=n1(x,y);return t<.5?GP.m1:GP.m2});
+  for(let i=0;i<70;i++){const x=r()*32,y=r()*32;px(x,y,r()<.5?GP.m0:GP.m3)}
+  for(let i=0;i<8;i++){const x=r()*32|0,y=(r()*8|0)*4+2;px(x,y,GP.m3);px(x+1,y,GP.m2)}
+})};
+/* harbour water: the same deep base for every frame (so it does not flicker) and glints that move between frames */
+GROUND_MAKERS.water=function(v){
+  const base=gMake(12000,({fill,r,px})=>{const n1=gNoise(r,4),n2=gNoise(r,8),W0=hx('#1d4259'),W1=hx('#24506b'),W2=hx('#2b5c78');
+    fill((x,y)=>{const t=n1(x,y)*.6+n2(x,y)*.4;return t<.4?W0:t<.72?W1:W2});
+    for(let i=0;i<10;i++){const x=r()*32|0,y=r()*32|0;for(let j=0;j<4+r()*5;j++)px(x+j,y,hx('#1a3a50'))}});
+  return gMake(12100+v*47,({px,r,get})=>{
+    const g=base.getContext('2d').getImageData(0,0,32,32).data;
+    for(let y=0;y<32;y++)for(let x=0;x<32;x++){const i=(y*32+x)*4;px(x,y,[g[i],g[i+1],g[i+2]])}
+    for(let i=0;i<9;i++){const x=r()*32|0,y=r()*32|0,len=2+(r()*5|0);for(let j=0;j<len;j++)px(x+j,y,j===0||j===len-1?hx('#3d7090'):hx('#6fa6c4'))}
+  });
+};
 const GROUND_CACHE={};
 function groundTile(kind,v){const k=kind+':'+(v|0);return GROUND_CACHE[k]||(GROUND_CACHE[k]=GROUND_MAKERS[kind](v|0))}
 /* which generated tile a map tile gets: [kind, variant], chosen from where it is so each district keeps its own character */
 function groundPick(kind,tx,ty,d){
   const h=hash(tx,ty),v3=h%3;
   if(kind==='road'){
-    if(d==='Greenbelt')return['mud',v3];
+    if(d==='Greenbelt')return['mud',h%11===0?1:h%2?0:2];
+    if(d==='Neon Mile'){const k=h%14;return['neon',k===0?3:k<3?1:k<5?2:0]}
     if(h%47===0)return['drain',0];
     const a=[0,0,0,1,0,2][h%6];
-    if(d==='Neon Mile')return h%2?['wet',v3]:['asphalt',a];
     if(d==='Foundry Row')return h%10<4?['cracked',v3]:['asphalt',a];
-    if(d==='Dockside')return h%10<3?['cracked',v3]:h%10<5?['wet',v3]:['asphalt',a];
+    if(d==='Dockside')return h%10<3?['cracked',v3]:h%12===5?['wet',v3]:['asphalt',a];
     if(d==='Grid')return h%9===0?['cracked',v3]:['asphalt',a];
     return['asphalt',a];
   }
+  if(kind==='farm')return['tilled',h%2];
+  if(kind==='water')return['water',(Math.floor(performance.now()/900)+h%3)%3];
   if(kind==='plaza')return['paving',d==='Highline'?(h%4===0?1:0):v3];
   if(kind==='dock'){const low=typeof tideV==='function'&&tideV()<-.2;return['planks',low?1+h%2:(h%5===0?1:0)]}
   if(kind==='lot')return d==='Foundry Row'&&h%3===0?['rust',h%2]:['cobbles',v3];
@@ -168,7 +199,7 @@ function groundPick(kind,tx,ty,d){
   return null;
 }
 /* a little of each district's own colour over the tile, so the districts still read differently */
-const GROUND_TINT={road:{Highline:.12,Grid:.08,Dockside:.12,'Neon Mile':.22,'Foundry Row':.12},ground:{Highline:.1,Grid:.08,Dockside:.14,Greenbelt:.12}};
+const GROUND_TINT={road:{Highline:.12,Grid:.08,Dockside:.12,'Neon Mile':.06,'Foundry Row':.12},ground:{Highline:.1,Grid:.08,Dockside:.14,Greenbelt:.12}};
 function drawGround(kind,tx,ty,sx,sy,d){
   if(RS<2)return false;
   const sel=groundPick(kind,tx,ty,d);if(!sel)return false;

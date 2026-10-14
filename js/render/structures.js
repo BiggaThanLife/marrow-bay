@@ -2,6 +2,7 @@
 /* Tram stops and player structures. */
 function drawStop(s){
   const sx=s.x*TS-camX,sy=s.y*TS-camY;
+  if(RS>=2)return drawStopHD(sx,sy);
   cx.fillStyle='#2a3140';cx.fillRect(sx+7,sy-2,2,14);
   cx.fillStyle='#3a86d6';cx.fillRect(sx+2,sy-6,12,8);cx.fillStyle='#fff';cx.fillRect(sx+4,sy-4,8,1);cx.fillRect(sx+4,sy-2,5,1);
 }

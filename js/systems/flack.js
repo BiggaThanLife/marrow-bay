@@ -22,6 +22,7 @@ function drawCam(sx,sy,i,now){
   let dx=1,dy=1;
   for(const [a,b] of [[1,1],[-1,1],[1,-1],[-1,-1]]){const t=map[s.y+b]&&map[s.y+b][s.x+a];if(t===T.BLD){dx=a;dy=b;break}}
   const bx=sx+(dx>0?TS-3:3),by=sy+(dy>0?TS-3:3),hx=dx>0?bx-6:bx-1;
+  if(RS>=2)return drawCamHD(bx,by,hx,dx,blind,near||(Math.floor(now/700)+i)%2);
   cx.fillStyle='#2a3140';cx.fillRect(bx-1,by-10,2,10);
   cx.fillStyle=blind?'#e04080':'#5a6578';cx.fillRect(hx,by-13,7,4);
   cx.fillStyle=blind?'#333':near||(Math.floor(now/700)+i)%2?'#ff3b3b':'#7a1c1c';cx.fillRect(dx>0?hx:hx+5,by-12,2,2);

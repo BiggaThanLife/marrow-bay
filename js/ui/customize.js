@@ -22,7 +22,7 @@ function customize(k,existing){
      G.flags.customDone=true;draft=null;save();
      if(existing){closeMenu();notify('Your file is complete. HARBOR is almost proud.')}else intro(0,k)}},
    ...(existing?[{label:'Keep the default',sub:'Stay as Stranger, no quirk.',cls:'quiet',fn:()=>{G.flags.customDone=true;draft=null;save();closeMenu()}}]:[])],true,false);
-  const c=$('#pv');if(c)drawPlayer(c.getContext('2d'),10,21,look,0,false,0);
+  const c=$('#pv');if(c){const g=c.getContext('2d');if(RS>=2){c.width=40;c.height=48;g.setTransform(2,0,0,2,0,0);g.hd=true}drawPlayer(g,10,21,look,0,false,0)}
 }
 function wardrobeMenu(back,msg){
   const L=G.look;

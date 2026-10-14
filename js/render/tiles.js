@@ -5,8 +5,8 @@ function tree(sx,sy){cx.fillStyle='#5b3d24';cx.fillRect(sx+7,sy+10,2,4);cx.fillS
 function drawTile(tx,ty,now){
   const t=map[ty][tx],sx=tx*TS-camX,sy=ty*TS-camY,d=district(tx,ty),h=hash(tx,ty);
   if(t===T.WATER){
-    cx.fillStyle='#2c5b78';cx.fillRect(sx,sy,TS,TS);
-    if(Math.sin(now*.002+tx*.9+ty*.7)>.5){cx.fillStyle='#4f86a6';cx.fillRect(sx+3,sy+6,8,1)}
+    if(!drawGround('water',tx,ty,sx,sy,d)){cx.fillStyle='#2c5b78';cx.fillRect(sx,sy,TS,TS);
+    if(Math.sin(now*.002+tx*.9+ty*.7)>.5){cx.fillStyle='#4f86a6';cx.fillRect(sx+3,sy+6,8,1)}}
   }else if(t===T.ROAD){
     if(!drawGround('road',tx,ty,sx,sy,d)){cx.fillStyle=ROADC[d];cx.fillRect(sx,sy,TS,TS)}
     const v=XS.includes(tx),hz=HY.includes(ty)||((ty===17||ty===27)&&tx<10);
@@ -16,11 +16,12 @@ function drawTile(tx,ty,now){
     if(tx>=41&&tx<=44){cx.fillStyle='#d8d0b8';cx.fillRect(sx,sy,TS,2);cx.fillRect(sx,sy+TS-2,TS,2)}
     if(d==='Neon Mile'&&h%7===0){cx.fillStyle='rgba(255,80,200,.35)';cx.fillRect(sx+2,sy+2,3,1)}
   }else if(t===T.FARM){
-    cx.fillStyle='#6f5237';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#5c4229';
-    for(let i=2;i<TS;i+=4)cx.fillRect(sx,sy+i,TS,1);
+    if(!drawGround('farm',tx,ty,sx,sy,d)){cx.fillStyle='#6f5237';cx.fillRect(sx,sy,TS,TS);cx.fillStyle='#5c4229';
+    for(let i=2;i<TS;i+=4)cx.fillRect(sx,sy+i,TS,1)}
     const pl=G&&G.plots.find(q=>q.x===tx&&q.y===ty);
-    if(pl&&pl.s===1){cx.fillStyle='#6fbf5a';cx.fillRect(sx+4,sy+6,2,4);cx.fillRect(sx+10,sy+6,2,4)}
-    if(pl&&pl.s===2){cx.fillStyle=cropOf(pl).col;cx.fillRect(sx+3,sy+4,3,7);cx.fillRect(sx+10,sy+4,3,7)}
+    if(RS>=2&&pl&&pl.s)drawCropHD(sx,sy,pl.s,cropOf(pl).col);
+    else if(pl&&pl.s===1){cx.fillStyle='#6fbf5a';cx.fillRect(sx+4,sy+6,2,4);cx.fillRect(sx+10,sy+6,2,4)}
+    else if(pl&&pl.s===2){cx.fillStyle=cropOf(pl).col;cx.fillRect(sx+3,sy+4,3,7);cx.fillRect(sx+10,sy+4,3,7)}
   }else if(t===T.PLAZA){
     if(!drawGround('plaza',tx,ty,sx,sy,d)){cx.fillStyle=(tx+ty)%2?'#cfc5ae':'#c4baa2';cx.fillRect(sx,sy,TS,TS)}
   }else if(t===T.DOCK){

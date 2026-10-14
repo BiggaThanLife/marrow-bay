@@ -16,13 +16,13 @@ canvas{image-rendering:pixelated;display:block;border:1px solid #2f4a5b;margin:0
 <script src="../js/render/ground.js"></script>
 <script>
 const q = new URLSearchParams(location.search), S = +q.get('scale') || 3;
-const kinds = { asphalt: 3, cracked: 3, wet: 3, paving: 3, grass: 3, mud: 3, planks: 3, cobbles: 3, rust: 2, drain: 1 };
+const kinds = { asphalt: 3, cracked: 3, wet: 3, paving: 3, grass: 3, mud: 3, planks: 3, cobbles: 3, rust: 2, drain: 1, neon: 4, tilled: 2, water: 3 };
 const g = document.getElementById('g'), t = document.getElementById('t');
 for (const [k, n] of Object.entries(kinds)) for (let v = 0; v < n; v++) {
   const c = groundTile(k, v), d = document.createElement('div'); d.className = 'c';
   const cv = document.createElement('canvas'); cv.width = 32; cv.height = 32; cv.style.width = 32 * S + 'px'; cv.style.height = 32 * S + 'px';
   cv.getContext('2d').drawImage(c, 0, 0); d.appendChild(cv); d.appendChild(document.createTextNode(k + ' ' + v)); g.appendChild(d);
-  if (v === 0 || (k === 'paving' || k === 'wet')) {
+  if (v === 0 || (k === 'paving' || k === 'wet' || k === 'neon')) {
     const d2 = document.createElement('div'); d2.className = 'c';
     const c2 = document.createElement('canvas'); c2.width = 96; c2.height = 96; c2.style.width = '96px'; c2.style.height = '96px';
     const x = c2.getContext('2d'); for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) x.drawImage(c, i * 32, j * 32);

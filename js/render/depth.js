@@ -84,6 +84,7 @@ function drawTreeDepth(tx,ty){
 }
 function drawLampDepth(l,on){
   const lx=Math.round(l.x-camX),ly=Math.round(l.y-camY);if(lx<-10||ly<-20||lx>VW+10||ly>VH+20)return;
+  if(RS>=2)return drawLampHD(lx,ly,on);
   dpFill('rgba(0,0,0,.25)',lx-1,ly+12,3,1);dpFill('#1e2430',lx,ly-1,1,13);dpFill('#5a6578',lx+1,ly,1,12);
   dpFill('#1e2430',lx,ly-1,4,1);dpFill('#1e2430',lx+2,ly,3,2);dpFill(on?'#fff1b8':'#7a8496',lx+3,ly+1,2,1);
 }
