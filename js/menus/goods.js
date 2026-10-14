@@ -56,11 +56,11 @@ function crashTick(){
 const giftsOwned=()=>Object.keys(GOODS).filter(id=>GOODS[id].gift&&itemCount(id)>0);
 function giftMenu(n){
   const s=npcS(n),own=giftsOwned();
-  if(s.gift===day())return talk(n,`${n.name.split(' ')[0]} has already had a gift today.`);
+  if(s.gift===day())return talk(n,`${shortName(n)} has already had a gift today.`);
   ui(`<h2>Give a gift</h2><p class="muted">To ${esc(n.name)}. One a day.</p>`,[
     ...own.map((id,i)=>({label:`${GOODS[id].n} (${itemCount(id)})`,sub:GOODS[id].d,cls:i?'':'primary',fn:()=>{
       G.items[id]--;s.gift=day();s.m+=GOODS[id].gift;G.rep[n.d]=clamp(G.rep[n.d]+1,-100,100);G.gifts++;
       if(G.gifts===3||G.gifts%5===0)addRumor('generous',[n.id]);
-      talk(n,`${n.name.split(' ')[0]} takes the ${GOODS[id].n.toLowerCase()}, a little surprised. It lands well.`)}})),
+      talk(n,`${shortName(n)} takes the ${GOODS[id].n.toLowerCase()}, a little surprised. It lands well.`)}})),
     {label:'Back',cls:'quiet',fn:()=>talk(n)}]);
 }

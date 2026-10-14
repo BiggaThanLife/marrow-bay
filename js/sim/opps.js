@@ -27,7 +27,7 @@ const OPP_GEN={
   person(){
     const c=NPCS.filter(n=>G.met[n.id]&&n.id!==G.companion&&(npcS(n).hunger<40||npcS(n).cash<15));if(!c.length)return null;
     const n=c[hash(day(),11)%c.length],hungry=npcS(n).hunger<40;
-    return{dist:n.d,t:`${n.name} ${hungry?'looks hungry':'is short on cash'}. A meal or a bit of work would go a long way, and people remember who helped.`,act:{type:'talk',label:`Find ${n.name.split(' ')[0]}`,id:n.id}};
+    return{dist:n.d,t:`${n.name} ${hungry?'looks hungry':'is short on cash'}. A meal or a bit of work would go a long way, and people remember who helped.`,act:{type:'talk',label:`Find ${shortName(n)}`,id:n.id}};
   }
 };
 /* each morning: drop what has run out, then add new ones of kinds not already showing until there are three */

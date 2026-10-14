@@ -20,7 +20,7 @@ function hud(){
   sfxCashWatch();
   const it=issueTotal();$('#b-biz').dataset.n=it?String(it):'';
   $('#h-cash').textContent=money(G.cash);
-  $('#h-dist').textContent=district(Math.round(G.p.x),Math.round(G.p.y));
+  const dn=district(Math.round(G.p.x),Math.round(G.p.y));$('#h-dist').textContent=dn==='Foundry Row'?'Foundry':dn;
   $('#h-tide').textContent=tideName();
   $('#b-hunger').style.width=G.hunger+'%';
   $('#b-energy').style.width=G.energy+'%';
@@ -30,7 +30,7 @@ function hud(){
   $('#t-heat').textContent=G.heat>=.5?'\u2605'.repeat(Math.min(5,Math.ceil(G.heat))):'Clear';
   $('#b-build').classList.toggle('on',!!placing);
   $('#b-phone').textContent=(G.news.some(x=>x.id>G.newsRead)||G.threads.active.some(t=>t.pending)||feedUnread()>0)?'Phone \u25CF':'Phone';
-  const cb=$('#b-comp'),cn=G.companion&&NPC[G.companion];cb.hidden=!cn;if(cn)cb.textContent=cn.name.split(' ')[0]+' ×';
+  const cb=$('#b-comp'),cn=G.companion&&NPC[G.companion];cb.hidden=!cn;if(cn)cb.textContent=shortName(cn)+' ×';
   const ms=$('#mission');ms.hidden=!G.mission;if(G.mission)ms.textContent=missionText();
 }
 function ui(html,btns=[],isModal=true,dismiss=true){

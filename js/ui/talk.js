@@ -50,13 +50,13 @@ function talk(n,extra){
       talk(n,`${n.name} accepts the meal, surprised.`)}}
   ];
   if(shop)btns.push({label:`Visit ${POIS[shop].name}`,cls:'',fn:()=>goPOI(POIS[shop])});
-  if(tr>=3&&!G.companion)btns.push({label:`Ask ${n.name.split(' ')[0]} to come along`,sub:COMP_PERKS[n.id],cls:'',fn:()=>{recruit(n);closeMenu();notify(`${n.name} falls in beside you.`)}});
+  if(tr>=3&&!G.companion)btns.push({label:`Ask ${shortName(n)} to come along`,sub:COMP_PERKS[n.id],cls:'',fn:()=>{recruit(n);closeMenu();notify(`${n.name} falls in beside you.`)}});
   if(G.companion===n.id)btns.push({label:'Send them home',sub:'They return to their usual day.',cls:'quiet',fn:()=>{const nm=n.name;dismissComp();closeMenu();notify(`${nm} heads back.`)}});
   if(giftsOwned().length)btns.push({label:'Give a gift',sub:npcS(n).gift===day()?'They have had one today':giftsOwned().map(id=>`${GOODS[id].n} ${itemCount(id)}`).join(', '),cls:'',off:npcS(n).gift===day(),fn:()=>giftMenu(n)});
   btns.push(...openingTalkButtons(n));
   btns.push({label:'Pickpocket',sub:'Risky. Raises your wanted level if caught.',cls:'quiet',fn:()=>pickpocket(n)});
   btns.push(leaveBtn);
   ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}, ${n.d}. Attitude: <span class="${cls}">${LAB[tr]}</span>${needsL.length?`. Seems ${needsL.join(' and ')}.`:'.'}</p>
-  <p>${esc(n.tier[tr])}</p>${best?`<p>${esc(n.react[best])}</p>`:''}${heard.length&&!rumorLine(n)?`<p class="amber">${esc(n.name.split(' ')[0])} has heard: ${esc(heard[0])}</p>`:''}${rumorLine(n)?`<p>"${esc(rumorLine(n))}"</p>`:''}${extra?`<p class="amber">${esc(extra)}</p>`:''}
+  <p>${esc(n.tier[tr])}</p>${best?`<p>${esc(n.react[best])}</p>`:''}${heard.length&&!rumorLine(n)?`<p class="amber">${esc(shortName(n))} has heard: ${esc(heard[0])}</p>`:''}${rumorLine(n)?`<p>"${esc(rumorLine(n))}"</p>`:''}${extra?`<p class="amber">${esc(extra)}</p>`:''}
   ${why.length?`<p class="muted small">Shaped by: ${why.map(esc).join(', ')}.</p>`:''}`,btns);sceneCtx({who:n});
 }

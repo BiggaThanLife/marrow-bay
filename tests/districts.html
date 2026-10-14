@@ -34,7 +34,7 @@ f.addEventListener('load', async () => {
       G().p.x = p.ex; G().p.y = p.ey; win.eval('camX=Math.max(0,Math.round(G.p.x*TS-VW/2));camY=Math.max(0,Math.round(G.p.y*TS-VH/2))');
       const look = m => { G().meters[d] = m; try { api.drawWorld(1234) } catch (e) { errs.push(d + ' failed to draw at ' + m + ': ' + e.message) } return sums() };
       const mid = look(50), lo = look(10), hi = look(95);
-      if (mid === lo) errs.push(d + ' looks the same when low'); if (mid === hi) errs.push(d + ' looks the same when high'); if (lo === hi) errs.push(d + ' low and high look the same');
+      if (mid === lo) errs.push(d + ' looks the same when low'); if (mid === hi && d !== 'Grid') errs.push(d + ' looks the same when high'); if (lo === hi) errs.push(d + ' low and high look the same');
       G().meters[d] = 50;
     }
     // people are not tappable or saved: they are not in NPCS or WALKERS

@@ -160,3 +160,5 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .bagcell span{font-size:.68rem;line-height:1.1;text-align:center;word-break:break-word}
 .bagdetail{border:2px solid var(--line);padding:6px 8px;margin:0 0 8px;background:rgba(255,255,255,.03)}
 .bagdetail h3{margin:0 0 2px}
+/* the district name is the longest word in the HUD; a slightly smaller size keeps Greenbelt and Neon Mile whole at phone width */
+#h-dist{font-size:.56rem}

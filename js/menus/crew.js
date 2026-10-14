@@ -9,7 +9,7 @@ function crewMenu(msg){
   const rows=crewAll().map(c=>`<p><b>${esc(c.n)}</b>, ${CREW_ROLES[c.role].n} ${stars(c.skill)}<br><span class="small muted">${crewFree(c)?esc(JOB_N[c.job]):'In a cell until day '+c.jail}, ${loyWord(c.loy)}</span></p>`).join('');
   const wages=G.crew.filter(crewFree).reduce((t,m)=>t+crewWage(crewDef(m.id)),0);
   ui(`<h2>Your crew</h2><p class="muted">${G.crew.length}/${CREW_MAX} people. Wages ${money(wages)} a day, paid from dirty cash first. Unpaid people get restless, and restless people talk.</p>${rows?rows:'<p>Nobody yet. Vex knows people who know people.</p>'}${msgP(msg)}`,[
-    ...G.crew.map(m=>({label:`Manage ${crewDef(m.id).n.split(' ')[0]}`,sub:`${CREW_ROLES[crewDef(m.id).role].n}, loyalty ${Math.round(m.loy)}`,cls:'',fn:()=>crewMember(m.id)})),
+    ...G.crew.map(m=>({label:`Manage ${shortName(crewDef(m.id).n)}`,sub:`${CREW_ROLES[crewDef(m.id).role].n}, loyalty ${Math.round(m.loy)}`,cls:'',fn:()=>crewMember(m.id)})),
     {label:'Recruit',sub:G.crew.length>=CREW_MAX?'Your crew is full':'New faces each week',off:G.crew.length>=CREW_MAX,cls:'',fn:()=>crewRecruit()},
     velvetBack]);
 }

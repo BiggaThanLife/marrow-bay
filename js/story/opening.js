@@ -19,7 +19,7 @@ const OPEN_JOB={
     run:n=>{const pay=Math.round(25*(has('creative')?1.4:1));G.cash+=pay;advance(120);G.energy=clamp(G.energy-8,0,100);G.rep.Grid=clamp(G.rep.Grid+1,-100,100);memAdd(n.id,6);return `Pip points at the right tile and the crowd does the rest. You split the tips and keep ${money(pay)}.`}}
 };
 const openingNpc=()=>NPC[G.opening.npc];
-const openingFirst=()=>openingNpc().name.split(' ').slice(-1)[0];
+const openingFirst=()=>shortName(openingNpc());
 function openingBegin(){
   const o=G.opening;if(!o||o.step!=='intro')return;
   G.opening={step:'wait',bg:G.bg,npc:OPEN_NPC[G.bg]||'wren',d0:day(),offered:false,jobDone:false,readyAt:0,kept:null};
@@ -79,7 +79,7 @@ function openingCrate(){
   const o=G.opening,n=openingNpc();
   ui(`<h2>A crate on the flats</h2><p>It is locked, salt-stained and heavier than it looks. Found property is a legal category. HARBOR is unsure which one.</p><p class="muted">The tide is ${tideName()}. This ground is under water at high tide, and the sea takes back what it leaves. Nobody is watching. For now.</p>`,[
     {label:'Break it open and keep what is inside',sub:'About $40 and a trinket. People may notice.',fn:()=>openingChoose(true)},
-    {label:`Hand it in to ${n.name.split(' ').slice(-1)[0]}`,sub:'About $10, and they will remember.',cls:'',fn:()=>openingChoose(false)},
+    {label:`Hand it in to ${shortName(n)}`,sub:'About $10, and they will remember.',cls:'',fn:()=>openingChoose(false)},
     {label:'Leave it for now',cls:'quiet',keep:true,fn:closeMenu}]);
 }
 function openingChoose(keep){
@@ -89,14 +89,14 @@ function openingChoose(keep){
   else{G.cash+=10;memAdd(n.id,8)}
   o.kept=keep;o.step='consequence';o.at=G.t+60;
   histAdd('crate',keep?'Kept a crate from the flats. Nobody saw. HARBOR did.':'Handed in a crate from the flats. HARBOR is suspicious of how nice that was.')
-  ui(`<h2>${keep?'Finders keepers':'Handed in'}</h2><p>${keep?'The lock gives on the third try. Inside: coins, a brass trinket and a smell like old harbour. You pocket it all.':`You carry it to ${esc(n.name.split(' ').slice(-1)[0])}, who turns it over twice. "Huh. Most people would not have."`}</p>`,[{label:'Continue',keep:true,fn:closeMenu}]);
+  ui(`<h2>${keep?'Finders keepers':'Handed in'}</h2><p>${keep?'The lock gives on the third try. Inside: coins, a brass trinket and a smell like old harbour. You pocket it all.':`You carry it to ${esc(shortName(n))}, who turns it over twice. "Huh. Most people would not have."`}</p>`,[{label:'Continue',keep:true,fn:closeMenu}]);
 }
 /* an hour later: a rumor, a different line from the neighbour, and a reason to come back tomorrow */
 function openingConsequence(){
   const o=G.opening,n=openingNpc(),keep=o.kept;
   o.step='tomorrow';o.meetAt=day()*1440+9*60;
-  addRumor(keep?'crateKept':'crateReturned',keep?[n.id==='pip'?'reyes':'pip',n.id]:[n.id,'teo'],{dist:'Dockside',owner:n.name.split(' ').slice(-1)[0]});
-  notify(keep?'People have noticed the crate.':`${n.name.split(' ').slice(-1)[0]} tells people you handed it in.`);
+  addRumor(keep?'crateKept':'crateReturned',keep?[n.id==='pip'?'reyes':'pip',n.id]:[n.id,'teo'],{dist:'Dockside',owner:shortName(n)});
+  notify(keep?'People have noticed the crate.':`${shortName(n)} tells people you handed it in.`);
 }
 function openingVisit(){
   const o=G.opening,keep=o.kept,n=keep?NPC.pip:openingNpc();
@@ -113,7 +113,7 @@ function openingVisit(){
 /* HARBOR's pinned suggestion for wherever the opening has got to */
 function openingSuggestion(){
   const o=G&&G.opening;if(!o||o.done||o.step==='intro'||o.step==='wait')return null;
-  const n=openingNpc(),fn=n.name.split(' ').slice(-1)[0];
+  const n=openingNpc(),fn=shortName(n);
   const say=t=>({id:'o:'+o.step+(o.jobDone?'j':''),kind:'suggest',dist:'',by:'HARBOR',t});
   if(o.step==='tide'&&!o.jobDone)return say(`${fn} has work for you. Talk to ${fn}, or tap them on the map.`);
   if(o.step==='crate'&&!openingCrateOut()){const m=oppNextLow();return {...say('The tide has covered the crate.'+(m?` It shows again at low tide, around ${fmtHr(Math.floor(m/60))}.`:'')),id:'o:crate-covered'}}
