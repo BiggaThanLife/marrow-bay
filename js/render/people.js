@@ -81,15 +81,17 @@ function drawRide(k,x,y,now,mv){
     const fx=Math.cos(ph)*2,fy=Math.sin(ph)*2;
     cx.strokeStyle='#2b2118';cx.lineWidth=2;cx.beginPath();cx.moveTo(-2,-8);cx.lineTo(0+fx,-3+fy);cx.stroke();
     cx.fillStyle=oc;cx.fillRect(-3,-14,5,6);
+    if(RS>=2){cx.fillStyle=tone(oc,1.22);cx.fillRect(-3,-14,1,6);cx.fillStyle=tone(oc,.78);cx.fillRect(1,-14,1,6);cx.fillStyle='rgba(255,255,255,.75)';cx.fillRect(-2.5,-14,4,.5)}
     cx.fillStyle=sk;cx.fillRect(2,-12,3,2);
-    if(L)drawPlayer(cx,1,-6,L,0,true,0);else{cx.fillStyle=sk;cx.fillRect(0,-19,4,4)}
+    if(L)drawPlayer(cx,1,RS>=2?-4:-6,L,0,true,0);else{cx.fillStyle=sk;cx.fillRect(0,-19,4,4)}
   }else{
     wheel(-5,2);wheel(5,2);
     cx.fillStyle=vehColor('scooter','#e0b83a');cx.fillRect(-6,-5,12,2);cx.fillRect(4,-14,2,10);cx.fillStyle='#1c1c1c';cx.fillRect(3,-15,4,1);
     cx.fillStyle='#2b2118';cx.fillRect(-2,-6,4,2);
     cx.fillStyle=oc;cx.fillRect(-3,-10,6,5);
+    if(RS>=2){cx.fillStyle=tone(oc,1.22);cx.fillRect(-3,-10,1,5);cx.fillStyle=tone(oc,.78);cx.fillRect(2,-10,1,5);cx.fillStyle='rgba(255,255,255,.75)';cx.fillRect(-2.5,-10,5,.5)}
     cx.fillStyle=sk;cx.fillRect(3,-10,2,2);
-    if(L)drawPlayer(cx,0,-1,L,0,true,0);else{cx.fillStyle=sk;cx.fillRect(-2,-19,4,4)}
+    if(L)drawPlayer(cx,0,RS>=2?0:-1,L,0,true,0);else{cx.fillStyle=sk;cx.fillRect(-2,-19,4,4)}
   }
   cx.restore();
 }

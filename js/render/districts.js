@@ -78,8 +78,9 @@ function ambientEnts(now){
     const n=ambientCount(d);
     for(let i=0;i<n&&i<AMB.slots[d].length;i++){
       const s=AMB.slots[d][i],per=5200+(s.h%2600),t=((now/per)+(s.h%997)/997)%2,tri=t<1?t:2-t,off=(tri-.5)*4;
-      const x=s.axis?s.x:s.x+off,y=s.axis?s.y+off:s.y;
-      if(Math.hypot(x-G.p.x,y-G.p.y)<.9)continue;
+      let x=s.axis?s.x:s.x+off,y=s.axis?s.y+off:s.y;
+      /* someone in your way stops a tile short and lets you pass, instead of vanishing */
+      if(Math.hypot(x-G.p.x,y-G.p.y)<1){if(s.axis)y=G.p.y+(y>=G.p.y?1:-1);else x=G.p.x+(x>=G.p.x?1:-1)}
       out.push({y,f:()=>person(x,y,AMB_COLS[s.h%AMB_COLS.length],false,true,now,false)});
     }
   }
