@@ -19,7 +19,9 @@ function hud(){
     $('#h-ico').innerHTML=dayTime?'<svg width="11" height="11" viewBox="0 0 12 12"><circle cx="6" cy="6" r="3" fill="#f2b84b"/><path d="M6 0v2M6 10v2M0 6h2M10 6h2M2 2l1.4 1.4M8.6 8.6L10 10M2 10l1.4-1.4M8.6 3.4L10 2" stroke="#f2b84b" stroke-width="1.2"/></svg>':'<svg width="11" height="11" viewBox="0 0 12 12"><path d="M9.5 8A5 5 0 1 1 4 2.5 4 4 0 0 0 9.5 8z" fill="#c9d6ff"/></svg>'}
   sfxCashWatch();
   const it=issueTotal();$('#b-biz').dataset.n=it?String(it):'';
-  $('#h-cash').textContent=money(G.cash);
+  /* the cash box fits about five characters at phone width, so big totals are shortened ($12.3k, $1.25m) */
+  const ca=Math.abs(G.cash),cs=G.cash<0?'-$':'$';
+  $('#h-cash').textContent=ca>=1e6?cs+(ca/1e6).toFixed(2)+'m':ca>=1e4?cs+(ca/1e3).toFixed(1)+'k':money(G.cash);
   const dn=district(Math.round(G.p.x),Math.round(G.p.y));$('#h-dist').textContent=dn==='Foundry Row'?'Foundry':dn;
   tideHud();
   $('#b-hunger').style.width=G.hunger+'%';
