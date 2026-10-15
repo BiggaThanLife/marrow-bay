@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay tide clues and bonds test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Tide clues and bond scenes</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document;
+  const api = win.eval(`({get G(){return G},BG,NPC,start,closeMenu,popClear,tideClueDaily,clueNext,clueFinalSeen,TIDE_CLUES,BONDS,bondScene,talk,day,migrate,ARCS})`);
+  const G = () => api.G;
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().hist = [];
+    G().opening = { step: 'done', done: true };
+    // no clue before day 5
+    api.tideClueDaily(); if (G().clues.seen.length) errs.push('clue before day 5');
+    // drip across 25 days: once each, spaced, logged to history
+    let last = -9, shownDays = [];
+    for (let d = 1; d <= 30; d++) { G().t = (d - 1) * 1440 + 600; const n = G().clues.seen.length; api.tideClueDaily(); if (G().clues.seen.length > n) { shownDays.push(d); if (d - last < 2) errs.push('clues too close on day ' + d); last = d } }
+    if (shownDays[0] < 5) errs.push('first clue too early: ' + shownDays[0]);
+    if (new Set(G().clues.seen).size !== G().clues.seen.length) errs.push('a clue repeated');
+    if (G().clues.seen.length < 8) errs.push('too few clues dripped: ' + G().clues.seen.length);
+    if (!(G().hist || []).some(h => /^The tide: /.test(h.t))) errs.push('clues not in history');
+    if (!api.clueFinalSeen()) errs.push('final stage never reached by day 30');
+    // arc opens earlier
+    G().stance.harbor = 0; if (!api.ARCS.harbor.can()) errs.push('HARBOR arc should open on final clue at day 30');
+    G().clues.seen = []; G().stance.harbor = 7; G().t = 10 * 1440; if (api.ARCS.harbor.can()) errs.push('arc open too early');
+    G().t = 20 * 1440; if (!api.ARCS.harbor.can()) errs.push('arc closed at day 20 with stance 7');
+    // migrate keeps/creates fields
+    delete G().clues; delete G().bonds; win.eval('migrate()'); if (!G().clues || !G().bonds) errs.push('migrate did not default clues/bonds');
+    // bond scene: Teo, each choice once
+    const teo = api.NPC.teo; G().bonds = {}; win.eval('npcS(NPC.teo).m=500'); G().hist = [];
+    api.talk(teo); const btn = [...doc.querySelectorAll('#sheet #actions button')].find(b => /Something on their mind/.test(b.innerText));
+    if (!btn) errs.push('bond button missing at close tier'); else {
+      btn.click(); const opts = [...doc.querySelectorAll('#sheet #actions button')]; if (opts.length < 3) errs.push('bond choices missing');
+      const m0 = win.eval('npcS(NPC.teo).m'); opts.find(b => /Eat, ask nothing/.test(b.innerText)).click();
+      if (G().bonds.teo !== 1) errs.push('bond not recorded'); if (win.eval('npcS(NPC.teo).m') <= m0) errs.push('attitude did not rise');
+      if (!(G().hist || []).some(h => /Teo fed you/.test(h.t))) errs.push('bond not in history');
+      if ([...doc.querySelectorAll('#sheet #actions button')].some(b => /Something on their mind/.test(b.innerText))) errs.push('bond offered twice');
+    }
+    // every bond is well formed
+    Object.keys(api.BONDS).forEach(id => { if (!api.NPC[id]) errs.push('bond for unknown npc ' + id); if (api.BONDS[id].choices.length !== 3) errs.push('bond ' + id + ' needs 3 choices') });
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n');
+  window.__done = { ok: !errs.length, errs };
+});
+</script>

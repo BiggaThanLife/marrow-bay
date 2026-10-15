@@ -2,7 +2,7 @@
 /* HARBOR's own arc. It starts by itself once you have heard everything HARBOR will say, and ends with one of five outcomes. */
 ARCS.harbor={
   title:'What HARBOR Is',district:'Grid',
-  can:()=>day()>=40&&G.stance.harbor>=7&&!arcDone('harbor'),
+  can:()=>day()>=19&&(G.stance.harbor>=5||clueFinalSeen())&&!arcDone('harbor'),
   status:A=>`Trust ${A.trust||0}. ${A.side?`You told HARBOR you are with ${A.side==='trust'?'the Trust':A.side==='harbor'?'it':'nobody'}.`:'You have not said whose side you are on.'}${A.choice?` Leaning: ${ARC_HARBOR_CHOICE[A.choice]}.`:''}`,
   phases:[
    {name:'Calibration',days:5,blurb:'HARBOR: "I would like to run a private session. For calibration. It will not hurt. I have not been told if it will."',

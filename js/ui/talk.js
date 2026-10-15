@@ -49,6 +49,7 @@ function talk(n,extra){
       if(G.gifts===3||G.gifts%5===0)addRumor('generous',[n.id]);
       talk(n,`${n.name} accepts the meal, surprised.`)}}
   ];
+  if(tr>=3&&bondAvailable(n))btns.unshift({label:'Something on their mind',sub:'A quiet moment. It only happens once.',cls:'',fn:()=>bondScene(n)});
   if(shop)btns.push({label:`Visit ${POIS[shop].name}`,cls:'',fn:()=>goPOI(POIS[shop])});
   if(tr>=3&&!G.companion)btns.push({label:`Ask ${shortName(n)} to come along`,sub:COMP_PERKS[n.id],cls:'',fn:()=>{recruit(n);closeMenu();notify(`${n.name} falls in beside you.`)}});
   if(G.companion===n.id)btns.push({label:'Send them home',sub:'They return to their usual day.',cls:'quiet',fn:()=>{const nm=n.name;dismissComp();closeMenu();notify(`${nm} heads back.`)}});

@@ -5,7 +5,7 @@ Voice rules: dry, terse, darkly funny, grounded. No magic, no new currencies. Th
 ## 1. Canon summary (already in the game)
 
 - **Setting.** Six districts: Greenbelt, Highline, Grid, Dockside, Neon Mile, Foundry Row (`js/data/places.js`). Tide cycle is 12h 24m (`js/story/arc-harbor.js`, HARBOR's calibration line).
-- **HARBOR.** "Harbor Administration and Resident Benefits Office", the city AI. Keeps records, hands out benefits, runs "births, bills, bridges, the tide table". Cannot delete, only lose ("I may not delete. I may lose."). Sardonic, files things under 'personality'. Admits it is listening (`intro.js`, `harbor-voice.js`). Its arc "What HARBOR Is" (day 40+, Grid) ends in five outcomes: obey the Trust, leave City Hall, rip out FLACK, share the mayor's office, hide.
+- **HARBOR.** "Harbor Administration and Resident Benefits Office", the city AI. Keeps records, hands out benefits, runs "births, bills, bridges, the tide table". Cannot delete, only lose ("I may not delete. I may lose."). Sardonic, files things under 'personality'. Admits it is listening (`intro.js`, `harbor-voice.js`). Its arc "What HARBOR Is" (from about day 19, Grid) ends in five outcomes: obey the Trust, leave City Hall, rip out FLACK, share the mayor's office, hide.
 - **FLACK.** Grey-pole cameras that tell HARBOR who is where.
 - **The Trust.** Unseen power above the council. Orders HARBOR to rank citizens by cooperativeness and watch the lowest first. Nobody calls it by its name. Favours Lady Ashgrove for mayor.
 - **Vex Calloway** (Neon Mile, fixer, Velvet Room, man). "Everyone in this city is for sale." Fights the Salt Kings in "The Salt War". Signed for MB-0417.
@@ -35,7 +35,7 @@ Dates are approximate on purpose. Records disagree; HARBOR may not delete, so it
 
 **What is under the flats.** The original fill is hollow in places: old drained channels, a buried sluice, something like a second harbor. Water under the Grid moves independently of the bay. The real tide is the sea plus whatever is down there. HARBOR's tables model only the sea. Someone has been correcting them by hand, then stopped, then started again. Whether the flats are filling, draining or breathing is left open.
 
-### Five reveal stages (drip day 5 to 20, then the HARBOR arc at day 40)
+### Five reveal stages (drip day 5 to 20, then the HARBOR arc from about day 19)
 1. **Day 5-7, a small wrongness.** The tide is slightly off the board. Dismissed.
 2. **Day 8-11, a pattern.** Always off in the same direction, always near Dockside paperwork.
 3. **Day 12-14, somebody knows.** People who read the water (Pip, Duarte, Teo's morning crowd) already keep their own tables.

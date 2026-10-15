@@ -33,7 +33,7 @@ function newDay(d){
   makePool();
   if(G.debt>0&&day()-G.loanDay>(G.loanTerm||10)&&!G.flags.defRum){G.flags.defRum=1;addRumor('defaulter',['cordelia'])}
   G.rumors.forEach(r=>r.str-=4);G.rumors=G.rumors.filter(r=>r.str>=12);
-  cityDaily();threadsDaily();
+  cityDaily();threadsDaily();tideClueDaily();
   G.projects.forEach(p=>{
     if(p.done)return;const d=PROJECTS.find(x=>x.id===p.id);
     NPCS.filter(n=>n.d===d.d).forEach(n=>{
