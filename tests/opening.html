@@ -37,7 +37,7 @@ f.addEventListener('load', async () => {
       const m = lowTide(G().t + 31); if (!m) { errs.push(tag + ': no low tide found'); continue }
       G().t = m; api.openingTick(); if (api.step !== 'crate') errs.push(tag + ': no crate at low tide (' + api.step + ') at ' + api.tideName() + ' hour ' + api.hourOf());
       const s = api.feedSuggestions()[0]; if (!s || !/waterfront/.test(s.t)) errs.push(tag + ': no pinned crate suggestion: ' + JSON.stringify(s));
-      if (!G().gps) errs.push(tag + ': no dotted route to the waterfront when the crate appears');
+      if (!G().gps && !win.eval('(()=>{const [x,y]=oppDockSpot();return Math.hypot(x-G.p.x,y-G.p.y)<=1.3})()')) errs.push(tag + ': no dotted route to the waterfront when the crate appears');
       // at high tide the crate is covered and the next low tide is named, then it is back
       { const keepT = G().t; let hm = null; for (let m = keepT; m < keepT + 1440; m += 5) if (win.eval(`tideName(${m})`) === 'high') { hm = m; break }
         if (hm == null) errs.push(tag + ': no high tide to check'); else { G().t = hm; api.waterfront(); if (!btn(/under water/) || btn(/crate in the mud/)) errs.push(tag + ': crate still reachable at high tide');

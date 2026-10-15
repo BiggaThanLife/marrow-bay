@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay old save test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Saves from before the tide, log, clue and levy features</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Strips every field added since d989e3b, round-trips the save through JSON, migrates, then plays days (including a full-night sleep for the day summary) on a save already past day 19 and checks nothing throws and the clue drip catches up. */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], stats = {};
+  win.addEventListener('error', e => errs.push('page error: ' + e.message));
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,advance,day,migrate,setG:v=>{G=v},tideClueDaily,hud,MENUS,POIS,phone,careerMenu,logMenu,save})`);
+  const G = () => api.G;
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true;
+    G().cash = 3000;
+    const old = JSON.parse(JSON.stringify(G()));
+    ['log', 'jobs', 'clues', 'bonds', 'found', 'lastTalk', 'fees', 'oppPrev', 'daySum', 'club', 'levy', 'gilded', 'fairWins', 'arc', 'arcsDone', 'arcLast', 'opening'].forEach(k => delete old[k]);
+    old.t = 25 * 1440 + 8 * 60;
+    api.setG(JSON.parse(JSON.stringify(old)));
+    api.migrate();
+    for (const k of ['log', 'jobs', 'clues', 'bonds', 'found', 'lastTalk', 'fees', 'daySum']) if (!G()[k]) errs.push('migrate did not default ' + k);
+    for (let i = 0; i < 12; i++) { api.advance(1440, true); api.closeMenu(); api.popClear() }
+    api.hud();
+    stats.day = api.day(); stats.clues = G().clues.seen.length;
+    if (stats.clues < 8) errs.push('clue drip did not catch up for a late save: ' + stats.clues + ' clues after 12 days');
+    // a nap and a bench rest must not raise a day summary popup
+    api.save(); const raw = JSON.parse(win.localStorage.getItem(win.eval("SAVE")) || 'null');
+    stats.savedBaseline = !!(raw && raw.daySum);
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

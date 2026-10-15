@@ -52,7 +52,7 @@ function logFish(n,boat){
 function logMenu(){
   logSync();
   ui(`<h2>Bay Log</h2><p class="muted">Everything you have found, caught, cooked and earned. Finish a page for a small bonus.</p>`+
-    logCats().map(c=>`<p class="small"><b>${esc(c.n)}</b> ${c.have} of ${c.total}${G.log.done[c.id]?' (done)':''}</p><div style="background:#2a2f38;height:8px;border-radius:4px;margin:2px 0 4px"><div style="background:#6bbf8a;height:8px;border-radius:4px;width:${Math.round(100*c.have/Math.max(1,c.total))}%"></div></div><p class="muted small">${c.list.map(([a,b])=>b?`${esc(a)} (${esc(b)})`:`<s>${esc(a)}</s>`).join(', ')}</p>`).join(''),
+    logCats().map(c=>`<p class="small"><b>${esc(c.n)}</b> ${c.have} of ${c.total}${G.log.done[c.id]?' (done)':''}</p><div style="background:#2a2f38;height:8px;border-radius:4px;margin:2px 0 4px"><div style="background:#6bbf8a;height:8px;border-radius:4px;width:${Math.round(100*c.have/Math.max(1,c.total))}%"></div></div><p class="muted small">${c.list.map(([a,b])=>b?`${esc(a)} (${esc(b)})`:`<i style="opacity:.55">${esc(a)}</i>`).join(', ')}</p>`).join(''),
     [{label:'Back',cls:'quiet',fn:()=>careerMenu()},leaveBtn]);
 }
 /* ---- gig ranks ---- */

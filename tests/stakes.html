@@ -25,7 +25,7 @@ f.addEventListener('load', () => {
     const msg = E(`surgeRepairs(['Dockside'], .03)`); if (!/repairs cost \$57/.test(msg)) errs.push('surge message: ' + msg); if (E('G.cash') !== 943) errs.push('repair not charged only to Dockside: ' + E('G.cash'));
     E(`G.cash = 10; G.biz[0].till = 0`); E(`surgeRepairs(['Dockside'], .5)`); if (E('G.cash') < 0) errs.push('repairs bankrupted');
     // day summary lists fees
-    E(`G.fees = [{d: day(), t: 'Harbor levy', amt: 120}]; daySum = null; daySummary(day()); daySummary(day())`);
+    E(`G.fees = [{d: day(), t: 'Harbor levy', amt: 120}]; G.daySum = null; daySummary(day()); daySummary(day())`);
     // Gilded Tide: club menu renders with join button
     E(`G.cash = 5000; G.rep.Highline = 20; G.t = 5 * 1440 + 20 * 60; npcS(NPC.vex || NPCS[0]); openPOI(POIS.club)`);
     if (!/Join the Gilded Tide/.test(doc.getElementById('sheet').innerText)) errs.push('no Gilded Tide join button');

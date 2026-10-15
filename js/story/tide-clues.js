@@ -55,7 +55,10 @@ function clueNext(force){
 function tideClueDaily(){
   if(!G||(G.opening&&!G.opening.done))return;
   cluesInit();
-  if(day()<CLUE_STAGE_DAY[1]||day()-G.clues.last<2)return;
+  if(day()<CLUE_STAGE_DAY[1])return;
+  /* a save well past the calendar catches up one clue a day instead of every other day */
+  const behind=G.clues.seen.length<(clueStageNow()-1)*CLUES_PER_STAGE;
+  if(day()-G.clues.last<(behind?1:2))return;
   const c=clueNext(false);if(c)clueShow(c);
 }
 const clueFinalSeen=()=>!!(G.clues&&G.clues.seen.some(id=>id[0]==='5'));
@@ -70,7 +73,7 @@ const BONDS={
   {label:'Stay and watch',text:'The metal comes out the colour of a sunrise nobody asked for. Neither of you speaks.',att:8,hist:'You watched the pour with Ines.',fx:()=>{facAdd('guild',3);G.cash+=20;return 'She tucks $20 of "bonus" into your hand and denies it.'}},
   {label:'Ask about the Slag Fire',text:'She gives you the quota number. It is a very large number.',att:14,hist:'Ines told you the quota number from the night of the Slag Fire.',fx:()=>{facAdd('guild',4);G.flags.inesLead=1;return 'You now know who signed off the night shift. The Guild will remember you asked.'}},
   {label:'Bring her a drink',text:'"I don\'t drink on the line." She drinks it.',att:8,hist:'Ines drank the drink you brought.',fx:()=>{G.cash+=25;facAdd('guild',2);return 'A favour from the boss: $25 appears in your pocket.'}}]},
- teo:{title:'Closing time',setup:'Teo flips the sign and sets two plates. "I cook for a hundred people a day. You\'re the first I\'ve sat with."',choices:[
+ teo:{title:'Closing time',setup:'Teo flips the sign and sets two plates. "I cook for a hundred people a day. You\'re the first customer I\'ve sat down with."',choices:[
   {label:'Eat, ask nothing',text:'The food is very good. The silence is better.',att:14,hist:'Teo fed you and did not talk.',fx:()=>{G.inv.meals+=3;return 'He packs three meals for later and says nothing about it.'}},
   {label:'Ask where he learned to cook',text:'His mother\'s cookbook, every recipe crossed out and rewritten.',att:8,hist:'Teo showed you his mother\'s cookbook.',fx:()=>{G.hunger=clamp(G.hunger+30,0,100);return 'He writes one recipe on a napkin: "Salt last. Always last." You leave full.'}},
   {label:'Offer to wash up',text:'"The last person who did that asked for a raise."',att:8,hist:'You washed up at the diner with Teo.',fx:()=>{advance(45);G.cash+=25;return 'He pays you $25 for the dishes and calls it a shift.'}}]},

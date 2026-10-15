@@ -17,7 +17,7 @@ const FLACK_BANDS=[
 function cityInit(){
   G.meters=G.meters||{};for(const d in METERS)if(typeof G.meters[d]!=='number')G.meters[d]=50;
   G.fac=G.fac||{};for(const f in FACTIONS)if(typeof G.fac[f]!=='number')G.fac[f]=0;
-  G.facts=G.facts||{};if(typeof G.flack!=='number')G.flack=10;
+  G.facts=G.facts||{};if(!G.daySum)G.daySum={cash:G.cash,day:typeof day==='function'?day():1};if(typeof G.flack!=='number')G.flack=10;
   G.stance=G.stance||{};for(const k of ['coop','evade','sab','harbor'])if(typeof G.stance[k]!=='number')G.stance[k]=0;
   G.blind=G.blind||{};G.fx=G.fx||{};
   if(G.facts.mayor===undefined)G.facts.mayor='voss';

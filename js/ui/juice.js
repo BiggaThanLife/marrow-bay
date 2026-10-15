@@ -25,24 +25,24 @@ function tideInfo(t=clockNow()){
   return {rising,to,v:tideV(t)};
 }
 function tideHud(){
-  if(G&&(!daySum||daySum.g!==G))daySum={g:G,cash:G.cash,day:day()};
+  if(G&&!G.daySum)G.daySum={cash:G.cash,day:day()};
   const i=tideInfo(),el=$('#h-tide');if(!el)return;
   const mins=Math.max(1,Math.round(i.to)),tm=mins>=60?Math.floor(mins/60)+'h'+(mins%60?String(mins%60).padStart(2,'0'):''):mins+'m';
-  const html=`<span class="tarr ${i.rising?'up':'dn'}">${i.rising?'\u25B2':'\u25BC'}</span><span class="tbar"><i style="width:${clamp(Math.round((i.v/tideAmp()+1)*50),0,100)}%"></i></span><small>${i.rising?'high':'low'} ${tm}${tideCycle()?' Â· '+tideCycle():''}</small>`;
+  const html=`<span class="tarr ${i.rising?'up':'dn'}">${i.rising?'\u25B2':'\u25BC'}</span><span class="tbar"><i style="width:${clamp(Math.round((i.v/tideAmp()+1)*50),0,100)}%"></i></span><small>${i.rising?'high':'low'} ${tm}${tideCycle()?' '+(tideCycle()==='spring'?'spr':tideCycle()):''}</small>`;
   if(html!==tideHtml){tideHtml=html;el.innerHTML=html}
   el.title='Tide '+tideName()+', '+(i.rising?'rising':'falling')+(tideCycle()?', '+tideCycle()+' tide':'');
   if(tideLast.g!==G){tideLast={g:G,r:i.rising};return}
   if(tideLast.r!==i.rising){tideLast.r=i.rising;notify(i.rising?'The tide has turned and is rising.':'The tide has turned and is falling.');sfx('news')}
 }
 /* end of day: cash change since the last summary plus a few notable things from the news and your story */
-let daySum=null;
+/* the baseline lives in G.daySum so it survives a reload */
 function daySummary(prevDay){
   if(!G)return;
-  if(!daySum||daySum.g!==G){daySum={g:G,cash:G.cash,day:prevDay};return}
-  const d=G.cash-daySum.cash,from=daySum.day;daySum={g:G,cash:G.cash,day:day()};
+  if(!G.daySum||typeof G.daySum.cash!=='number'){G.daySum={cash:G.cash,day:prevDay};return}
+  const d=G.cash-G.daySum.cash,from=G.daySum.day||prevDay;G.daySum={cash:G.cash,day:day()};
   const lines=[];
   const fees=(G.fees||[]).filter(f=>f.d>=from);
-  if(fees.length)lines.push('• Paid out: '+fees.map(f=>f.t+' '+money(f.amt)).join(', '));
+  if(fees.length)lines.push('\u2022 Paid out: '+fees.map(f=>f.t+' '+money(f.amt)).join(', '));
   (G.news||[]).filter(x=>x.d>=from&&x.d<day()&&x.s>=2).slice(0,3).forEach(x=>lines.push('\u2022 '+x.t));
   (G.hist||[]).filter(h=>h.day>=from&&h.day<day()).slice(-2).forEach(h=>{if(lines.length<4)lines.push('\u2022 '+h.t)});
   popup('Day '+prevDay+' in review',`Cash: ${d>=0?'+':'-'}${money(Math.abs(d))} (now ${money(G.cash)})`+(lines.length?'\n'+lines.join('\n'):'\nA quiet day.'));
