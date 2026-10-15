@@ -12,6 +12,7 @@ function gvTileColor(x,y,t){
     case T.FARM:return '#8f6c3a';
     case T.PLAZA:return '#cdbd90';
     case T.DOCK:return '#85705a';
+    case T.FLAT:return '#7a6a52';
     case T.LOT:return '#6d7272';
     case T.PARK:return '#5a9a56';
     default:return GROUND[d];

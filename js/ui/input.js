@@ -59,6 +59,7 @@ cv.addEventListener('pointerdown',e=>{
   if(t===T.FARM){const pl=G.plots.find(q=>q.x===tx&&q.y===ty);return walkTo(tx,ty,()=>plotMenu(pl))}
   if(t===T.PLAZA)return walkTo(tx,ty,()=>plazaMenu());
   if(t===T.DOCK)return walkTo(tx,ty,()=>waterfront());
-  if(t===T.WATER)return notify('Deep water.');
+  if(t===T.FLAT)return walkTo(tx,ty);
+  if(t===T.WATER)return notify(tideV()>-.3&&tx>=41&&tx<=44&&ty===33?'Water covers the river mouth. It dries out at low tide.':'Deep water.');
   walkTo(tx,ty);
 });

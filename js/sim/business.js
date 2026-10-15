@@ -26,7 +26,20 @@ function bizAppeal(b){
   if(G.ev&&G.ev.id==='gala'&&dist==='Highline')appeal*=1.3;
   if(G.ev&&G.ev.id==='strike'&&dist==='Dockside')appeal*=.75;
   appeal*=(G.mod.traffic[dist]||1);
+  appeal*=tideTrade(dist).mul;
   return appeal;
+}
+/* the tide and trade: Dockside is on the quay, so high water keeps people off it and low water brings scrap hunters; Foundry Row sits low by the river mouth and does better when the flats are open. Averaged over trading hours (8 to 20) of today, kept within 15%. */
+function tideTrade(dist,t=clockNow()){
+  const prof=dist==='Dockside'?{hi:-.55,lo:.3}:dist==='Foundry Row'?{hi:-.2,lo:.4}:null;
+  if(!prof)return{mul:1,txt:''};
+  const base=Math.floor(t/1440)*1440;let hi=0,lo=0;
+  for(let h=8;h<=20;h++){const v=tideV(base+h*60);if(v>.45)hi++;else if(v<-.45)lo++}
+  hi/=13;lo/=13;
+  const mul=clamp(1+prof.hi*hi+prof.lo*lo,.85,1.15),pc=Math.round((mul-1)*100);
+  if(Math.abs(pc)<2)return{mul:1,txt:`Tide today: ${tideCycle(t)?tideCycle(t)+' tides, but ':''}no real effect on trade here.`};
+  const why=pc<0?(dist==='Dockside'?'High water keeps people off the quay':'High water cuts the trade down by the river'):(dist==='Dockside'?'Low water brings scrap hunters to the quay':'Low water opens the flats and brings people through');
+  return{mul,txt:`Tide today: ${why} (${pc>0?'+':''}${pc}% customers${tideCycle(t)?', '+tideCycle(t)+' tides':''}).`};
 }
 /* Typical customers per day (demand) and how many the staff can serve (capacity). */
 function bizTraffic(b){

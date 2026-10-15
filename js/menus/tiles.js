@@ -24,7 +24,7 @@ function plazaMenu(msg){
 }
 function waterfront(msg){
   const tn=tideName(),fs=G.fishStock,fl=G.flats;
-  ui(`<h2>Waterfront</h2><p class="muted">The tide is ${tn}. Fish look ${fs<30?'scarce':fs>70?'plentiful':'steady'}. The flats look ${fl<30?'picked clean':fl>70?'full of scrap':'workable'}.${tn==='low'?' The mud is exposed.':tn==='high'?' The pier is awash.':''}</p>${msgP(msg)}`,[
+  ui(`<h2>Waterfront</h2><p class="muted">The tide is ${tn}. Fish look ${fs<30?'scarce':fs>70?'plentiful':'steady'}. The flats look ${fl<30?'picked clean':fl>70?'full of scrap':'workable'}.${tideCycle()?' It is a '+tideCycle()+' tide.':''}${flatsOpen?' A walkway of mud links the two quays.':''}${tn==='low'?' The mud is exposed.':tn==='high'?' The pier is awash.':''}</p>${msgP(msg)}`,[
     ...openingWaterfrontButtons(),
     {label:'Fish from the pier',sub:'2 hours. Best at high tide.',need:14,fn:()=>{
       if(G.energy<14)return waterfront('You are too tired.');
@@ -39,8 +39,8 @@ function waterfront(msg){
       if(G.energy<10)return waterfront('You are too tired.');
       let n=ri(1,2)+rodLevel();n=Math.round(n*clamp(.4+G.fishStock/80,.4,1.2));
       G.inv.fish+=n;G.fishStock=clamp(G.fishStock-n*1.5,0,100);advance(120);G.energy=clamp(G.energy-5,0,100);waterfront(n?`The channel gives up ${n} fish.`:'The channel is bare.')}},
-    {label:'Scavenge the mudflats',sub:tn==='low'?'90 minutes. Scrap is exposed.':'Only at low tide',off:tn!=='low',cls:'',fn:()=>{
-      let n=ri(1,3)+(has('strong')?1:0)+(G.companion==='pip'?1:0);n=Math.round(n*clamp(G.flats/60,.3,1.2));
+    {label:'Scavenge the mudflats',sub:tn==='low'?(tideCycle()==='spring'?'90 minutes. A spring tide has laid the flats bare.':'90 minutes. Scrap is exposed.'):'Only at low tide',off:tn!=='low',cls:'',fn:()=>{
+      let n=ri(1,3)+(has('strong')?1:0)+(G.companion==='pip'?1:0)+(tideCycle()==='spring'?1:0);n=Math.round(n*clamp(G.flats/60,.3,1.2));
       G.inv.scrap+=n;G.flats=clamp(G.flats-n*5,0,100);advance(90);G.energy=clamp(G.energy-6,0,100);
       const box=Math.random()<.12?ri(25,60):0;G.cash+=box;
       waterfront((n?`You pulled ${n} pieces of scrap from the mud.`:'The flats have been picked clean.')+(box?` Something glints under the silt: a strongbox with ${money(box)} in it.`:''))}},

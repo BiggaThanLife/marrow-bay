@@ -28,9 +28,9 @@ function tideHud(){
   if(G&&(!daySum||daySum.g!==G))daySum={g:G,cash:G.cash,day:day()};
   const i=tideInfo(),el=$('#h-tide');if(!el)return;
   const mins=Math.max(1,Math.round(i.to)),tm=mins>=60?Math.floor(mins/60)+'h'+(mins%60?String(mins%60).padStart(2,'0'):''):mins+'m';
-  const html=`<span class="tarr ${i.rising?'up':'dn'}">${i.rising?'\u25B2':'\u25BC'}</span><span class="tbar"><i style="width:${Math.round((i.v+1)*50)}%"></i></span><small>${i.rising?'high':'low'} ${tm}</small>`;
+  const html=`<span class="tarr ${i.rising?'up':'dn'}">${i.rising?'\u25B2':'\u25BC'}</span><span class="tbar"><i style="width:${clamp(Math.round((i.v/tideAmp()+1)*50),0,100)}%"></i></span><small>${i.rising?'high':'low'} ${tm}${tideCycle()?' · '+tideCycle():''}</small>`;
   if(html!==tideHtml){tideHtml=html;el.innerHTML=html}
-  el.title='Tide '+tideName()+', '+(i.rising?'rising':'falling');
+  el.title='Tide '+tideName()+', '+(i.rising?'rising':'falling')+(tideCycle()?', '+tideCycle()+' tide':'');
   if(tideLast.g!==G){tideLast={g:G,r:i.rising};return}
   if(tideLast.r!==i.rising){tideLast.r=i.rising;notify(i.rising?'The tide has turned and is rising.':'The tide has turned and is falling.');sfx('news')}
 }

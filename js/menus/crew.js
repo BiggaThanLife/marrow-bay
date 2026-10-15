@@ -48,7 +48,7 @@ function heistPlanMenu(msg){
   const ready=H.intel>=30&&!miss.length&&gearOk;
   ui(`<h2>${esc(h.n)}</h2><p class="muted">${esc(h.blurb)}</p>
     <p>${ck(H.intel>=30)} Case ${esc(poi.name)}: ${H.intel}% intel<br>${gearRows}${ck(!miss.length)} Crew: ${miss.length?'need a '+miss.map(r=>CREW_ROLES[r].n.toLowerCase()).join(' and a '):'ready'}</p>
-    <p class="small">Right now the odds look ${oddsWord(heistOdds())}. More intel, the right people and low heat all help. Jobs happen at night.</p>${msgP(msg)}`,[
+    ${h.tide?`<p class="small">${tideName()===h.tide?'The tide is right.':'The tide is wrong.'} This one goes much better at ${h.tide} tide, when the lower stacks are dry and the patrols stay up on the quay.</p>`:''}<p class="small">Right now the odds look ${oddsWord(heistOdds())}. More intel, the right people and low heat all help. Jobs happen at night.</p>${msgP(msg)}`,[
     {label:`Case ${poi.name}`,sub:'Walk there and watch for an hour. A lookout learns more.',off:!!G.mission||H.intel>=100,cls:'',fn:()=>{startMission({type:'case',title:`Case ${poi.name}`,stops:[h.poi],i:0,deadline:G.t+600,reward:0})}},
     ...h.gear.filter(g=>!g.inv&&!H.gear[g.id]).map(g=>({label:`Get ${g.n.toLowerCase()}`,sub:`${money(g.p)}, dirty cash first. ${HEIST_GEAR_SHOP}`,off:(G.dirty||0)+G.cash<g.p,cls:'',fn:()=>heistPlanMenu(heistBuy(g.id))})),
     ...(miss.length?[{label:'Recruit crew',sub:`Missing: ${miss.map(r=>CREW_ROLES[r].n).join(', ')}`,cls:'',fn:()=>crewRecruit()}]:[]),

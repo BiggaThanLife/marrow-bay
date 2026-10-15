@@ -7,6 +7,12 @@ function drawTile(tx,ty,now){
   if(t===T.WATER){
     if(!drawGround('water',tx,ty,sx,sy,d)){cx.fillStyle='#2c5b78';cx.fillRect(sx,sy,TS,TS);
     if(Math.sin(now*.002+tx*.9+ty*.7)>.5){cx.fillStyle='#4f86a6';cx.fillRect(sx+3,sy+6,8,1)}}
+  }else if(t===T.FLAT){
+    /* the low-tide walkway: exposed sand and mud with wet shine and a few shells, drawn from the tile hash so it never flickers */
+    cx.fillStyle=h%3?'#8a7656':'#7d6a4c';cx.fillRect(sx,sy,TS,TS);
+    cx.fillStyle='rgba(60,45,30,.35)';cx.fillRect(sx,sy+10,TS,6);
+    cx.fillStyle='rgba(150,190,205,.35)';cx.fillRect(sx+2+(h>>2)%6,sy+3+(h>>4)%4,5,2);cx.fillRect(sx+8+(h>>3)%4,sy+11,4,1);
+    cx.fillStyle='rgba(235,225,200,.7)';if(h%2)cx.fillRect(sx+3+(h>>5)%9,sy+7+(h>>6)%5,2,1);
   }else if(t===T.ROAD){
     if(!drawGround('road',tx,ty,sx,sy,d)){cx.fillStyle=ROADC[d];cx.fillRect(sx,sy,TS,TS)}
     const v=XS.includes(tx),hz=HY.includes(ty)||((ty===17||ty===27)&&tx<10);

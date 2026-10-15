@@ -12,7 +12,7 @@
 const f = document.getElementById('game');
 f.addEventListener('load', async () => {
   const win = f.contentWindow, errs = [], doc = win.document, stats = {};
-  const api = win.eval(`({get G(){return G},BG,NPC,POIS,T,get map(){return map},W,H,start,closeMenu,popClear,tick,assign,waterfront,tideV,tideName,ri})`);
+  const api = win.eval(`({get G(){return G},BG,NPC,POIS,T,get map(){return map},W,H,start,closeMenu,popClear,tick,assign,waterfront,tideV,tideName,ri,tideAmp,tideCycle,applyFlatsWalk,tideTrade,bfs,pass,bizTraffic})`);
   const G = () => api.G, text = () => doc.getElementById('sheet').innerText, btn = rx => [...doc.querySelectorAll('#sheet #actions button')].find(x => rx.test(x.innerText));
   const when = (cond, from = 0) => { for (let m = from; m < from + 3 * 1440; m += 5) if (cond(m)) return m; return null };
   const hi = m => api.tideV(m) > .5, lo = m => api.tideV(m) < -.5, mid = m => Math.abs(api.tideV(m)) < .2;
@@ -41,6 +41,17 @@ f.addEventListener('load', async () => {
     // a strongbox sometimes turns up in the mud, never otherwise
     G().t = when(lo); G().energy = 90; api.waterfront(); const cash0 = G().cash, orig = win.Math.random; win.Math.random = () => .01; const sb = btn(/Scavenge the mudflats/); if (!sb || sb.disabled) errs.push('scavenge button missing at low tide'); else { sb.click(); if (!/strongbox/.test(text()) || G().cash <= cash0) errs.push('no strongbox on a lucky roll') }
     win.Math.random = () => .99; G().t = when(lo); G().energy = 90; api.waterfront(); const c1 = G().cash; btn(/Scavenge the mudflats/).click(); if (/strongbox/.test(text()) || G().cash !== c1) errs.push('strongbox on an unlucky roll'); win.Math.random = orig;
+    // spring and neap: a 7 day swell on the height, spring tides run past 1.1, neap under 0.9
+    const amps = []; for (let d = 0; d < 14; d++) amps.push(api.tideAmp(d * 1440)); if (Math.max(...amps) < 1.18 || Math.min(...amps) > .82) errs.push('no spring/neap swing'); stats.cycle = [api.tideCycle(0), api.tideCycle(3.5 * 1440)];
+    if (api.tideCycle(0) !== 'spring' || api.tideCycle(3.5 * 1440) !== 'neap') errs.push('cycle labels wrong');
+    // the low-tide walkway: closed at high tide, open at low, reachable by pathing, and the player is moved off it when the tide returns
+    const lowT = when(lo), hiT = when(hi, lowT); G().t = hiT; api.applyFlatsWalk(); if (api.map[33][42] !== api.T.WATER || api.pass(42, 33)) errs.push('walkway open at high tide');
+    G().t = lowT; api.applyFlatsWalk(); if (api.map[33][42] !== api.T.FLAT || !api.pass(42, 33)) errs.push('walkway closed at low tide');
+    const route = api.bfs(40, 33, 45, 33); if (!route || !route.length) errs.push('no path across the walkway at low tide'); stats.route = route && route.length;
+    G().p.x = 42; G().p.y = 33; G().p.path = []; G().t = hiT; api.applyFlatsWalk(); if (api.map[33][42] !== api.T.WATER) errs.push('walkway not closed'); if (!(G().p.x === 40 || G().p.x === 45) || api.map[Math.round(G().p.y)][Math.round(G().p.x)] === api.T.WATER) errs.push('player left on the water');
+    if (api.bfs(40, 33, 45, 33) && api.bfs(40, 33, 45, 33).some(q => q[1] === 33 && q[0] >= 41 && q[0] <= 44)) errs.push('path across closed walkway');
+    // trade: Dockside never moves more than 15%, other districts are untouched, and the menu line exists
+    for (let d = 0; d < 14; d++) { const m = api.tideTrade('Dockside', d * 1440).mul; if (m < .85 || m > 1.15) errs.push('tide trade out of range ' + m) } if (api.tideTrade('Grid').mul !== 1) errs.push('Grid affected by tide');
     // old saves are unaffected: nothing new is saved
     win.eval('G=JSON.parse(JSON.stringify(G));migrate()'); if (!G()) errs.push('save broke');
   } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }

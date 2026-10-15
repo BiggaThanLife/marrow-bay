@@ -7,6 +7,26 @@ function setBridge(closed){
     fix(G.p);G.p.path=[];NPCS.forEach(n=>{fix(n);n.path=[]});
   }
 }
+/* The low-tide walkway: the river mouth at the south end of the docks (x 41 to 44, y 33) dries out when the tide is well down, joining the two quays. Opens below -0.5, closes above -0.3, so spring tides keep it open longer. Derived from the tide each call, nothing is saved. */
+const FLAT_X=[41,42,43,44],FLAT_Y=33;
+let flatsOpen=false,flatsWarned=false;
+const onFlatBand=e=>e.x>=40.6&&e.x<=44.4&&Math.abs(e.y-FLAT_Y)<1.6;
+function applyFlatsWalk(){
+  const v=tideV(),want=flatsOpen?v<-.3:v<-.5;
+  if(want!==flatsOpen){
+    flatsOpen=want;FLAT_X.forEach(x=>{map[FLAT_Y][x]=want?T.FLAT:T.WATER});
+    if(want&&G&&Math.hypot(G.p.x-42.5,G.p.y-FLAT_Y)<12)notify('The tide is out. A walkway of mud and sand shows across the river mouth.');
+    if(!want&&G&&G.p.path&&G.p.path.some(q=>q[1]===FLAT_Y&&q[0]>=41&&q[0]<=44)){G.p.path=[];G.p.onArrive=null}
+    flatsWarned=false;
+  }
+  if(!G)return;
+  if(flatsOpen&&v>-.4&&!flatsWarned&&onFlatBand(G.p)){flatsWarned=true;notify('The water is creeping back over the flats. Move!')}
+  if(!flatsOpen){
+    const fix=e=>{if(onFlatBand(e)){e.x=e.x<42.5?40:45;e.y=FLAT_Y;e.path=[]}};
+    if(onFlatBand(G.p)){fix(G.p);G.p.onArrive=null;notify('The tide comes in and you wade back to dry ground.')}
+    NPCS.forEach(fix);
+  }
+}
 function applyBridge(c){if(c===bridgeOn)return;bridgeOn=c;setBridge(c)}
 function recomputeMods(){
   const m={traffic:{},sell:1,crops:1,meal:1,fish:1,drain:1,vspeed:1,flood:[],tram:false,closed:[],cops:false,heist:0,bills:1,growth:0,yield:1,bridge:false,busk:1,names:{}};
@@ -46,7 +66,9 @@ function startEvent(t){
 function rollEvent(){
   if(G.evs.length>=3||Math.random()>.55)return;
   const k=1+day()/60;
-  const pool=EVT.filter(t=>!G.evs.some(e=>e.id===t.id)).map(t=>({t,w:t.w*(t.sev>=4?k:1)}));
+  /* the sea only floods the city on a spring tide: much likelier then (most of all with high water around dawn), rare otherwise */
+  const seaMul=tideCycle()==='spring'?(tideV(G.t+180)>.45?6:3):.15;
+  const pool=EVT.filter(t=>!G.evs.some(e=>e.id===t.id)).map(t=>({t,w:t.w*(t.sev>=4?k:1)*(t.id==='surge'||t.id==='flood'?seaMul:1)}));
   const tot=pool.reduce((s,x)=>s+x.w,0);let r=Math.random()*tot;
   for(const x of pool){r-=x.w;if(r<=0){startEvent(x.t);return}}
 }

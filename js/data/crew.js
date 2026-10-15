@@ -33,7 +33,7 @@ const HEISTS=[
    blurb:'Every Friday an armoured van brings wages to the Foundry. It stops for exactly one red light.',
    twists:[{t:'The van takes a different street tonight.',a:[{l:'Chase it down',role:'driver',k:.08},{l:'Cut across on foot',k:-.08,pay:1.1},{l:'Let it go',abort:true}]},
            {t:'The guard inside has a second guard inside him, emotionally. He will not open up.',a:[{l:'Lean on the door',role:'muscle',k:.08},{l:'Take the rear lockbox only',k:.12,pay:.6},{l:'Walk away',abort:true}]}]},
-  {id:'yard',n:'Harbor Freight container yard',poi:'dock',roles:['look','lock'],gear:[{id:'cutters',n:'Bolt cutters',p:40}],pay:[450,700],loot:[4,7],heat:2.5,unlock:0,
+  {id:'yard',n:'Harbor Freight container yard',poi:'dock',roles:['look','lock'],gear:[{id:'cutters',n:'Bolt cutters',p:40}],pay:[450,700],loot:[4,7],heat:2.5,unlock:0,tide:'low',
    blurb:'Container 4471 is listed as "garden gnomes." Nobody guards garden gnomes this hard.',
    twists:[{t:'A night patrol walks the stacks with a torch.',a:[{l:'Wait in the shadows',role:'look',k:.1},{l:'Rush the container',k:-.06,pay:1.15},{l:'Slip out',abort:true}]},
            {t:'The padlock is new, and it is very proud of itself.',a:[{l:'Pick it slowly',role:'lock',k:.1},{l:'Cut the hinges instead',k:-.04},{l:'Leave it',abort:true}]}]},

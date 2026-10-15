@@ -149,6 +149,7 @@ function heistOdds(){
   h.roles.forEach(r=>{o+=Math.min(3,crewSkill(r))*.035});
   o+=(G.mod&&G.mod.heist||0)+(G.fx.kit?.04:0);
   o-=G.heat*.05+(G.notor||0)/400+flackBand()*.04;
+  if(h.tide){const tn=tideName();o+=tn===h.tide?.14:(tn==='high'||tn==='low')?-.1:0}
   return clamp(o,.05,.92);
 }
 /* resolve a job. choice is one of the twist's answers. Returns {ok, text} */
