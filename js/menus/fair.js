@@ -13,8 +13,8 @@ function fairContest(poi,n){
   G.cash-=10;G.inv.crops-=3;advance(90);G.flags.fairYear=Math.floor((day()-1)/120);
   const score=40+Math.random()*40+G.rep.Greenbelt/4+Math.min(G.inv.crops,10)*2+(has('rural')?10:0)+(fact('coop_owned')?5:0)+(fact('greenbelt_sold')?-5:0);
   let m;
-  if(score>=85){G.cash+=150;G.rep.Greenbelt=clamp(G.rep.Greenbelt+6,-100,100);G.fairWins=(G.fairWins||0)+1;m='First place. A ribbon, $150, and the goat gives you a long look of respect.'}
-  else if(score>=65){G.cash+=40;G.rep.Greenbelt=clamp(G.rep.Greenbelt+2,-100,100);m='Second place. A smaller ribbon and $40.'}
+  if(score>=85){G.cash+=150;G.rep.Greenbelt=clamp(G.rep.Greenbelt+6,-100,100);G.fairWins=(G.fairWins||0)+1;logRibbon('first');m='First place. A ribbon, $150, and the goat gives you a long look of respect.'}
+  else if(score>=65){G.cash+=40;G.rep.Greenbelt=clamp(G.rep.Greenbelt+2,-100,100);logRibbon('second');m='Second place. A smaller ribbon and $40.'}
   else m='Not placed. The judge says your crops have "character."';
   MENUS.barn(poi,n,m);
 }

@@ -16,7 +16,7 @@ function expansionMenu(biz,msg){
     {label:'Back',cls:'quiet',fn:()=>bizMenu(biz)}]);
 }
 /* ----- NPC shops ----- */
-function shopPrice(id,n){return Math.round(SHOP_DEFS[id].price*(tier(att(n))>=3?.9:1))}
+function shopPrice(id,n){return Math.round(SHOP_DEFS[id].price*(tier(att(n))>=3?.9:1)*(G.jobs&&jobRank(id)>=4?.85:1))}
 function shopBtn(poi,n){
   const def=SHOP_DEFS[poi.id];if(!def||!n)return[];
   if(shopOwned(poi.id))return[{label:'Your shop',sub:`Takings ${money(G.shops[poi.id].till)}. Level ${G.shops[poi.id].level}.`,cls:'primary',fn:()=>shopMenu(poi,n)}];

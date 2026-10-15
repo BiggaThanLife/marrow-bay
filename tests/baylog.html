@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay Bay Log and gig ranks test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Bay Log and gig ranks</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], stats = {};
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,gig,jobRank,jobPayMul,logFish,logDish,logCats,logSync,logMenu,careerMenu,MENUS,POIS,migrate,shopPrice,NPC,FISH_SPECIES})`);
+  const G = () => api.G;
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true;
+    if (!G().log || !G().jobs) errs.push('defaults missing');
+    api.logFish(200, true); if (G().log.fish && Object.keys(G().log.fish).length < 8) errs.push('few species ' + Object.keys(G().log.fish).length);
+    ['meals','stew','salad','soup','pie','smoked'].forEach(k => api.logDish(k));
+    if (!G().log.done.dishes) errs.push('dishes not completed');
+    // ranks
+    G().energy = 100; const c0 = G().cash;
+    const m = api.gig(null, { hrs: 1, base: 100, rep: 'Grid', label: 'x', job: 'workshop' }); stats.first = m;
+    for (let i = 0; i < 40; i++) { G().energy = 100; api.gig(null, { hrs: 1, base: 10, rep: 'Grid', label: 'x', job: 'diner' }) }
+    stats.rank = api.jobRank('diner'); if (stats.rank !== 4) errs.push('rank ' + stats.rank);
+    if (Math.abs(api.jobPayMul('diner') - 1.4) > 1e-9) errs.push('pay mul');
+    if (api.shopPrice('diner', api.NPC[Object.keys(api.NPC)[0]]) >= 2000) errs.push('no buyout perk');
+    G().energy = 100; G().cash = 0; api.gig(null, { hrs: 1, base: 100, rep: 'Grid', label: 'x', job: 'diner' }); if (G().cash !== 140) errs.push('rank pay ' + G().cash);
+    G().jobs = undefined; G().log = undefined; win.eval('migrate()'); if (!G().log || !G().jobs) errs.push('migrate defaults');
+    api.careerMenu(); api.logMenu();
+    if (!/Bay Log/.test(win.document.getElementById('sheet').innerText)) errs.push('log menu');
+    stats.cats = api.logCats().map(c => c.id + ':' + c.have + '/' + c.total).join(' ');
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  const v = document.getElementById('verdict'); v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.join('\n') + '\n' + JSON.stringify(stats); window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

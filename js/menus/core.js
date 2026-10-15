@@ -14,17 +14,19 @@ function openPOI(poi){
   if(poi.id!==G.home&&!isOpen(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>Closed. Opens at ${fmtHr(OPEN[poi.id][0])}.</p>`,[leaveBtn]);
   if(n&&poi.id!==G.home&&tier(att(n))===0&&!OPEN_TO_ALL.includes(poi.id))return refuse(poi,n);
   if(poi.id!==G.home&&lawLocked(poi.id))return ui(`<h2>${esc(poi.name)}</h2><p>${n?esc(shortName(n)):'The doorman'} will not see you. Your name is on a list.</p><p class="muted">The records office at City Hall can help, for a price or some honest work.</p>`,[leaveBtn]);
-  engageAdd(poi.d,1);
+  engageAdd(poi.d,1);logSeen(poi);
   if(arcHook(poi))return;
   (MENUS[poi.id]||info)(poi,n);
 }
 function info(poi){ui(`<h2>${esc(poi.name)}</h2><p>Residents live here. Nobody answers the door.</p>`,[leaveBtn])}
-function gig(n,{hrs,base,mult=1,rep,label}){
-  if(G.energy<hrs*7)return `You are too tired for ${hrs} hours of work.`;
+function gig(n,{hrs,base,mult=1,rep,label,job}){
+  const ef=job&&jobRank(job)>=4?.75:1;
+  if(G.energy<hrs*7*ef)return `You are too tired for ${hrs} hours of work.`;
   engageAdd(rep,2);
-  const pay=Math.round(base*mult*(G.fx.gloves?1.1:1)*(n?payF(n):1)*(G.quirk==='iron-stomach'?.95:1));
-  G.cash+=pay;advance(hrs*60);G.energy=clamp(G.energy-hrs*4,0,100);
+  const pay=Math.round(base*mult*(job?jobPayMul(job):1)*(G.fx.gloves?1.1:1)*(n?payF(n):1)*(G.quirk==='iron-stomach'?.95:1));
+  G.cash+=pay;advance(hrs*60);G.energy=clamp(G.energy-hrs*4*ef,0,100);
   G.rep[rep]=clamp(G.rep[rep]+1,-100,100);
+  if(job)jobDone(job);
   return `You worked ${label} for ${hrs} hours and earned ${money(pay)}.`;
 }
 function sellScreen(mult,title,back,msg){

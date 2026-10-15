@@ -16,19 +16,21 @@ MENUS.market=(poi,n,msg)=>{
 };
 MENUS.diner=(poi,n,msg)=>{
   const price=Math.round(mealPrice()*buyF(n)*shopMul('diner',.7));
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} is behind the grill.</p>${msgP(msg)}`,[
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} is behind the grill.</p>${jobLine('diner')}${msgP(msg)}`,[
     {label:'Order a meal',sub:`${money(price)}. Restores 45 fullness.`,off:G.cash<price,fn:()=>{G.cash-=price;G.hunger=clamp(G.hunger+45,0,100);G.demand+=1;advance(30);MENUS.diner(poi,n,'You eat a hot meal.')}},
     {label:'Takeaway meals',sub:`${money(price)} each. Choose how many for your bag.`,off:G.cash<price,cls:'',fn:()=>qtyMenu({title:'Takeaway meals',intro:'Packed in paper. Eat them later.',price,max:30,mode:'buy',onConfirm:q=>{G.cash-=Math.round(price*q);G.inv.meals+=q;G.demand+=q*.5;advance(10);return `You take ${q} meal${q>1?'s':''} away.`},back:m=>MENUS.diner(poi,n,m)})},
     ...(POIS.fastfood?[]:[{label:'The fast counter',sub:'Fries, burgers and a combo. Cheap and quick.',cls:'',fn:()=>fastFoodMenu(poi,n,()=>MENUS.diner(poi,n))}]),
-    {label:'Work a kitchen shift',sub:`4 hours, about ${money(22*payF(n))}`,need:28,cls:'',fn:()=>MENUS.diner(poi,n,gig(n,{hrs:4,base:22,rep:'Grid',label:'the grill'}))},
+    {label:'Work a kitchen shift',sub:`4 hours, about ${money(22*payF(n)*jobPayMul('diner'))}`,need:28,cls:'',fn:()=>MENUS.diner(poi,n,gig(n,{hrs:4,base:22,rep:'Grid',label:'the grill',job:'diner'}))},
+    ...jobExtra('diner','Close the kitchen',`6 hours, about ${money(38*payF(n)*jobPayMul('diner'))}.`,{hrs:6,base:38,rep:'Grid',label:'the grill, closing up'},m=>MENUS.diner(poi,n,m),n),
     ...shopBtn(poi,n),leaveBtn]);
 };
 MENUS.estate=(poi,n,msg)=>{
   if(has('known-thief'))return ui(`<h2>${esc(poi.name)}</h2><p>The steward turns you away. Word of the theft reached the terraces.</p>`,[leaveBtn]);
   const gala=G.ev&&G.ev.id==='gala';
   const mult=(has('rural')?1.3:1)*(has('disgraced')?.7:1)*(gala?1.5:1)*(G.fx.commons?1.2:1);
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Lady Ashgrove's gardens need constant tending.</p>${msgP(msg)}`,[
-    {label:'Tend the gardens',sub:`4 hours, about ${money(34*mult*payF(n))}`,need:28,fn:()=>MENUS.estate(poi,n,gig(n,{hrs:4,base:34,mult,rep:'Highline',label:'in the gardens'}))},
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Lady Ashgrove's gardens need constant tending.</p>${jobLine('estate')}${msgP(msg)}`,[
+    {label:'Tend the gardens',sub:`4 hours, about ${money(34*mult*payF(n)*jobPayMul('estate'))}`,need:28,fn:()=>MENUS.estate(poi,n,gig(n,{hrs:4,base:34,mult,rep:'Highline',label:'in the gardens',job:'estate'}))},
+    ...jobExtra('estate','Prune the hedge maze',`6 hours, about ${money(56*mult*payF(n)*jobPayMul('estate'))}.`,{hrs:6,base:56,mult,rep:'Highline',label:'in the hedge maze'},m=>MENUS.estate(poi,n,m),n),
     leaveBtn]);
 };
 function craftTrinket(){G.inv.scrap-=3;G.inv.trinkets++;advance(120);G.energy=clamp(G.energy-6,0,100)}
@@ -39,9 +41,10 @@ function craftTrinkets(back){
     run:n=>{G.inv.scrap-=3*n;G.inv.trinkets+=n;advance(bulkMin(120,n));G.energy=clamp(G.energy-6*n,0,100);return `You made ${n} trinket${n>1?'s':''}.`},back});
 }
 MENUS.workshop=(poi,n,msg)=>{
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Benches, tools, and the smell of solder.</p>${msgP(msg)}`,[
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">Benches, tools, and the smell of solder.</p>${jobLine('workshop')}${msgP(msg)}`,[
     {label:'Craft trinkets',sub:`3 scrap and 2 hours each. You have ${G.inv.scrap}. Choose how many.`,off:G.inv.scrap<3,fn:()=>craftTrinkets(m=>MENUS.workshop(poi,n,m))},
-    {label:'Repair shift',sub:'3 hours, about $18',need:21,cls:'',fn:()=>MENUS.workshop(poi,n,gig(null,{hrs:3,base:18,mult:(has('creative')?1.2:1)*(G.fx.toolkit?1.2:1),rep:'Grid',label:'repairs'}))},
+    {label:'Repair shift',sub:`3 hours, about ${money(18*jobPayMul('workshop'))}`,need:21,cls:'',fn:()=>MENUS.workshop(poi,n,gig(null,{hrs:3,base:18,mult:(has('creative')?1.2:1)*(G.fx.toolkit?1.2:1),rep:'Grid',label:'repairs',job:'workshop'}))},
+    ...jobExtra('workshop','Rush order',`5 hours, about ${money(34*jobPayMul('workshop'))}.`,{hrs:5,base:34,mult:(has('creative')?1.2:1)*(G.fx.toolkit?1.2:1),rep:'Grid',label:'a rush order'},m=>MENUS.workshop(poi,n,m)),
     {label:'Crafting bench',sub:'Parts, jammers, and vehicle upgrades',cls:'',fn:()=>craftMenu(()=>MENUS.workshop(poi,n))},
     leaveBtn]);
 };

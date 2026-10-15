@@ -24,10 +24,13 @@ const CAREERS=[
   text:'The trading desk goes quiet when you arrive and loud when you leave. Cordelia sends over a coffee. You do not drink it.'},
  {id:'nuisance',n:'Professional Nuisance',need:'Get blocked five times on Marrowlist.',test:()=>!!G.cl&&(G.cl.blocks||0)>=5,
   text:'Five sellers have blocked you, some of them more than once. The Bay-Watch Feed has a pinned post about you. It has more likes than anything else on there.'},
+ {id:'foreman',n:'Foreman\u2019s Pick',need:'Reach top rank in any gig: dock, diner, estate or workshop.',test:()=>Object.keys(JOB_NAMES).some(j=>jobRank(j)>=4),
+  text:'Somebody chalks your name on the roster board, in the good chalk. Nobody asks you to fetch the ladder any more.'},
  {id:'ghost',n:'Ghost in the Machine',need:'Settle HARBOR\u2019s fate: free it, hide it, merge with it, or tear FLACK out.',test:()=>fact('harbor_ghost')||fact('harbor_free')||fact('harbor_merged')||fact('flack_removed'),
   text:'Somewhere in the walls of Marrow Bay a very polite machine remembers your name and has agreed, mostly, to keep it to itself.'}
 ];
 function careerDaily(){
+  logSync();
   CAREERS.forEach(c=>{
     if(G.titles.some(t=>t.id===c.id)||!c.test())return;
     G.titles.push({id:c.id,day:day()});
@@ -40,5 +43,5 @@ function careerMenu(msg){
   ui(`<h2>Career</h2><p class="muted">Net worth ${money(netWorth())}. Titles are milestones. The story never stops.</p>${msgP(msg)}
     ${got.length?'<h2>Earned</h2>'+got.map(c=>`<p class="small"><b>${esc(c.n)}</b> (day ${G.titles.find(t=>t.id===c.id).day}): ${esc(c.text)}</p>`).join(''):'<p class="muted">No titles yet.</p>'}
     <h2>Ahead</h2>${CAREERS.filter(c=>!got.includes(c)).map(c=>`<p class="small"><b>${esc(c.n)}</b>: ${esc(c.need)}</p>`).join('')||'<p class="muted small">You have earned every title.</p>'}`,
-    [{label:'Back',cls:'quiet',fn:()=>phone()},leaveBtn]);
+    [{label:'Bay Log',sub:'Fish, dishes, friends, places, ribbons',cls:'',fn:()=>logMenu()},{label:'Back',cls:'quiet',fn:()=>phone()},leaveBtn]);
 }
