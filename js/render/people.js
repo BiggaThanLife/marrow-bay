@@ -44,7 +44,7 @@ function drawNpc(c,px,py,l,col,sw,headOnly){
 }
 const vehColor=(k,def)=>(G&&G.veh&&G.veh.paint&&G.veh.paint[k])||def;
 function shade(hex,f){const n=parseInt(hex.slice(1),16),r=Math.round((n>>16&255)*f),g=Math.round((n>>8&255)*f),b=Math.round((n&255)*f);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1)}
-function drawVeh(k,x,y,now,mv){
+function drawVeh(k,x,y,now,mv,face){
   const px=Math.round(x*TS+8-camX),py=Math.round(y*TS+14-camY),sp=mv?Math.floor(now/90)%2:0;
   if(k==='bike'){
     cx.lineWidth=2;cx.strokeStyle='#f2f2f2';cx.beginPath();cx.arc(px-5,py-2,3,0,7);cx.stroke();cx.beginPath();cx.arc(px+5,py-2,3,0,7);cx.stroke();
@@ -56,6 +56,7 @@ function drawVeh(k,x,y,now,mv){
     cx.fillStyle='#1c1c1c';cx.fillRect(px-6,py-2,3,3);cx.fillRect(px+3,py-2,3,3);
   }else{
     const c=G&&G.veh&&G.veh.paint&&G.veh.paint[k]?[G.veh.paint[k],shade(G.veh.paint[k],.75)]:k==='coupe'?['#d04030','#a02a20']:['#3a7ad0','#2a5aa0'];
+    if(vehSpriteReady(k)){drawVehSprite('sedan_by_paint',px,py,face||1,sp,vehPaintRow(G&&G.veh&&G.veh.paint&&G.veh.paint[k]),48,32,24,29);return}
     if(RS>=2){drawCarHD(px,py,k,c,sp);return}
     cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(px-9,py,19,2);
     cx.fillStyle=c[0];cx.fillRect(px-9,py-7,18,6);cx.fillStyle=c[1];cx.fillRect(px-5,py-11,10,5);

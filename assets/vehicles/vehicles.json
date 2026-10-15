@@ -1,0 +1,100 @@
+{
+ "note": "Pixels are half map units: draw at half size. Columns: right f0, right f1, left f0, left f1.",
+ "paints": [
+  "cherry",
+  "sky",
+  "lemon",
+  "mint",
+  "plum",
+  "tangerine",
+  "pearl",
+  "midnight"
+ ],
+ "sheets": {
+  "bike_by_paint.png": {
+   "frame": [
+    32,
+    24
+   ],
+   "rows": "one per paint, in paints order",
+   "anchor": [
+    16,
+    21
+   ]
+  },
+  "scooter_by_paint.png": {
+   "frame": [
+    32,
+    24
+   ],
+   "rows": "one per paint, in paints order",
+   "anchor": [
+    16,
+    21
+   ]
+  },
+  "sedan_by_paint.png": {
+   "frame": [
+    48,
+    32
+   ],
+   "rows": "one per paint, in paints order",
+   "anchor": [
+    24,
+    29
+   ]
+  },
+  "coupe_by_paint.png": {
+   "frame": [
+    48,
+    32
+   ],
+   "rows": "one per paint, in paints order",
+   "anchor": [
+    24,
+    29
+   ]
+  },
+  "taxi.png": {
+   "frame": [
+    48,
+    32
+   ],
+   "anchor": [
+    24,
+    29
+   ]
+  },
+  "police.png": {
+   "frame": [
+    48,
+    32
+   ],
+   "anchor": [
+    24,
+    29
+   ]
+  },
+  "van.png": {
+   "frame": [
+    48,
+    32
+   ],
+   "anchor": [
+    24,
+    29
+   ]
+  },
+  "tram.png": {
+   "frame": [
+    128,
+    48
+   ],
+   "anchor": [
+    64,
+    45
+   ],
+   "note": "symmetrical, so it reads the same both ways"
+  }
+ }
+}

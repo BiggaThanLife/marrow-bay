@@ -40,8 +40,12 @@ function drawWorld(now){
       if(a==='bike'||a==='scooter')drawRide(a,G.p.x,G.p.y,now,mv);
       else if(a==='sedan'||a==='coupe'){
         const mx=Math.round(G.p.x*TS+8-camX);
-        cx.save();cx.translate(mx,0);cx.scale(pFace,1);cx.translate(-mx,0);
-        drawVeh(a,G.p.x,G.p.y,now,mv);person(G.p.x,G.p.y-.15,'#2f6fb3',true,mv,now,true);cx.restore();
+        const spr=vehSpriteReady(a); /* sprite sheets carry their own left and right frames, so only the driver is mirrored */
+        if(spr)drawVeh(a,G.p.x,G.p.y,now,mv,pFace);
+        cx.save();
+        if(spr){const my=Math.round(G.p.y*TS+14-camY);cx.beginPath();cx.rect(mx-14,my-12,28,6);cx.clip()} /* sprite roof is lower: show the driver's head and shoulders in the window only */
+        cx.translate(mx,0);cx.scale(pFace,1);cx.translate(-mx,0);
+        if(!spr)drawVeh(a,G.p.x,G.p.y,now,mv);person(G.p.x,G.p.y-.15+(spr?.42:0),'#2f6fb3',true,mv,now,true);cx.restore();
       }else person(G.p.x,G.p.y,'#2f6fb3',true,mv,now);
       drawFishing(now);drawFlats(now);
     }});
