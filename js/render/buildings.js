@@ -250,21 +250,29 @@ function drawBlockDepth(b,lit,now){
   const sx=b.x*TS-camX,sy=b.y*TS-camY,w=4*TS,hh=4*TS;
   const biz=G&&!b.poi?bizOf(b.key):null,bt=biz&&biz.type?BT[biz.type]:null,c=bt?bt.col:COL[b.kind];
   const key=bKey(b),s=BSTYLE[key]||{roof:'flat',wall:'plaster',win:'std'},hs=hash(b.x,b.y);
-  if(key==='barn')return drawBarnDepth(b,sx,sy,lit,now);
+  const spr=bldSpriteReady(key);
+  if(key==='barn'&&!spr)return drawBarnDepth(b,sx,sy,lit,now);
   const L=sx+2,ww=w-4,Rr=L+ww,top=sy+2,eave=sy+hh-22,base=sy+hh-2;
-  /* front wall */
-  bF(c[1],L,eave,ww,20);
-  bWall(s.wall,c,sx,eave,base,ww,L);
-  bF('rgba(255,255,255,.1)',L,eave+3,1,17);bF('rgba(0,0,0,.18)',Rr-4,eave,4,20);
-  bF('rgba(0,0,0,.3)',L,eave,ww,3);bF('rgba(0,0,0,.22)',L,base-2,ww,2);
-  bWindows(s.win,sx,sy,eave,base,lit||(G&&districtDayLit(b,hs)),c,hs);
-  if(G)districtBoards(b,biz,sx,sy,hs);
-  bDoor(s.door||'std',sx,sy,base,lit,c);
-  if(s.awn&&RS>=2)bAwningHD(c,sx,sy);else if(s.awn){const dx=sx+TS+3,dy=sy+52;for(let i=0;i<5;i++)bF(i%2?'#f4efe2':c[0],dx-4+i*4,dy-5,4,3);bF('rgba(0,0,0,.28)',dx-4,dy-2,20,1)}
-  /* roof */
-  bRoof(s.roof,s,sx,sy,L,ww,top,eave,c,hs);
-  if(RS>=2)bRoofHD(s.roof,sx,sy,L,ww,top,eave,c,hs);
-  bF('rgba(255,255,255,.18)',L,eave-3,ww,1);bF('rgba(0,0,0,.38)',L,eave-1,ww,1);bF('rgba(0,0,0,.18)',Rr-3,top,3,eave-top);bF('rgba(255,255,255,.12)',L,top,1,eave-top);
+  if(spr){
+    /* drawn sprite (sprites-bldg.js): walls, windows, door, awning, roof and landmark, day or night; the sign, boards and markers below still go on top */
+    drawBldSprite(key,sx,sy,night());
+    if(G)districtBoards(b,biz,sx,sy,hs);
+    if(key==='foundry')drawBldSmoke(sx,sy,now);
+  }else{
+    /* front wall */
+    bF(c[1],L,eave,ww,20);
+    bWall(s.wall,c,sx,eave,base,ww,L);
+    bF('rgba(255,255,255,.1)',L,eave+3,1,17);bF('rgba(0,0,0,.18)',Rr-4,eave,4,20);
+    bF('rgba(0,0,0,.3)',L,eave,ww,3);bF('rgba(0,0,0,.22)',L,base-2,ww,2);
+    bWindows(s.win,sx,sy,eave,base,lit||(G&&districtDayLit(b,hs)),c,hs);
+    if(G)districtBoards(b,biz,sx,sy,hs);
+    bDoor(s.door||'std',sx,sy,base,lit,c);
+    if(s.awn&&RS>=2)bAwningHD(c,sx,sy);else if(s.awn){const dx=sx+TS+3,dy=sy+52;for(let i=0;i<5;i++)bF(i%2?'#f4efe2':c[0],dx-4+i*4,dy-5,4,3);bF('rgba(0,0,0,.28)',dx-4,dy-2,20,1)}
+    /* roof */
+    bRoof(s.roof,s,sx,sy,L,ww,top,eave,c,hs);
+    if(RS>=2)bRoofHD(s.roof,sx,sy,L,ww,top,eave,c,hs);
+    bF('rgba(255,255,255,.18)',L,eave-3,ww,1);bF('rgba(0,0,0,.38)',L,eave-1,ww,1);bF('rgba(0,0,0,.18)',Rr-3,top,3,eave-top);bF('rgba(255,255,255,.12)',L,top,1,eave-top);
+  }
   /* the sign hangs on the eave */
   const label=b.poi?SIGN[b.kind]:bt?bt.sign:null,sy0=eave-14;
   cx.font='7px Silkscreen, monospace';cx.textAlign='center';
@@ -275,6 +283,6 @@ function drawBlockDepth(b,lit,now){
   }else if(biz&&!bt){bF('rgba(14,16,24,.7)',sx+8,sy0,w-16,12);cx.fillStyle='#ffd88a';cx.fillText('YOURS',sx+w/2,sy0+9)}
   cx.textAlign='left';
   /* the place's own landmark details */
-  bLandmark(key,{sx,sy,top,eave,base,lit,now,c,hs});
+  if(!spr)bLandmark(key,{sx,sy,top,eave,base,lit,now,c,hs});
   if(biz){bF('#2a3140',sx+w-10,sy-4,1,12);bF('#4fd1b5',sx+w-9,sy-4,6,4);bF('rgba(255,255,255,.3)',sx+w-9,sy-4,6,1)}
 }

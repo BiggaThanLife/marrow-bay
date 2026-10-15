@@ -1,0 +1,290 @@
+{
+ "size": [
+  128,
+  144
+ ],
+ "blockTop": 16,
+ "note": "Half map units: draw at 64x72 map units, top-left at (block x, block y - 8). Day and night sheets share the layout.",
+ "signBand": {
+  "x": 12,
+  "y": 72,
+  "w": 103,
+  "h": 24
+ },
+ "kinds": {
+  "bank": {
+   "x": 0,
+   "y": 0,
+   "roof": "flat",
+   "wall": "stone",
+   "win": "none",
+   "door": "double"
+  },
+  "estate": {
+   "x": 128,
+   "y": 0,
+   "roof": "slate",
+   "wall": "stone",
+   "win": "tall"
+  },
+  "club": {
+   "x": 256,
+   "y": 0,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "curtain",
+   "door": "double"
+  },
+  "flats": {
+   "x": 384,
+   "y": 0,
+   "roof": "pitched",
+   "wall": "brick",
+   "win": "small"
+  },
+  "rental": {
+   "x": 512,
+   "y": 0,
+   "roof": "pitched",
+   "wall": "brick",
+   "win": "small"
+  },
+  "realty": {
+   "x": 640,
+   "y": 0,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "listing",
+   "awn": 1
+  },
+  "corner": {
+   "x": 768,
+   "y": 0,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "shop",
+   "awn": 1
+  },
+  "fastfood": {
+   "x": 896,
+   "y": 0,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "strip",
+   "awn": 1
+  },
+  "market": {
+   "x": 0,
+   "y": 144,
+   "roof": "glass",
+   "wall": "plaster",
+   "win": "shop",
+   "awn": 1
+  },
+  "diner": {
+   "x": 128,
+   "y": 144,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "strip"
+  },
+  "studio": {
+   "x": 256,
+   "y": 144,
+   "roof": "saw",
+   "wall": "plaster",
+   "win": "tall"
+  },
+  "workshop": {
+   "x": 384,
+   "y": 144,
+   "roof": "metal",
+   "wall": "metal",
+   "win": "roll"
+  },
+  "cityhall": {
+   "x": 512,
+   "y": 144,
+   "roof": "flat",
+   "wall": "stone",
+   "win": "tall",
+   "door": "double"
+  },
+  "clinic": {
+   "x": 640,
+   "y": 144,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "blue"
+  },
+  "dock": {
+   "x": 768,
+   "y": 144,
+   "roof": "metal",
+   "wall": "metal",
+   "win": "std"
+  },
+  "bunk": {
+   "x": 896,
+   "y": 144,
+   "roof": "pitched",
+   "wall": "wood",
+   "win": "small"
+  },
+  "gull": {
+   "x": 0,
+   "y": 288,
+   "roof": "pitched",
+   "wall": "tudor",
+   "win": "std"
+  },
+  "casino": {
+   "x": 128,
+   "y": 288,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "none",
+   "door": "double"
+  },
+  "velvet": {
+   "x": 256,
+   "y": 288,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "curtain"
+  },
+  "pawn": {
+   "x": 384,
+   "y": 288,
+   "roof": "flat",
+   "wall": "brick",
+   "win": "barred"
+  },
+  "loft": {
+   "x": 512,
+   "y": 288,
+   "roof": "flat",
+   "wall": "brick",
+   "win": "tall"
+  },
+  "garage": {
+   "x": 640,
+   "y": 288,
+   "roof": "metal",
+   "wall": "metal",
+   "win": "roll"
+  },
+  "foundry": {
+   "x": 768,
+   "y": 288,
+   "roof": "metal",
+   "wall": "brick",
+   "win": "furnace"
+  },
+  "barber": {
+   "x": 896,
+   "y": 288,
+   "roof": "pitched",
+   "wall": "plaster",
+   "win": "shop",
+   "awn": 1
+  },
+  "tailor": {
+   "x": 0,
+   "y": 432,
+   "roof": "pitched",
+   "wall": "plaster",
+   "win": "shop",
+   "awn": 1
+  },
+  "prison": {
+   "x": 128,
+   "y": 432,
+   "roof": "flat",
+   "wall": "concrete",
+   "win": "slit",
+   "door": "steel"
+  },
+  "barn": {
+   "x": 256,
+   "y": 432,
+   "roof": "pitched",
+   "wall": "wood",
+   "win": "none",
+   "door": "barn"
+  },
+  "farmstead": {
+   "x": 384,
+   "y": 432,
+   "roof": "pitched",
+   "wall": "wood",
+   "win": "std"
+  },
+  "farm": {
+   "x": 512,
+   "y": 432,
+   "roof": "pitched",
+   "wall": "wood",
+   "win": "std"
+  },
+  "home": {
+   "x": 640,
+   "y": 432,
+   "roof": "pitched",
+   "wall": "plaster",
+   "win": "std"
+  },
+  "tower": {
+   "x": 768,
+   "y": 432,
+   "roof": "flat",
+   "wall": "glass",
+   "win": "grid"
+  },
+  "warehouse": {
+   "x": 896,
+   "y": 432,
+   "roof": "metal",
+   "wall": "metal",
+   "win": "roll"
+  },
+  "cafe": {
+   "x": 0,
+   "y": 576,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "shop",
+   "awn": 1
+  },
+  "bar": {
+   "x": 128,
+   "y": 576,
+   "roof": "flat",
+   "wall": "brick",
+   "win": "curtain"
+  },
+  "pies": {
+   "x": 256,
+   "y": 576,
+   "roof": "pitched",
+   "wall": "brick",
+   "win": "shop",
+   "awn": 1
+  },
+  "cages": {
+   "x": 384,
+   "y": 576,
+   "roof": "flat",
+   "wall": "concrete",
+   "win": "cage"
+  },
+  "wellness": {
+   "x": 512,
+   "y": 576,
+   "roof": "flat",
+   "wall": "plaster",
+   "win": "blue",
+   "awn": 1
+  }
+ }
+}
