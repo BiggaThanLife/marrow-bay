@@ -3,7 +3,8 @@
 function person(x,y,col,isP,moving,now,headOnly,look){
   const px=Math.round(x*TS+8-camX),py=Math.round(y*TS+14-camY);
   const sw=moving&&Math.floor(now/140)%2;
-  if(isP&&G&&G.look)return drawPlayer(cx,px,py,G.look,sw,headOnly,Math.floor(now/300)%2);
+  if(isP&&G&&G.look){pStep=moving?Math.floor(now/140):0;return drawPlayer(cx,px,py,G.look,sw,headOnly,Math.floor(now/300)%2)}
+  if(RS>=2&&look&&!isP&&!headOnly){const id=charIdOfLook(look);if(id&&drawCharNpc(cx,px,py,id,charDirFor(look,x,y,moving),moving,now))return}
   if(look&&!isP)return drawNpc(cx,px,py,look,col,sw,headOnly);
   if(RS>=2)return drawPersonHD(cx,px,py,{skin:'#e8c39e',hair:'#2b2118',style:0,col,sw,headOnly,collar:!!isP,marker:isP?Math.floor(now/300)%2:null});
   if(!headOnly){

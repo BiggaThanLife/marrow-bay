@@ -35,7 +35,8 @@ function drawWorld(now){
     if(G.companion&&NPC[G.companion]){const cn=NPC[G.companion],ct=compTrail.length>=8?compTrail[0]:[G.p.x-.9,G.p.y+.1];ents.push({y:ct[1],f:()=>person(ct[0],ct[1],cn.col,false,compTrail.length>=8,now,false,NPC_LOOK[cn.id])})}
     ents.push({y:G.p.y,f:()=>{
       const a=G.veh.active,mv=G.p.path.length>0;
-      if(mv){const dx=G.p.path[0][0]-G.p.x;if(Math.abs(dx)>.05)pFace=dx>0?1:-1}
+      if(mv){const dx=G.p.path[0][0]-G.p.x,dy=G.p.path[0][1]-G.p.y;if(Math.abs(dx)>.05)pFace=dx>0?1:-1;if(Math.abs(dx)>.05||Math.abs(dy)>.05)pDir=Math.abs(dx)>Math.abs(dy)?(dx<0?1:2):(dy<0?3:0)}
+      if(FS.st==='landed'||DG.st!=='idle')pDir=0;else if(FS.st!=='idle')pDir=2;
       if(a==='bike'||a==='scooter')drawRide(a,G.p.x,G.p.y,now,mv);
       else if(a==='sedan'||a==='coupe'){
         const mx=Math.round(G.p.x*TS+8-camX);

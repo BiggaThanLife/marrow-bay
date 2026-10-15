@@ -11,7 +11,7 @@ function drawFishing(now){
   const line=(x0,y0,x1,y1,col,sag)=>{const L=Math.hypot(x1-x0,y1-y0),n=Math.max(2,Math.ceil(L*2));c.fillStyle=col;for(let i=0;i<=n;i++){const k=i/n;c.fillRect(fsnap(x0+(x1-x0)*k),fsnap(y0+(y1-y0)*k+(sag||0)*Math.sin(Math.PI*k)),.5,.5)}};
   const active=st!=='idle';
   if(active){
-    const tip=(st==='reeling'||st==='landed')?{x:P.x+4,y:P.y-30}:{x:P.x+11,y:P.y-26},h={x:P.x+3.5,y:P.y-4.5};
+    const tip=(st==='reeling'||st==='landed')?{x:P.x+4,y:P.y-30}:{x:P.x+11,y:P.y-26},h=charPlayerSheet(G.look)?{x:P.x+1.5,y:P.y-6}:{x:P.x+3.5,y:P.y-4.5};
     /* bobber and line */
     if(st!=='reeling'&&st!=='landed'){
       let b;

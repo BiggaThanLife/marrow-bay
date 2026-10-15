@@ -7,7 +7,13 @@ function drawHat(c,px,py,hat){
   else if(hat==='wool'){c.fillStyle='#8a929c';c.fillRect(px-2,py-15,4,3);c.fillStyle='#d8dde4';c.fillRect(px-1,py-17,2,2)}
   else if(hat==='brim'){c.fillStyle='#5a4326';c.fillRect(px-4,py-13,8,1);c.fillRect(px-2,py-16,4,3)}
 }
+let pStep=0;
 function drawPlayer(c,px,py,l,sw,headOnly,t){
+  if(RS>=2&&(c===cx||c.hd)){
+    /* drawn sprite when the look is covered by the layer sheets (skin, hair colour, styles 0-3, outfit, the five hats); otherwise the older HD figure */
+    const onMap=c===cx;
+    if(drawCharPlayer(c,px,py,l,headOnly?2:onMap?pDir:0,onMap?pStep:0,headOnly)){if(t!=null)charMarker(c,px,py,t);return}
+  }
   if(RS>=2&&(c===cx||c.hd))return drawPersonHD(c,px,py,{skin:SKIN[l.skin]||SKIN[1],hair:HAIR[l.hair]||HAIR[0],style:l.style||0,hat:l.hat,col:outfitOf(l.outfit).c,collar:true,sw,headOnly,marker:t||0});
   if(!headOnly){
     c.fillStyle='rgba(0,0,0,.25)';c.fillRect(px-3,py,7,2);
