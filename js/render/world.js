@@ -42,6 +42,7 @@ function drawWorld(now){
         cx.save();cx.translate(mx,0);cx.scale(pFace,1);cx.translate(-mx,0);
         drawVeh(a,G.p.x,G.p.y,now,mv);person(G.p.x,G.p.y-.15,'#2f6fb3',true,mv,now,true);cx.restore();
       }else person(G.p.x,G.p.y,'#2f6fb3',true,mv,now);
+      drawFishing(now);
     }});
     ents.sort((a,b)=>a.y-b.y).forEach(e=>e.f());
   }

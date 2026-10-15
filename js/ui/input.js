@@ -58,7 +58,8 @@ cv.addEventListener('pointerdown',e=>{
   }
   if(t===T.FARM){const pl=G.plots.find(q=>q.x===tx&&q.y===ty);return walkTo(tx,ty,()=>plotMenu(pl))}
   if(t===T.PLAZA)return walkTo(tx,ty,()=>plazaMenu());
-  if(t===T.DOCK)return walkTo(tx,ty,()=>waterfront());
+  /* the pier now has a Fish button (js/ui/context.js); the menu is behind More. The crate step of the opening still lands on the menu. */
+  if(t===T.DOCK)return walkTo(tx,ty,()=>{if(G.opening&&G.opening.step==='crate')waterfront()});
   if(t===T.FLAT)return walkTo(tx,ty);
   if(t===T.WATER)return notify(tideV()>-.3&&tx>=41&&tx<=44&&ty===33?'Water covers the river mouth. It dries out at low tide.':'Deep water.');
   walkTo(tx,ty);

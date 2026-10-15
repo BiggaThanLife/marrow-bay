@@ -51,7 +51,7 @@ function ui(html,btns=[],isModal=true,dismiss=true){
     el.disabled=!!b.off||tired;el.addEventListener('click',e=>runButton(b,e));a.appendChild(el);
   });
   if(sheet.hidden)sfx('open');
-  sheet.hidden=false;sheet.scrollTop=0;shield(250);
+  sheet.hidden=false;sheet.scrollTop=0;shield(250);if(typeof ctxRefresh==='function')ctxRefresh();
   /* a menu that would scroll at the short height gets the taller one, and a fade and an arrow say there is more below */
   sheet.classList.remove('tall');if(sheet.scrollHeight>sheet.clientHeight+2)sheet.classList.add('tall');sheetCue();
 }

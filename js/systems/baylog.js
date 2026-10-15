@@ -37,16 +37,23 @@ function logSeen(poi){if(!G.log)logInit();if(poi&&poi.id&&!G.log.places[poi.id])
 function logDish(k){if(!G.log)logInit();G.log.dishes[k]=(G.log.dishes[k]||0)+1;logSync()}
 function logRibbon(k){if(!G.log)logInit();G.log.ribbons[k]=1;logSync()}
 /* each fish caught rolls a species; spring tides favour the rare ones */
+function pickFishSpecies(boat,noBoat){
+  const tn=tideName(),spring=tideCycle()==='spring';
+  const ws=FISH_SPECIES.map(f=>f.w*(f.tide?(f.tide===tn?2:.5):1)*(f.rare?(spring?3:.4):1)*(f.boat&&!boat?(noBoat?0:.15):1));
+  let r=Math.random()*ws.reduce((a,b)=>a+b,0),pk=FISH_SPECIES[0];
+  for(let j=0;j<ws.length;j++){r-=ws[j];if(r<=0){pk=FISH_SPECIES[j];break}}
+  return pk;
+}
+/* records one catch in the Bay Log; returns true the first time that species is caught */
+function logFishOne(pk,quiet){
+  if(!G.log)logInit();
+  const first=!G.log.fish[pk.n];G.log.fish[pk.n]=(G.log.fish[pk.n]||0)+1;
+  if(first&&!quiet)notify(`New in your Bay Log: ${pk.n}.`);
+  return first;
+}
 function logFish(n,boat){
   if(!G.log)logInit();
-  const tn=tideName(),spring=tideCycle()==='spring';
-  for(let i=0;i<n;i++){
-    const ws=FISH_SPECIES.map(f=>f.w*(f.tide?(f.tide===tn?2:.5):1)*(f.rare?(spring?3:.4):1)*(f.boat&&!boat?.15:1));
-    let r=Math.random()*ws.reduce((a,b)=>a+b,0),pk=FISH_SPECIES[0];
-    for(let j=0;j<ws.length;j++){r-=ws[j];if(r<=0){pk=FISH_SPECIES[j];break}}
-    const first=!G.log.fish[pk.n];G.log.fish[pk.n]=(G.log.fish[pk.n]||0)+1;
-    if(first)notify(`New in your Bay Log: ${pk.n}.`);
-  }
+  for(let i=0;i<n;i++)logFishOne(pickFishSpecies(boat));
   logSync();
 }
 function logMenu(){

@@ -70,7 +70,7 @@ function installHelp(back){
 function settingsMenu(msg){
   const inGame=!!G,full=isFull(),saved=loadSave();
   const back=m=>settingsMenu(m),leave=()=>inGame?phone():title();
-  ui(`<h2>Settings</h2><p class="muted">${inGame?`Saved game: ${saveStamp(saved)}. The game also saves by itself.`:'Sound and screen options.'}</p>${msgP(msg)}`,[
+  ui(`<h2>Settings</h2><p class="muted">${inGame?`Saved game: ${saveStamp(saved)}. The game also saves by itself.`:'Sound and screen options.'}</p><p class="muted small">Credits: fish, bobber and finds from the 'Fishing' free asset pack.</p>${msgP(msg)}`,[
     {label:`Sound: ${SET.mute?'Off':'On'}`,sub:'Tap to switch',cls:'primary',fn:()=>{SET.mute=!SET.mute;saveSettings();sfx('open');back()}},
     {label:`Volume: ${VOLNAMES[SET.vol]}`,sub:'Tap to change',off:SET.mute,cls:'',fn:()=>{SET.vol=SET.vol%3+1;saveSettings();sfx('good');back()}},
     {label:`Action scenes: ${SET.scenes===false?'Off':'On'}`,sub:'Short pixel scenes for work, money and rest',cls:'',fn:()=>{SET.scenes=SET.scenes===false;saveSettings();sfx('open');back()}},

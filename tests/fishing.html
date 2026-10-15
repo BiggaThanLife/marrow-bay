@@ -1,0 +1,79 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay fishing test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:412px;height:700px;border:1px solid #888}</style>
+<h2>Hands-on fishing</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* The Fish button shows on the pier only; cast, bite, reel lands a fish in the bag, stock and Bay Log; too soon and got away cost time but give nothing;
+   junk is not a fish; walking or opening a menu cancels; the pier never rolls boat-only species. Math.random is pinned so the run is repeatable. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,SET,FS,fishAct,fishUpdate,fishAtSpot,ctxRefresh,waterfront,pickFishSpecies,FISH_SPECIES,hud})`);
+  const G = () => api.G, FS = api.FS, vis = id => !doc.getElementById(id).hidden;
+  const real = win.Math.random;
+  const pin = v => { win.Math.random = () => v };
+  const toBite = t0 => { api.fishAct(t0); api.fishUpdate(t0 + 700); if (FS.st !== 'waiting') errs.push('not waiting after cast: ' + FS.st); api.fishUpdate(FS.biteAt + 1); };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; api.SET.hints = false;
+    G().p.x = 20; G().p.y = 33; G().p.path = []; G().energy = 80; G().hunger = 80; G().fishStock = 100;
+    api.ctxRefresh(); doc.getElementById('ctx-main'); 
+    if (!api.fishAtSpot()) errs.push('player on the pier should be at a fishing spot');
+    if (!vis('ctxbar') || doc.getElementById('ctx-main').textContent !== 'Fish') errs.push('Fish button not shown on the pier: ' + doc.getElementById('ctx-main').textContent);
+    if (vis('ctx-more') === false) errs.push('More button missing');
+    G().p.y = 32; G().p.x = 20; api.ctxRefresh(); if (vis('ctxbar')) errs.push('button should hide away from the pier'); G().p.y = 33; api.ctxRefresh();
+
+    // cast, bite, reel: a catch
+    pin(.3);
+    let fish0 = G().inv.fish, t0 = G().t, en0 = G().energy, stock0 = G().fishStock = 90, logN = () => Object.values(G().log ? G().log.fish : {}).reduce((a, b) => a + b, 0), log0 = logN();
+    toBite(1000);
+    if (FS.st !== 'bite') errs.push('no bite: ' + FS.st); api.ctxRefresh(); if (doc.getElementById('ctx-main').textContent !== 'Reel in!') errs.push('button should say Reel in!');
+    api.fishAct(FS.t0 + 100); if (FS.st !== 'reeling') errs.push('not reeling: ' + FS.st);
+    api.fishUpdate(FS.t0 + 800); if (FS.st !== 'landed') errs.push('not landed: ' + FS.st);
+    if (G().inv.fish < fish0 + 1) errs.push('fish not in the bag');
+    if (logN() !== log0 + 1) errs.push('Bay Log not updated');
+    if (!(G().fishStock < stock0)) errs.push('fish stock did not drop');
+    if (!(G().t - t0 >= 15)) errs.push('cast cost no game time: ' + (G().t - t0));
+    if (!(G().energy < en0)) errs.push('cast cost no energy');
+    if (!FS.card || !FS.card.first || !vis('fcard') || !/New in your Bay Log/.test(doc.getElementById('fcard-name').innerText)) errs.push('first catch should show the Bay Log badge');
+    api.ctxRefresh(); if (doc.getElementById('ctx-main').textContent !== 'Keep it') errs.push('button should say Keep it');
+    api.fishAct(FS.t0 + 100); if (FS.st !== 'idle' || vis('fcard')) errs.push('Keep it should reset');
+    stats.species = FS.card && FS.card.name;
+    // too soon
+    fish0 = G().inv.fish; t0 = G().t; api.fishAct(20000); api.fishUpdate(20700); api.fishAct(20800);
+    if (FS.st !== 'missed') errs.push('too soon should miss: ' + FS.st);
+    if (G().inv.fish !== fish0) errs.push('too soon gave a fish'); if (!(G().t > t0)) errs.push('too soon cost no time');
+    api.fishUpdate(22000); if (FS.st !== 'idle') errs.push('missed should return to idle');
+    // got away: let the bite window pass
+    fish0 = G().inv.fish; toBite(30000); api.fishUpdate(FS.t0 + 1100);
+    if (FS.st !== 'missed' || G().inv.fish !== fish0) errs.push('got-away wrong: ' + FS.st); api.fishUpdate(FS.t0 + 1000);
+    // nothing biting: the roll says no fish
+    pin(.99); fish0 = G().inv.fish; api.fishAct(40000); api.fishUpdate(40700); api.fishUpdate(FS.biteAt + 1);
+    if (FS.st !== 'missed' || G().inv.fish !== fish0) errs.push('empty cast wrong: ' + FS.st); api.fishUpdate(FS.t0 + 1000);
+    // junk
+    pin(.05); fish0 = G().inv.fish; const scrap0 = G().inv.scrap; toBite(50000); api.fishAct(FS.t0 + 100); api.fishUpdate(FS.t0 + 800);
+    if (FS.st !== 'landed' || !FS.card.junk) errs.push('junk roll did not give junk'); if (G().inv.fish !== fish0) errs.push('junk counted as fish'); if (G().inv.scrap !== scrap0 + 1) errs.push('plastic bag should be scrap');
+    api.fishAct(0);
+    // walking cancels
+    pin(.3); api.fishAct(60000); api.fishUpdate(60700); G().p.path = [[21, 33]]; api.fishUpdate(61000);
+    if (FS.st !== 'idle') errs.push('walking did not cancel'); G().p.path = [];
+    // a menu cancels
+    api.fishAct(70000); api.fishUpdate(70700); api.waterfront(); api.fishUpdate(71000);
+    if (FS.st !== 'idle') errs.push('menu did not cancel'); api.closeMenu();
+    // too tired
+    G().energy = 1; api.fishAct(80000); if (FS.st !== 'idle') errs.push('cast while exhausted'); G().energy = 80;
+    // species: never boat-only from the pier
+    win.Math.random = real; let boat = 0; for (let i = 0; i < 400; i++) { const s = api.pickFishSpecies(false, true); if (s.boat) boat++ }
+    if (boat) errs.push('pier rolled a boat species ' + boat + ' times');
+    stats.boat = boat;
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  win.Math.random = real;
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>
