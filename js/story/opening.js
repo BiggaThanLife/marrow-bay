@@ -112,7 +112,12 @@ function openingVisit(){
 }
 /* HARBOR's pinned suggestion for wherever the opening has got to */
 function openingSuggestion(){
-  const o=G&&G.opening;if(!o||o.done||o.step==='intro'||o.step==='wait')return null;
+  const o=G&&G.opening;
+  if(o&&o.done&&typeof o.kept==='boolean'&&G.threads&&!G.threads.done.some(t=>t.tid==='tidecargo')){
+    const th=G.threads.active.find(t=>t.tid==='tidecargo');
+    return {id:'cargo:'+(th?(th.pending?'p':'w'):'n'),kind:'suggest',dist:'',by:'HARBOR',t:'Find out where the crate came from. '+(!th?'Someone will be in touch in a few days.':th.pending?'You have a new message: Phone, then Threads.':"Tide's Cargo is waiting on its next lead.")};
+  }
+  if(!o||o.done||o.step==='intro'||o.step==='wait')return null;
   const n=openingNpc(),fn=shortName(n);
   const say=t=>({id:'o:'+o.step+(o.jobDone?'j':''),kind:'suggest',dist:'',by:'HARBOR',t});
   if(o.step==='tide'&&!o.jobDone)return say(`${fn} has work for you. Talk to ${fn}, or tap them on the map.`);

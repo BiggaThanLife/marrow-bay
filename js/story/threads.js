@@ -10,6 +10,11 @@ function threadsHourly(){
 }
 function threadsDaily(){
   const S=G.threads;
+  const o=G.opening;
+  if(o&&o.done&&typeof o.kept==='boolean'&&day()>=o.d0+3&&!S.active.concat(S.done).some(t=>t.tid==='tidecargo')){
+    S.active.push({tid:'tidecargo',beat:'b1',due:G.t+60*ri(3,10),pending:false,since:0,log:[],roles:THREADS.tidecargo.start()});
+    return;
+  }
   if(S.active.length>=2||day()<4||day()-S.lastStart<5)return;
   const used=new Set([...S.active.map(t=>t.tid),...S.done.map(t=>t.tid)]);
   const c=Object.keys(THREADS).filter(id=>!used.has(id)&&THREADS[id].hook());

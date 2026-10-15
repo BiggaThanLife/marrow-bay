@@ -13,7 +13,7 @@
 const f = document.getElementById('game');
 f.addEventListener('load', async () => {
   const win = f.contentWindow, errs = [], doc = win.document, stats = {};
-  const api = win.eval(`({get G(){return G},BG,NPC,start,closeMenu,popClear,finishIntro,openingTick,openingSkip,openingSuggestion,feedSuggestions,tideName,hourOf,day,waterfront,talk,advance,migrate,settingsMenu,get modal(){return modal},get step(){return G.opening&&G.opening.step}})`);
+  const api = win.eval(`({get G(){return G},BG,NPC,start,closeMenu,popClear,finishIntro,openingTick,openingSkip,openingSuggestion,threadsDaily,advanceThread,feedSuggestions,tideName,hourOf,day,waterfront,talk,advance,migrate,settingsMenu,get modal(){return modal},get step(){return G.opening&&G.opening.step}})`);
   const G = () => api.G, btns = () => [...doc.querySelectorAll('#sheet #actions button')], btn = rx => btns().find(x => rx.test(x.innerText)), text = () => doc.getElementById('sheet').innerText;
   const clear = () => { api.closeMenu(); api.popClear() };
   const newGame = bg => { api.start(bg); G().flags.customDone = true; clear(); api.finishIntro(); clear(); win.eval('SET.hints=false'); };
@@ -62,6 +62,14 @@ f.addEventListener('load', async () => {
       if (!btn(/Find honest work/) || !btn(/Own something/) || !btn(/Get to know people/) || !btn(/Work the edge/)) errs.push(tag + ': no card of ways to make a life: ' + text().slice(0, 120));
       clear();
       if (api.step !== 'done' || !o().done) errs.push(tag + ': opening did not finish'); if (api.feedSuggestions().some(x => /^o:/.test(x.id))) errs.push(tag + ': opening suggestion left behind');
+      if (!api.feedSuggestions().some(x => /^cargo:/.test(x.id))) errs.push(tag + ': no first-month goal');
+      G().t = (o().d0 + 3) * 1440; api.threadsDaily(); const tc = G().threads.active.find(t => t.tid === 'tidecargo');
+      if (!tc) errs.push(tag + ': Tides Cargo did not start'); else {
+        if (!/crate you (kept|handed in)/.test(tc.roles.c) || (o().kept ? !/kept/.test(tc.roles.c) : !/handed/.test(tc.roles.c))) errs.push(tag + ': wrong branch flavor');
+        api.threadsDaily(); if (G().threads.active.filter(t => t.tid === 'tidecargo').length !== 1) errs.push(tag + ': thread started twice');
+        api.advanceThread(tc, 'END:quiet', false);
+        if (api.feedSuggestions().some(x => /^cargo:/.test(x.id))) errs.push(tag + ': goal not cleared when the thread ended');
+      }
       stats[tag] = 'ok';
     }
     // Not now keeps the job on the talk menu

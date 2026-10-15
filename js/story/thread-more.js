@@ -97,3 +97,29 @@ THREADS.quirk={title:'Your Quirk',from:'Your reflection',
   shared:{name:'Shared',text:'You tell a friend about your {q} and they say, "me too." It is the best part of your week.',harbor:'HARBOR notes a measurable increase in "me too."'},
   embraced:{name:'Embraced',text:'You stop apologizing for your {q}. The odd thing is that other people stop noticing it.',fx:()=>{repAdd('Grid',2)},harbor:'HARBOR has changed your quirk status from "quirk" to "character."'},
   outgrown:{name:'Outgrown',text:'In the end it is just part of you, like a mole, or an opinion.',harbor:'HARBOR has archived this thread under "settled."'}}};
+
+/* Tide's Cargo: the continuation of the opening's low-tide crate. Never picked by chance (hook is false); threadsDaily starts it by hand a few days after the opening. */
+THREADS.tidecargo={title:"Tide's Cargo",from:'A number you do not recognise',
+ hook:()=>false,
+ start:()=>{const k=G.opening&&G.opening.kept;return {c:k?'the crate you kept':'the crate you handed in',w:k?'You spent the $40. The number did not go with it.':'You handed it in for $10. The number stayed in your head anyway.'}},
+ beats:{
+  b1:{wait:0,ignore:'b2',timeout:4,text:'A photo of a stencilled manifest number, MB-0417, and one line: "Is this yours?" You remember it on the side of {c}. {w}',choices:[
+    {label:'Ask around the docks',sub:'An hour of questions',fx:()=>{advance(60);repAdd('Dockside',1)},next:'b2'},
+    {label:'Ask HARBOR',next:'b2'},
+    {label:'Leave it',next:'b2'}]},
+  b2:{wait:1,ignore:'b3',timeout:4,text:'The Dockside harbor office keeps a ledger and does not like being asked about it. Somebody left it open on a counter. MB-0417 is on a page torn along the top: a Trust shipment, signed for by Vex Calloway, never marked delivered.',choices:[
+    {label:'Copy the page',sub:'Quietly',next:'b3'},
+    {label:'Take the page',sub:'Not strictly legal',fx:()=>{heatAdd(1)},next:'b3'},
+    {label:'Put it back',next:'b3'}]},
+  b3:{wait:1,ignore:'b4',timeout:4,text:'It adds up. The crate fell off a Trust and Vex shipment on a low tide, and nobody came back for it because the entry says the water was high. HARBOR, asked about it, says the harbor office tide tables put high water at 3:40 that night. The tide, as far as everyone who stood in it can tell, was already out. HARBOR then says it would like to change the subject.',choices:[
+    {label:'Take it to Vex',next:'b4'},
+    {label:'Take it to the harbor office',next:'b4'},
+    {label:'Keep it to yourself',next:'b4'}]},
+  b4:{wait:1,ignore:'END:quiet',timeout:5,text:'You know where the crate came from. The question is who should be embarrassed by that.',choices:[
+    {label:'Tell Vex you know',sub:'He will want it quiet',fx:()=>{memAdd('vex',6);G.cash+=30},next:'END:vex'},
+    {label:'File it with the harbor office',sub:'Dockside will approve. Vex will not.',fx:()=>{repAdd('Dockside',3);memAdd('vex',-8)},next:'END:filed'},
+    {label:'Burn the page',next:'END:quiet'}]}},
+ endings:{
+  vex:{name:'Quiet money',text:'Vex reads the page twice and thanks you the way people thank a locksmith. An envelope arrives with $30 and no note.',fx:()=>{histAdd('tidecargo',"You told Vex where his crate had gone. It cost him nothing and paid you $30.",999)},harbor:'HARBOR notes that its tide tables and the tide disagree, and that only one of them is on the payroll.'},
+  filed:{name:'On the record',text:'The harbor office stamps the page, files it and looks relieved to have a reason. The docks hear by lunch. Vex hears by the afternoon.',fx:()=>{histAdd('tidecargo',"You filed the crate's paperwork with the harbor office. Dockside noticed. So did Vex.",999)},harbor:'HARBOR would like it noted that the harbor office tide records and the tide do not match, and that HARBOR did not say so.'},
+  quiet:{name:'Ash',text:'The page curls and goes. The crate was just a crate, as far as anyone will say.',fx:()=>{histAdd('tidecargo','You let the crate stay a mystery.',999)},harbor:'HARBOR still has the tide tables. They are still wrong.'}}};
