@@ -42,7 +42,7 @@ function waterfront(msg){
     {label:'Scavenge the mudflats',sub:tn==='low'?(tideCycle()==='spring'?'90 minutes. A spring tide has laid the flats bare.':'90 minutes. Scrap is exposed.'):'Only at low tide',off:tn!=='low',cls:'',fn:()=>{
       let n=ri(1,3)+(has('strong')?1:0)+(G.companion==='pip'?1:0)+(tideCycle()==='spring'?1:0);n=Math.round(n*clamp(G.flats/60,.3,1.2));
       G.inv.scrap+=n;G.flats=clamp(G.flats-n*5,0,100);advance(90);G.energy=clamp(G.energy-6,0,100);
-      const box=Math.random()<.12?ri(25,60):0;G.cash+=box;
+      const box=Math.random()<.12?ri(25,60):0;G.cash+=box;foundFlats();
       waterfront((n?`You pulled ${n} pieces of scrap from the mud.`:'The flats have been picked clean.')+(box?` Something glints under the silt: a strongbox with ${money(box)} in it.`:''))}},
     leaveBtn]);
 }
