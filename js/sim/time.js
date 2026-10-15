@@ -15,6 +15,7 @@ function advance(m,sleep,quiet){
   const b=G.t;needs(m,sleep);G.t+=m;
   const d0=Math.floor(b/1440),d1=Math.floor(G.t/1440);
   for(let d=d0+1;d<=d1;d++)newDay(d);
+  if(sleep&&!quiet&&d1>d0&&typeof daySummary==='function')daySummary(d0+1);
   const h0=Math.floor(b/60),h1=Math.floor(G.t/60);
   for(let h=h0+1;h<=h1&&h<=h0+30;h++)hourly(h);
   if(m>=60)syncNPCs();else if(h1>h0)NPCS.forEach(n=>{if(!(n.id==='reyes'&&n.chasing))assign(n,false)});

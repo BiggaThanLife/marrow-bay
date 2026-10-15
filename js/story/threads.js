@@ -20,7 +20,7 @@ function threadsDaily(){
 }
 function advanceThread(th,next,interactive){
   if(next.startsWith('END:'))return endThread(th,next.slice(4),interactive);
-  th.beat=next;th.pending=false;th.due=G.t+(THREADS[th.tid].beats[next].wait||0)*1440;
+  vib(25);th.beat=next;th.pending=false;th.due=G.t+(THREADS[th.tid].beats[next].wait||0)*1440;
   if(interactive)threadsMenu('Sent. The story waits for you, and the world does not.');
 }
 function endThread(th,key,interactive){

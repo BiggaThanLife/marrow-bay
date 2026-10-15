@@ -21,7 +21,7 @@ function hud(){
   const it=issueTotal();$('#b-biz').dataset.n=it?String(it):'';
   $('#h-cash').textContent=money(G.cash);
   const dn=district(Math.round(G.p.x),Math.round(G.p.y));$('#h-dist').textContent=dn==='Foundry Row'?'Foundry':dn;
-  $('#h-tide').textContent=tideName();
+  tideHud();
   $('#b-hunger').style.width=G.hunger+'%';
   $('#b-energy').style.width=G.energy+'%';
   $('#t-hunger').textContent=G.hunger<20?'Starving':G.hunger<45?'Hungry':'Fed';

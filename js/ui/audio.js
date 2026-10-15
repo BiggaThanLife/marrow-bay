@@ -45,4 +45,5 @@ function sfxCashWatch(){
   if(sfxCash.g!==G){sfxCash={g:G,c:G.cash};return}
   const d=G.cash-sfxCash.c;sfxCash.c=G.cash;
   if(d>=1)sfx('coin');else if(d<=-1)sfx('spend');
+  if(typeof cashJuice==='function')cashJuice(d);
 }

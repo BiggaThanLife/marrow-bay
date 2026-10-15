@@ -27,7 +27,7 @@ p{margin:0 0 8px}
 .muted{color:var(--muted)} .small{font-size:.82rem}
 .bad{color:var(--warn);font-weight:700} .good{color:var(--good);font-weight:700} .amber{color:var(--amber);font-weight:700}
 #hud{flex:none;padding:5px 6px 4px}
-.stats{display:grid;grid-template-columns:1.35fr .8fr 1fr .8fr;gap:4px;margin:0 0 4px}
+.stats{display:grid;grid-template-columns:1.25fr .8fr .95fr 1fr;gap:4px;margin:0 0 4px}
 .stats div{background:var(--panel);border:2px solid var(--line);padding:2px 5px;min-width:0}
 .stats dt{font-size:.66rem;color:var(--muted);line-height:1.1;display:flex;align-items:center;gap:4px;white-space:nowrap}
 .stats dt svg{display:block;flex:none}
@@ -162,3 +162,15 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 .bagdetail h3{margin:0 0 2px}
 /* the district name is the longest word in the HUD; a slightly smaller size keeps Greenbelt and Neon Mile whole at phone width */
 #h-dist{font-size:.56rem}
+
+/* tide readout, floating cash text, day summary lines */
+#h-tide{display:flex;align-items:center;gap:3px}
+#h-tide small{font:inherit;font-size:.56rem;overflow:hidden;text-overflow:ellipsis}
+#h-tide .tarr{font-size:.55rem;color:var(--accent)}#h-tide .tarr.dn{color:var(--amber)}
+#h-tide .tbar{flex:none;width:14px;height:6px;border:1px solid var(--line);background:var(--bg);display:inline-block}
+#h-tide .tbar i{display:block;height:100%;background:var(--accent)}
+.cashfl{position:fixed;z-index:40;pointer-events:none;transform:translate(-50%,-100%);font:700 .9rem "Silkscreen","Courier New",monospace;text-shadow:0 1px 3px #000,0 0 6px #000;animation:cashfl 1.1s ease-out forwards}
+.cashfl.good{color:#8fd49a}.cashfl.bad{color:#ff9a7a}
+@keyframes cashfl{from{opacity:1;margin-top:0}to{opacity:0;margin-top:-34px}}
+@media (prefers-reduced-motion: reduce){.cashfl{animation:cashfl2 1.1s forwards}@keyframes cashfl2{from{opacity:1}to{opacity:0}}}
+#pop-x{white-space:pre-line}

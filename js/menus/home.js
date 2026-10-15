@@ -11,14 +11,18 @@ function dishMenu(poi,msg){
         run:n=>{Object.keys(d.from).forEach(k=>{G.inv[k]-=d.from[k]*n});G.inv[d.key]+=n*d.yield;advance(bulkMin(60,n));return `You cooked ${n*d.yield} ${d.n.toLowerCase()}${n*d.yield>1?'s':''}.`},back:m=>dishMenu(poi,m)})})),
     {label:'Back',cls:'quiet',fn:()=>homeMenu(poi)}]);
 }
+/* plain cooking takes any crop: the old kind first, then the newer ones */
+const COOK_CROPS=['crops','radish','tomato','pumpkin'];
+const cropTotal=()=>COOK_CROPS.reduce((a,k)=>a+(G.inv[k]||0),0);
+function takeCrops(n){for(const k of COOK_CROPS){const t=Math.min(n,G.inv[k]||0);G.inv[k]-=t;n-=t;if(n<=0)break}}
 function homeMenu(poi,msg){
   const sleepM=()=>{const tod=G.t%1440;let m=(7*60-tod+1440)%1440;if(m<360)m=360;return m};
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">Home. ${money(homeBill())} a month.</p>${msgP(msg)}${G.arrears>0?`<p class="bad">Bills owed: ${money(G.arrears)}</p>`:''}`,[
     {label:'Sleep until morning',sub:'Lowers your wanted level',fn:()=>{const m=sleepM();advance(m,true);G.energy=clamp(G.energy+m/60*14*(1+.05*decorPts('comfort')),0,100);G.heat=Math.max(0,G.heat-1-.15*decorPts('cheer'));hud();homeMenu(poi,`You slept ${Math.round(m/60)} hours.`)}},
     {label:'Nap for 2 hours',cls:'',fn:()=>{advance(120,true);G.energy=clamp(G.energy+25,0,100);hud();homeMenu(poi,'You napped.')}},
-    {label:'Cook meals',sub:`2 crops make 1 meal. You have ${G.inv.crops} crops. Choose how many.`,off:G.inv.crops<2,cls:'',fn:()=>bulkMake({title:'Cook meals',intro:'2 crops make 1 meal.',max:Math.floor(G.inv.crops/2),base:60,confirm:'Cook these meals',allLabel:'As many as I can',
+    {label:'Cook meals',sub:`2 crops make 1 meal. You have ${cropTotal()} crops (radishes, tomatoes and pumpkins count). Choose how many.`,off:cropTotal()<2,cls:'',fn:()=>bulkMake({title:'Cook meals',intro:'2 crops make 1 meal.',max:Math.floor(cropTotal()/2),base:60,confirm:'Cook these meals',allLabel:'As many as I can',
       sayFn:n=>`${n} meal${n>1?'s':''} from ${2*n} crops, about ${minText(bulkMin(60,n))}`,
-      run:n=>{let got=n;for(let i=0;i<n;i++)if(Math.random()<.12*decorPts('cooking'))got++;G.inv.crops-=2*n;G.inv.meals+=got;advance(bulkMin(60,n));return `You cooked ${got} meal${got>1?'s':''}.`},back:m=>homeMenu(poi,m)})},
+      run:n=>{let got=n;for(let i=0;i<n;i++)if(Math.random()<.12*decorPts('cooking'))got++;takeCrops(2*n);G.inv.meals+=got;advance(bulkMin(60,n));return `You cooked ${got} meal${got>1?'s':''}.`},back:m=>homeMenu(poi,m)})},
     {label:'Cook quality meals',sub:'Radish salad, tomato soup and pumpkin pie from your new crops. They sell for more.',off:!Object.values(DISHES).some(d=>dishMax(d)>0),cls:'',fn:()=>dishMenu(poi)},
     {label:'Cook stew',sub:`1 fish and 1 crop make 2 meals. Choose how many.`,off:G.inv.fish<1||G.inv.crops<1,cls:'',fn:()=>bulkMake({title:'Cook fish stew',intro:'1 fish and 1 crop make 2 meals.',max:Math.min(G.inv.fish,G.inv.crops),base:60,confirm:'Cook this stew',allLabel:'As many as I can',
       sayFn:n=>`${n} pot${n>1?'s':''}: ${2*n} meals from ${n} fish and ${n} crop${n>1?'s':''}, about ${minText(bulkMin(60,n))}`,

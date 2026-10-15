@@ -11,7 +11,7 @@ function arcsDaily(){
     const A=G.arc,D=ARCS[A.id],ph=D.phases[A.i];
     if(ph.daily)ph.daily(A);
     if(day()-A.start>=ph.days){
-      if(A.i+1<D.phases.length){A.i++;A.start=day();const nx=D.phases[A.i];nx.enter&&nx.enter(A);popup(`${D.title}: ${nx.name}`,nx.blurb||'')}
+      if(A.i+1<D.phases.length){vib([40,40,40]);A.i++;A.start=day();const nx=D.phases[A.i];nx.enter&&nx.enter(A);popup(`${D.title}: ${nx.name}`,nx.blurb||'')}
       else resolveArc();
     }
     return;
