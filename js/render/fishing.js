@@ -11,11 +11,12 @@ function drawFishing(now){
   const line=(x0,y0,x1,y1,col,sag)=>{const L=Math.hypot(x1-x0,y1-y0),n=Math.max(2,Math.ceil(L*2));c.fillStyle=col;for(let i=0;i<=n;i++){const k=i/n;c.fillRect(fsnap(x0+(x1-x0)*k),fsnap(y0+(y1-y0)*k+(sag||0)*Math.sin(Math.PI*k)),.5,.5)}};
   const active=st!=='idle';
   if(active){
-    const tip=(st==='reeling'||st==='landed')?{x:P.x+4,y:P.y-30}:{x:P.x+11,y:P.y-26},h=charPlayerSheet(G.look)?{x:P.x+1.5,y:P.y-6}:{x:P.x+3.5,y:P.y-4.5};
+    /* the player faces the water (down); the rod is held out to the side over it, and raised once a fish is on */
+    const tip=(st==='reeling'||st==='landed')?{x:P.x+5,y:P.y-22}:{x:P.x+10,y:P.y-12},h=charPlayerSheet(G.look)?{x:P.x+3,y:P.y-6}:{x:P.x+3.5,y:P.y-4.5};
     /* bobber and line */
     if(st!=='reeling'&&st!=='landed'){
       let b;
-      if(st==='casting'){const k=Math.min(1,(now-FS.t0)/FISH_CAST_MS);b={x:tip.x+(FS.tx-tip.x)*k,y:tip.y+(FS.ty-tip.y)*k-46*Math.sin(Math.PI*k),air:k<1}}
+      if(st==='casting'){const k=Math.min(1,(now-FS.t0)/FISH_CAST_MS);b={x:tip.x+(FS.tx-tip.x)*k,y:tip.y+(FS.ty-tip.y)*k-12*Math.sin(Math.PI*k),air:k<1}}
       else{let y=FS.ty+Math.sin(now/320)*.5;for(const nb of FS.nibbles)if(now>nb.at&&now<nb.at+260)y+=1.2;b={x:FS.tx,y}}
       line(tip.x,tip.y,b.x,b.y-2,'rgba(220,232,240,.75)',st==='waiting'?4:st==='bite'?1:0);
       if(st==='bite'){ring(b.x,b.y+1,2.5+Math.sin(now/60),.6);if(Math.floor(now/90)%2)d(b.x-.5,b.y-.5,1,1,'rgba(255,255,255,.8)')}
@@ -32,7 +33,7 @@ function drawFishing(now){
     if(FS.fish&&(st==='reeling'||st==='landed')){
       const a=FS.fish.junk?fishArt(FS.fish.junk):fishArt(FS.fish.art),Wd=a.width/2,Ht=a.height/2;
       let x,y,flip=false;
-      if(st==='reeling'){const k=Math.min(1,(now-FS.t0)/FISH_REEL_MS);x=FS.tx+(P.x-FS.tx)*k;y=FS.ty+(P.y-21-FS.ty)*k-34*Math.sin(Math.PI*k);flip=Math.floor(now/110)%2===0;
+      if(st==='reeling'){const k=Math.min(1,(now-FS.t0)/FISH_REEL_MS);x=FS.tx+(P.x-FS.tx)*k;y=FS.ty+(P.y-21-FS.ty)*k-14*Math.sin(Math.PI*k);flip=Math.floor(now/110)%2===0;
         if(Math.random()<.35)FS.fx.push({k:'drop',x,y,vx:rnd(-.4,.4),vy:rnd(-.3,.3),t:now,life:300})}
       else{x=P.x;y=P.y-21+Math.sin(now/260)*.7}
       c.save();c.translate(fsnap(x),fsnap(y));if(flip)c.scale(-1,1);c.drawImage(a,-Wd/2,-Ht/2,Wd,Ht);c.restore();
