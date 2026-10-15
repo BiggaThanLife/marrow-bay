@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay player economy</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Player economy (working bot)</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script src="progress.js?v=1"></script>
+<script>
+const f = document.getElementById('game'), q = new URLSearchParams(location.search);
+const games = +(q.get('games') || 3), days = +(q.get('days') || 150);
+f.addEventListener('load', () => {
+  let res;
+  try { res = runProgress(f.contentWindow, games, days); } catch (e) { res = {flags: ['ERROR ' + e.message + ' ' + (e.stack||'').split('\n')[1]], rows: []}; }
+  const v = document.getElementById('verdict');
+  v.className = res.flags.length ? 'bad' : 'ok';
+  v.textContent = res.flags.length ? res.flags.length + ' economy flags' : 'Economy curve within bounds.';
+  document.getElementById('out').textContent = res.flags.join('\n') + '\n\n' + res.rows.map(r => r.bg + ': ' + Object.entries(r.marks).map(([d, m]) => `d${d} cash ${m.cash} nw ${m.nw} owed ${m.arrears} biz ${m.biz}`).join(' | ')).join('\n');
+  window.__done = res;
+});
+</script>

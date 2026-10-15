@@ -27,6 +27,6 @@ function bizOverview(msg){
   btns.push(...shopButtons());
   btns.push({label:'Close',cls:'quiet',fn:closeMenu});
   ui(`<h2>Properties and business</h2><div class="kv"><div><span>Buildings</span><b>${G.biz.length}</b></div><div><span>Vehicles</span><b>${esc(vehs)}</b></div>
-  <div><span>Next bills</span><b>${money(tot)} in ${nextBill} d</b></div><div><span>Owed</span><b>${money(G.arrears)}</b></div>${G.dirty>0?`<div><span>Dirty cash</span><b>${money(G.dirty)}</b></div>`:''}</div>${msgP(msg)}
+  <div><span>Next bills</span><b>${money(tot)} in ${nextBill} d</b></div><div><span>Owed</span><b>${money(G.arrears)}</b></div>${levyAmount()>0?`<div><span>Weekly levy</span><b>${money(levyAmount())}</b></div>`:''}${G.dirty>0?`<div><span>Dirty cash</span><b>${money(G.dirty)}</b></div>`:''}</div>${msgP(msg)}
   ${issueTotal()?`<p class="bad">${issueTotal()} tenant problem${issueTotal()>1?'s':''} waiting. Look for the red numbers.</p>`:''}${lineChart(sumHist([...G.biz.map(b=>b.hist||[]),...Object.values(G.shops||{}).map(s=>s.hist||[])]),{title:'All businesses, profit per day',zero:true})}<p class="muted small">Tap a building on the map, or from here, to manage staff, supplies, and prices.</p>`,btns);
 }

@@ -26,6 +26,7 @@ function newDay(d){
   G.ev=Math.random()<.5?null:pick(EVENTS);
   dayNews();
   if(d%30===0)chargeBills();
+  if(d%7===0&&d>=14)weeklyLevy();
   G.plots.forEach(p=>{if(p.s===1){p.d--;if(p.d<=0)p.s=2}});
   G.structs.forEach(s=>{if(s.type==='planter'&&s.s===1){s.d--;if(s.d<=0)s.s=2}});
   lawDaily();crimeDaily();

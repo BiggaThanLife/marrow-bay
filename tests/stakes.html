@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay stakes and sinks test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:400px;height:420px;border:1px solid #888}</style>
+<h2>Money sinks and Last orders</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Harbor levy (scaled, capped at half of cash), flood repairs, Gilded Tide, and the Last orders thread (force start, warnings, helped, ignored -> Trust takes the diner). */
+const f = document.getElementById('game');
+f.addEventListener('load', () => {
+  const win = f.contentWindow, errs = [], doc = win.document;
+  const E = s => win.eval(s);
+  try {
+    E(`start(Object.keys(BG)[0]); G.flags.customDone = true; closeMenu(); popClear(); SET.hints=false`);
+    // levy
+    E(`G.cash = 0; G.biz = []`); if (E('levyAmount()') !== 0) errs.push('levy on nothing');
+    E(`G.cash = 30000`); const lv = E('levyAmount()'); if (lv !== 1000) errs.push('levy wrong at 30k: ' + lv);
+    E(`G.fx.gilded = true`); if (E('levyAmount()') >= lv) errs.push('Gilded Tide gives no discount'); E(`delete G.fx.gilded`);
+    E(`G.cash = 30000; G.fees = []; weeklyLevy()`); const left = E('G.cash'); if (left < 15000) errs.push('levy took more than half the cash'); if (!E('G.fees.length')) errs.push('levy not logged');
+    E(`G.cash = 20; weeklyLevy()`); if (E('G.cash') < 0) errs.push('cash went negative');
+    // surge repairs
+    E(`G.cash = 1000; G.fees = []; G.biz = [{key:'1,1', d:'Dockside', type:'cafe', price:1500, paid:1900, workers:[], supplies:0, till:0, level:1, mk:1, store:0, auto:false, last:null}, {key:'2,2', d:'Greenbelt', type:'cafe', price:900, paid:1300, workers:[], supplies:0, till:0, level:1, mk:1, store:0, auto:false, last:null}]`);
+    const msg = E(`surgeRepairs(['Dockside'], .03)`); if (!/repairs cost \$57/.test(msg)) errs.push('surge message: ' + msg); if (E('G.cash') !== 943) errs.push('repair not charged only to Dockside: ' + E('G.cash'));
+    E(`G.cash = 10; G.biz[0].till = 0`); E(`surgeRepairs(['Dockside'], .5)`); if (E('G.cash') < 0) errs.push('repairs bankrupted');
+    // day summary lists fees
+    E(`G.fees = [{d: day(), t: 'Harbor levy', amt: 120}]; daySum = null; daySummary(day()); daySummary(day())`);
+    // Gilded Tide: club menu renders with join button
+    E(`G.cash = 5000; G.rep.Highline = 20; G.t = 5 * 1440 + 20 * 60; npcS(NPC.vex || NPCS[0]); openPOI(POIS.club)`);
+    if (!/Join the Gilded Tide/.test(doc.getElementById('sheet').innerText)) errs.push('no Gilded Tide join button');
+    E(`G.fx.gilded = true; if (!monthlyBills().some(l => /Gilded/.test(l[0]))) throw new Error('no dues line')`);
+    E(`delete G.fx.gilded`);
+    // Last orders
+    E(`G.biz = []; G.cash = 2000; G.t = 40 * 1440 + 600; G.threads.active = []; G.threads.done = []; G.threads.lastStart = 0; G.facts = {mayor:'voss'}; G.lastTalk = {}; npcS(NPC.teo).m = 40`);
+    if (!E('THREADS.lastorders.force()')) errs.push('force false though teo is a friend and neglected: tier ' + E('tier(att(NPC.teo))'));
+    E(`G.lastTalk.teo = day() - 2`); if (E('THREADS.lastorders.force()')) errs.push('force true though recently talked');
+    E(`G.lastTalk.teo = 0; threadsDaily()`);
+    if (!E(`G.threads.active.some(t => t.tid === 'lastorders')`)) errs.push('thread not force-started');
+    // ignore everything -> closed
+    for (let i = 0; i < 12 && E(`G.threads.active.some(t => t.tid === 'lastorders')`); i++) E(`G.t += 1440 * 2; threadsHourly(); threadsHourly()`);
+    if (E(`fact('diner_trust')`) !== true) errs.push('ignoring did not hand the diner to the Trust: ' + JSON.stringify(E('G.threads.done[0]')));
+    if (E('npcS(NPC.teo).m') >= 40) errs.push('Teo attitude did not drop');
+    if (E('shopBtn(POIS.diner, NPC.teo)[0].off') !== true) errs.push('diner still purchasable');
+    E(`openPOI(POIS.diner)`); if (!/Trust logo/.test(doc.getElementById('sheet').innerText)) errs.push('diner menu unchanged');
+    if (!/logo|clipboard|name on the door|conversation/.test(E(`chatLine(NPC.teo, 2)`))) errs.push('Teo lines unchanged');
+    if (E('THREADS.lastorders.force()')) errs.push('thread can restart');
+    // helped by visiting
+    E(`delete G.facts.diner_trust; G.threads.done = []; G.threads.active = []; G.t = 80 * 1440; G.lastTalk = {}; npcS(NPC.teo).m = 40; threadsDaily()`);
+    E(`const th = G.threads.active[0]; th.beat = 'b3'; th.pending = true; th.since = day() - 1; th.roles.s = String(day() - 5); G.lastTalk.teo = day();`);
+    E(`G.t += 1440 * 3; threadsHourly()`);
+    if (E(`fact('diner_saved')`) !== true || E(`fact('diner_trust')`)) errs.push('visiting did not save the diner');
+    // paying the arrears
+    E(`delete G.facts.diner_saved; G.threads.done = []; G.threads.active = []; G.lastTalk = {}; threadsDaily(); const t2 = G.threads.active[0]; t2.beat='b2'; t2.pending = true;`);
+    E(`threadBeat(G.threads.active[0])`);
+    const btn = [...doc.querySelectorAll('#sheet #actions button')].find(b => /Cover the arrears/.test(b.innerText)); if (!btn) errs.push('no pay button'); else { const c0 = E('G.cash'); btn.click(); if (E('G.cash') !== c0 - 150) errs.push('arrears not charged'); }
+    // migrate an old save
+    E(`delete G.lastTalk; delete G.fees; cityInit()`); if (!E('G.lastTalk && G.fees')) errs.push('migration defaults missing');
+  } catch (e) { errs.push('EXC ' + e.message + ' ' + (e.stack || '').split('\n')[1]); }
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' problems' : 'No errors.';
+  document.getElementById('out').textContent = errs.join('\n');
+  window.__done = errs;
+});
+</script>

@@ -41,6 +41,8 @@ function daySummary(prevDay){
   if(!daySum||daySum.g!==G){daySum={g:G,cash:G.cash,day:prevDay};return}
   const d=G.cash-daySum.cash,from=daySum.day;daySum={g:G,cash:G.cash,day:day()};
   const lines=[];
+  const fees=(G.fees||[]).filter(f=>f.d>=from);
+  if(fees.length)lines.push('• Paid out: '+fees.map(f=>f.t+' '+money(f.amt)).join(', '));
   (G.news||[]).filter(x=>x.d>=from&&x.d<day()&&x.s>=2).slice(0,3).forEach(x=>lines.push('\u2022 '+x.t));
   (G.hist||[]).filter(h=>h.day>=from&&h.day<day()).slice(-2).forEach(h=>{if(lines.length<4)lines.push('\u2022 '+h.t)});
   popup('Day '+prevDay+' in review',`Cash: ${d>=0?'+':'-'}${money(Math.abs(d))} (now ${money(G.cash)})`+(lines.length?'\n'+lines.join('\n'):'\nA quiet day.'));

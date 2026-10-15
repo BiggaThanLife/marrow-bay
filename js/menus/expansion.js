@@ -19,6 +19,7 @@ function expansionMenu(biz,msg){
 function shopPrice(id,n){return Math.round(SHOP_DEFS[id].price*(tier(att(n))>=3?.9:1)*(G.jobs&&jobRank(id)>=4?.85:1))}
 function shopBtn(poi,n){
   const def=SHOP_DEFS[poi.id];if(!def||!n)return[];
+  if(poi.id==='diner'&&fact('diner_trust'))return[{label:'Not for sale',sub:'The Trust holds the lease now.',off:true,cls:'',fn:()=>{}}];
   if(shopOwned(poi.id))return[{label:'Your shop',sub:`Takings ${money(G.shops[poi.id].till)}. Level ${G.shops[poi.id].level}.`,cls:'primary',fn:()=>shopMenu(poi,n)}];
   const ok=tier(att(n))>=2;
   return[{label:'Make an offer for the shop',sub:ok?`${n.name} would sell for ${money(shopPrice(poi.id,n))}`:`${n.name} does not trust you enough to sell`,off:!ok,cls:'',fn:()=>offerMenu(poi,n)}];

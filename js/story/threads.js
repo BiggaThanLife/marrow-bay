@@ -5,7 +5,7 @@ function threadsHourly(){
     const T=THREADS[th.tid],B=T.beats[th.beat];
     if(!th.pending){
       if(G.t>=th.due){th.pending=true;th.since=day();notify(`New message: ${T.title}. Check Phone, then Threads.`);news(`New message in "${T.title}".`,1)}
-    }else if(day()-th.since>=(B.timeout||3)){th.log.push('You did not respond.');advanceThread(th,B.ignore,false)}
+    }else if(day()-th.since>=(B.timeout||3)){th.log.push('You did not respond.');advanceThread(th,typeof B.ignore==='function'?B.ignore(th):B.ignore,false)}
   });
 }
 function threadsDaily(){
@@ -15,6 +15,8 @@ function threadsDaily(){
     S.active.push({tid:'tidecargo',beat:'b1',due:G.t+60*ri(3,10),pending:false,since:0,log:[],roles:THREADS.tidecargo.start()});
     return;
   }
+  const fc=Object.keys(THREADS).find(id=>THREADS[id].force&&!S.active.concat(S.done).some(t=>t.tid===id)&&THREADS[id].force());
+  if(fc&&S.active.length<3){S.active.push({tid:fc,beat:'b1',due:G.t+60*ri(2,6),pending:false,since:0,log:[],roles:THREADS[fc].start()});return}
   if(S.active.length>=2||day()<4||day()-S.lastStart<5)return;
   const used=new Set([...S.active.map(t=>t.tid),...S.done.map(t=>t.tid)]);
   const c=Object.keys(THREADS).filter(id=>!used.has(id)&&THREADS[id].hook());

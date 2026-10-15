@@ -16,7 +16,7 @@ MENUS.market=(poi,n,msg)=>{
 };
 MENUS.diner=(poi,n,msg)=>{
   const price=Math.round(mealPrice()*buyF(n)*shopMul('diner',.7));
-  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} is behind the grill.</p>${jobLine('diner')}${msgP(msg)}`,[
+  ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} is behind the grill.${fact('diner_trust')?' A Trust logo is stencilled on the menu, and he does not look at it.':fact('diner_saved')?' He has a plate waiting with your name on it.':''}</p>${jobLine('diner')}${msgP(msg)}`,[
     {label:'Order a meal',sub:`${money(price)}. Restores 45 fullness.`,off:G.cash<price,fn:()=>{G.cash-=price;G.hunger=clamp(G.hunger+45,0,100);G.demand+=1;advance(30);MENUS.diner(poi,n,'You eat a hot meal.')}},
     {label:'Takeaway meals',sub:`${money(price)} each. Choose how many for your bag.`,off:G.cash<price,cls:'',fn:()=>qtyMenu({title:'Takeaway meals',intro:'Packed in paper. Eat them later.',price,max:30,mode:'buy',onConfirm:q=>{G.cash-=Math.round(price*q);G.inv.meals+=q;G.demand+=q*.5;advance(10);return `You take ${q} meal${q>1?'s':''} away.`},back:m=>MENUS.diner(poi,n,m)})},
     ...(POIS.fastfood?[]:[{label:'The fast counter',sub:'Fries, burgers and a combo. Cheap and quick.',cls:'',fn:()=>fastFoodMenu(poi,n,()=>MENUS.diner(poi,n))}]),
@@ -59,7 +59,8 @@ MENUS.club=(poi,n,msg)=>{
   const ok=(G.rep.Highline>=-10||has('educated')||has('smooth'))&&!has('known-thief');
   if(!ok)return ui(`<h2>${esc(poi.name)}</h2><p>The doorman looks you over and shakes his head. "Members and guests only."</p><p class="muted">Your standing on the Highline is too low.</p>`,[leaveBtn]);
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">Candlelight and low talk above the tide.</p>${msgP(msg)}`,[
-    {label:'Mingle with the guests',sub:'$30, 2 hours. Raises Highline standing.',off:G.cash<30,fn:()=>{G.cash-=30;G.rep.Highline=clamp(G.rep.Highline+(has('smooth')?8:5),-100,100);advance(120);MENUS.club(poi,n,'You work the room and a few doors open.')}},
+    {label:'Mingle with the guests',sub:G.fx.gilded?'Free for members, 2 hours. Raises Highline standing.':'$30, 2 hours. Raises Highline standing.',off:!G.fx.gilded&&G.cash<30,fn:()=>{if(!G.fx.gilded)G.cash-=30;G.rep.Highline=clamp(G.rep.Highline+(has('smooth')?8:5)+(G.fx.gilded?2:0),-100,100);advance(120);MENUS.club(poi,n,'You work the room and a few doors open.')}},
+    {label:G.fx.gilded?'Member of the Gilded Tide':'Join the Gilded Tide',sub:G.fx.gilded?'Dues $50 a month. Highline shops do 8% better, free mingling, 10% off the Harbor levy.':'$1,500 to join, $50 a month. Highline shops do 8% better, free mingling, 10% off the Harbor levy.',off:!!G.fx.gilded||G.cash<1500||G.rep.Highline<10,cls:'',fn:()=>ask('Join the Gilded Tide?','$1,500 now and $50 a month in dues. Needs Highline standing of 10. Members get better trade for Highline shops, free mingling and 10% off the Harbor levy.','Yes, join',()=>{G.cash-=1500;G.fx.gilded=true;histAdd('gilded','Joined the Gilded Tide. Candlelight, a name on a brass plate, and a standing order for dues.');MENUS.club(poi,n,'Welcome to the Gilded Tide. The doorman almost smiles.')},()=>MENUS.club(poi,n))},
     leaveBtn]);
   sceneCtx({where:'club'});
 };

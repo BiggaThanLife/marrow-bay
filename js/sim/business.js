@@ -27,6 +27,7 @@ function bizAppeal(b){
   if(G.ev&&G.ev.id==='strike'&&dist==='Dockside')appeal*=.75;
   appeal*=(G.mod.traffic[dist]||1);
   appeal*=tideTrade(dist).mul;
+  if(dist==='Highline'&&G.fx.gilded)appeal*=1.08;
   return appeal;
 }
 /* the tide and trade: Dockside is on the quay, so high water keeps people off it and low water brings scrap hunters; Foundry Row sits low by the river mouth and does better when the flats are open. Averaged over trading hours (8 to 20) of today, kept within 15%. */

@@ -123,3 +123,29 @@ THREADS.tidecargo={title:"Tide's Cargo",from:'A number you do not recognise',
   vex:{name:'Quiet money',text:'Vex reads the page twice and thanks you the way people thank a locksmith. An envelope arrives with $30 and no note.',fx:()=>{histAdd('tidecargo',"You told Vex where his crate had gone. It cost him nothing and paid you $30.",999)},harbor:'HARBOR notes that its tide tables and the tide disagree, and that only one of them is on the payroll.'},
   filed:{name:'On the record',text:'The harbor office stamps the page, files it and looks relieved to have a reason. The docks hear by lunch. Vex hears by the afternoon.',fx:()=>{histAdd('tidecargo',"You filed the crate's paperwork with the harbor office. Dockside noticed. So did Vex.",999)},harbor:'HARBOR would like it noted that the harbor office tide records and the tide do not match, and that HARBOR did not say so.'},
   quiet:{name:'Ash',text:'The page curls and goes. The crate was just a crate, as far as anyone will say.',fx:()=>{histAdd('tidecargo','You let the crate stay a mystery.',999)},harbor:'HARBOR still has the tide tables. They are still wrong.'}}};
+
+/* Last orders: a neglected friend's diner is going under. Teo is bonded to shops, opps, bonds and the Bay Log, so he is never removed.
+   Ignoring him changes the world instead: the Trust takes the diner's lease (fact diner_trust), Teo turns bitter, meals cost more
+   and the diner can no longer be bought. Visiting him at any point after the first message also counts as help. */
+THREADS.lastorders={title:'Last orders',from:'Big Teo',
+ hook:()=>false,
+ force:()=>day()>=35&&!shopOwned('diner')&&!fact('diner_trust')&&!fact('diner_saved')&&tier(att(NPC.teo))>=2&&day()-(G.lastTalk.teo||0)>=10,
+ start:()=>({s:String(day())}),
+ beats:{
+  b1:{wait:0,timeout:4,ignore:'b2',text:'A message from Big Teo, short for him: "Slow week. Slower month. The Trust sent a man with a clipboard and he ate nothing. Come by if you are passing. No pressure. Some pressure."',choices:[
+    {label:'Text back: on my way soon',next:'b2'},
+    {label:'Slip him $40 for now',sub:'$40',need:()=>G.cash>=40,fx:()=>{G.cash-=40;memAdd('teo',6)},next:'b2'},
+    {label:'Leave it',next:'b2'}]},
+  b2:{wait:3,timeout:4,ignore:'b3',text:'Teo again. "Notice on the door from the Trust: arrears or out. I am short $150 and the notice says nine days. If you were thinking of coming, this is the week."',choices:[
+    {label:'Cover the arrears',sub:'$150',need:()=>G.cash>=150,fx:()=>{G.cash-=150},next:'END:saved'},
+    {label:'Work his lunch rush',sub:'4 hours of your day',need:()=>G.energy>=20,fx:()=>{G.energy=clamp(G.energy-16,0,100);advance(240);G.lastTalk.teo=day()},next:'END:helped'},
+    {label:'Eat there and bring friends',sub:'$30',need:()=>G.cash>=30,fx:()=>{G.cash-=30;G.demand+=2;advance(60);G.lastTalk.teo=day()},next:'b3'},
+    {label:'Leave it',next:'b3'}]},
+  b3:{wait:3,timeout:3,ignore:th=>(+(G.lastTalk.teo||0)>=+th.roles.s+1?'END:helped':'END:closed'),text:'Last message: "Final notice goes up tomorrow. If the grill is cold when you read this, it is not because I gave up. Anything helps. Even a meal."',choices:[
+    {label:'Cover the arrears',sub:'$150',need:()=>G.cash>=150,fx:()=>{G.cash-=150},next:'END:saved'},
+    {label:'Pay what you can: $60',sub:'$60',need:()=>G.cash>=60,fx:()=>{G.cash-=60},next:'END:helped'},
+    {label:'Leave it',next:'END:closed'}]}},
+ endings:{
+  saved:{name:'Paid in full',text:'The clipboard man leaves with an envelope and a look of mild disappointment. Teo sets a plate in front of you and does not let you pay for it, then or ever again.',fx:()=>{memAdd('teo',20);setFact('diner_saved');G.inv.meals+=3;histAdd('lastorders','You covered Teo\u2019s arrears. The diner stayed his.',999);return 'Teo thinks the world of you now. Three meals in your bag.'},harbor:'HARBOR notes that a $150 intervention preserved a 40-year-old fryer. It has filed this under "efficient."'},
+  helped:{name:'Held on',text:'It is not enough to fix anything, but it is enough to keep the lights on one more month. Teo calls it a miracle. The fryer calls it Tuesday.',fx:()=>{memAdd('teo',12);setFact('diner_saved');histAdd('lastorders','You helped Teo through a bad month.',999);return 'Teo remembers who showed up.'},harbor:'HARBOR has marked the diner "stable," with a footnote reading "for now."'},
+  closed:{name:'Taken over',text:'The Trust takes the lease. The sign is repainted overnight: the same grill, the same stools, a menu with a logo on it. Teo still cooks. He has stopped talking.',fx:()=>{memAdd('teo',-25);setFact('diner_trust');repAdd('Grid',-2);histAdd('lastorders','The Trust took the diner\u2019s lease. Teo went quiet.',999);return 'Meals at the diner cost more now, and the shop is no longer for sale.'},harbor:'HARBOR has recorded the transfer as "a positive consolidation." It has also stopped recommending the eggs.'}}};

@@ -30,6 +30,7 @@ function pickpocket(n){
 }
 function talk(n,extra){
   if(!G.met[n.id])G.met[n.id]=day();
+  G.lastTalk[n.id]=day();
   const a=att(n),tr=tier(a),tg=tagsNow(),s=npcS(n);
   let best=null,bv=-1;
   tg.forEach(t=>{if(n.react[t]&&Math.abs(n.aff[t]||0)>=bv){bv=Math.abs(n.aff[t]||0);best=t}});

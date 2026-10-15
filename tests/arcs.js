@@ -100,7 +100,7 @@ function runArcs(api, win, runs) {
           if (th.pending) {
             api.threadBeat(th);
             const b = pickBtn();
-            if (b) { b.click(); flush(); } else { th.pending = false; th.beat = th.beat; api.advanceThread(th, T.beats[th.beat].ignore, false); }
+            if (b) { b.click(); flush(); } else { th.pending = false; th.beat = th.beat; api.advanceThread(th, (ig => typeof ig === 'function' ? ig(th) : ig)(T.beats[th.beat].ignore), false); }
           } else {
             G().t += 3 * 1440; api.threadsHourly(); flush();
             if (!th.pending && G().t > th.due) th.pending = true;

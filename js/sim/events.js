@@ -57,6 +57,7 @@ function startEvent(t){
   recomputeMods();
   let extra='';
   if(o.start){const r=o.start();if(r)extra=r}
+  if(t.id==='surge'||t.id==='flood'){const r=surgeRepairs(t.id==='flood'?['Dockside','Foundry Row']:['Dockside'],t.id==='flood'?.05:.03);if(r)extra=(extra?extra+' ':'')+r}
   if(o.follow&&Math.random()<o.follow[1])G.queue.push({id:o.follow[0],on:day()+1});
   news(`${SEVN[t.sev]}: ${o.name}. ${o.desc}${extra?' '+extra:''}`,t.sev);
   if(t.sev>=3)quip('disaster');

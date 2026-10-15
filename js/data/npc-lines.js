@@ -120,6 +120,7 @@ const NPC_LINES={
 };
 /* a line from this person you have not heard yet, from their attitude tier (then the one below). Once those are all heard they start again. */
 function chatLine(n,tr){
+  if(n.id==='teo'&&fact('diner_trust'))return `"${pick(['Order or leave. The menu has a logo now.','Same grill. Different name on the door.','The man with the clipboard eats here free. Funny how that works.','I cook. That is the whole conversation.'])}"`;
   const L=NPC_LINES[n.id];if(!L)return n.topic;
   const s=npcS(n);s.heard=s.heard||{};
   const tiers=[tr,Math.max(0,tr-1)].filter((t,i,a)=>a.indexOf(t)===i);
