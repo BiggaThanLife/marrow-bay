@@ -8,9 +8,10 @@ const FISH_SPECIES=[
 const LOG_DISHES={meals:'Plain meal',stew:'Fish stew',salad:'Radish salad',soup:'Tomato soup',pie:'Pumpkin pie',smoked:'Smoked fish'};
 const LOG_RIBBONS={first:'First place ribbon',second:'Second place ribbon'};
 const LOG_REWARD=120;
+const LOG_FINDS=['Weed-line shell','Sand dollar','Snail','Moss ball','Starfish','Sea spider'];
 function logInit(){
   const L=G.log=G.log||{};
-  L.fish=L.fish||{};L.dishes=L.dishes||{};L.npcs=L.npcs||{};L.places=L.places||{};L.ribbons=L.ribbons||{};L.done=L.done||{};
+  L.fish=L.fish||{};L.dishes=L.dishes||{};L.npcs=L.npcs||{};L.places=L.places||{};L.ribbons=L.ribbons||{};L.finds=L.finds||{};L.done=L.done||{};
   if(G.fairWins>0)L.ribbons.first=1;
 }
 function logPlaces(){return Object.keys(POIS).filter(id=>MENUS[id]&&POIS[id].d&&DISTS.includes(POIS[id].d))}
@@ -21,6 +22,7 @@ function logCats(){
    {id:'dishes',n:'Dishes cooked',have:Object.keys(LOG_DISHES).filter(k=>L.dishes[k]).length,total:Object.keys(LOG_DISHES).length,list:Object.keys(LOG_DISHES).map(k=>[LOG_DISHES[k],L.dishes[k]?'cooked '+L.dishes[k]:''])},
    {id:'npcs',n:'Close friends',have:NPCS.filter(x=>L.npcs[x.id]).length,total:NPCS.length,list:NPCS.map(x=>[x.name,L.npcs[x.id]?'close':''])},
    {id:'places',n:'Places visited',have:pl.filter(id=>L.places[id]).length,total:pl.length,list:DISTS.map(d=>{const a=pl.filter(id=>POIS[id].d===d);return[d,`${a.filter(id=>L.places[id]).length} of ${a.length}`]})},
+   {id:'finds',n:'Shore finds',have:LOG_FINDS.filter(k=>L.finds[k]).length,total:LOG_FINDS.length,list:LOG_FINDS.map(k=>[k,L.finds[k]?'found '+L.finds[k]:''])},
    {id:'ribbons',n:'Fair ribbons',have:Object.keys(LOG_RIBBONS).filter(k=>L.ribbons[k]).length,total:2,list:Object.keys(LOG_RIBBONS).map(k=>[LOG_RIBBONS[k],L.ribbons[k]?'won':''])}
   ];
 }
@@ -49,6 +51,13 @@ function logFishOne(pk,quiet){
   if(!G.log)logInit();
   const first=!G.log.fish[pk.n];G.log.fish[pk.n]=(G.log.fish[pk.n]||0)+1;
   if(first&&!quiet)notify(`New in your Bay Log: ${pk.n}.`);
+  return first;
+}
+/* a flavour find dug from the flats; true the first time (plastic bags are scrap, not logged) */
+function logFindOne(n){
+  if(!G.log)logInit();
+  if(!LOG_FINDS.includes(n))return false;
+  const first=!G.log.finds[n];G.log.finds[n]=(G.log.finds[n]||0)+1;logSync();
   return first;
 }
 function logFish(n,boat){

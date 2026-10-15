@@ -1,0 +1,88 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay flats test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:412px;height:700px;border:1px solid #888}</style>
+<h2>Dig the flats</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Glints show on the flats at low tide only (more on spring tides); the Dig button appears next to one; a dig grants a find, costs energy and 10-15 minutes,
+   and that spot is gone; the tide coming in clears the glints; the ambience level is high at the water and zero far inland. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,SET,DG,digAct,digUpdate,flatSpots,flatNear,ctxRefresh,applyFlatsWalk,tideV,tideCycle,ambienceLevel,FLAT_X,FLAT_Y})`);
+  const G = () => api.G, DG = api.DG, vis = id => !doc.getElementById(id).hidden;
+  const real = win.Math.random;
+  const setT = t => { G().t = t; api.applyFlatsWalk(); };
+  const findT = (pred) => { for (let t = 600; t < 600 + 14 * 1440; t += 15) if (pred(t, G)) return t; return -1 };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; api.SET.hints = false;
+    G().p.path = []; G().energy = 80; G().hunger = 80; G().flats = 80;
+    const tSpring = findT(t => api.tideV(t) < -.85 && api.tideCycle(t) === 'spring');
+    const tPlain = findT(t => api.tideV(t) < -.6 && api.tideCycle(t) === '');
+    const tHigh = findT(t => api.tideV(t) > .8);
+    if (tSpring < 0 || tPlain < 0 || tHigh < 0) throw new Error('could not find test tides ' + [tSpring, tPlain, tHigh]);
+    // high tide: no glints, no button
+    setT(tHigh); G().p.x = 42; G().p.y = 32; api.ctxRefresh();
+    if (api.flatSpots().length) errs.push('glints at high tide');
+    if (vis('ctxbar')) errs.push('button at high tide');
+    // spring low tide: glints (count across several tides, spring >= plain)
+    const count = t0 => { let n = 0; for (let k = 0; k < 4; k++) { setT(t0 + k * 744); n += api.flatSpots().length } return n };
+    const nSpring = count(tSpring), nPlain = count(tPlain);
+    stats.spring = nSpring; stats.plain = nPlain;
+    if (!nSpring) errs.push('no glints at spring low tide');
+    if (nSpring <= nPlain) errs.push('spring tides should show more glints: ' + nSpring + ' vs ' + nPlain);
+    // find a low tide with a spot and stand beside it
+    let t = tSpring, spots = [];
+    for (let k = 0; k < 20 && !spots.length; k++) { t = tSpring + k * 744; setT(t); spots = api.flatSpots() }
+    if (!spots.length) throw new Error('no spot to dig');
+    G().t = t; const q = spots[0];
+    G().p.x = q.x + .3; G().p.y = 33; G().p.path = [];
+    api.ctxRefresh();
+    if (!vis('ctxbar') || doc.getElementById('ctx-main').textContent !== 'Dig') errs.push('Dig button not shown: ' + doc.getElementById('ctx-main').textContent);
+    if (vis('ctx-more') === false) errs.push('More button missing');
+    G().p.x = q.x + 6; G().p.y = 33; api.ctxRefresh(); if (vis('ctxbar') && doc.getElementById('ctx-main').textContent === 'Dig') errs.push('Dig button far from the spot');
+    G().p.x = q.x + .3; api.ctxRefresh();
+    // dig
+    win.Math.random = () => .7; // flavour find band
+    const t0 = G().t, en0 = G().energy, cash0 = G().cash, n0 = api.flatSpots().length;
+    api.digAct(1000);
+    if (DG.st !== 'digging') errs.push('not digging: ' + DG.st);
+    api.digUpdate(1000 + 800);
+    if (DG.st !== 'pop' || !DG.res) errs.push('no result after the dig: ' + DG.st);
+    if (!DG.res || DG.res.kind !== 'find') errs.push('expected a flavour find: ' + (DG.res && DG.res.kind));
+    const dt = G().t - t0; stats.minutes = dt; stats.find = DG.res && DG.res.name;
+    if (!(dt >= 10 && dt <= 15)) errs.push('dig time out of range: ' + dt);
+    if (!(G().energy < en0)) errs.push('dig cost no energy');
+    if (G().log.finds && DG.res.find && DG.res.find.pk !== 12 && !G().log.finds[DG.res.name]) errs.push('find not in the Bay Log');
+    if (!(G().cash > cash0)) errs.push('find paid nothing');
+    if (api.flatSpots().length !== n0 - 1) errs.push('dug spot should be gone: ' + n0 + ' -> ' + api.flatSpots().length);
+    api.digUpdate(1000 + 800 + 1600); if (DG.st !== 'idle') errs.push('dig did not finish');
+    // scrap band
+    win.Math.random = () => .2; G().p.path = []; const s = api.flatSpots();
+    if (s.length) { G().p.x = s[0].x; G().p.y = 33; const sc0 = G().inv.scrap; api.digAct(5000); api.digUpdate(5800); if (!(G().inv.scrap > sc0)) errs.push('scrap dig gave no scrap'); api.digUpdate(8000) }
+    win.Math.random = real;
+    // walking away cancels a dig
+    const s2 = api.flatSpots();
+    if (s2.length) { G().p.x = s2[0].x; G().p.y = 33; G().p.path = []; api.digAct(9000); G().p.path = [[40, 33]]; api.digUpdate(9100); if (DG.st !== 'idle') errs.push('walking did not cancel the dig'); G().p.path = [] }
+    // too tired
+    const s3 = api.flatSpots();
+    if (s3.length) { G().p.x = s3[0].x; G().p.y = 33; G().energy = 1; api.digAct(10000); if (DG.st !== 'idle') errs.push('dug while exhausted'); G().energy = 80 }
+    // tide in clears the glints
+    setT(tHigh);
+    if (api.flatSpots().length) errs.push('glints should clear when the tide comes in');
+    api.ctxRefresh(); if (doc.getElementById('ctx-main').textContent === 'Dig') errs.push('Dig button should hide at high tide');
+    // ambience: high at the dock, none far inland
+    G().p.x = 20; G().p.y = 33; const a1 = api.ambienceLevel(); G().p.x = 20; G().p.y = 20; const a2 = api.ambienceLevel(); G().p.x = 5; G().p.y = 5; const a3 = api.ambienceLevel();
+    stats.amb = [a1, a2, a3].map(v => +v.toFixed(2));
+    if (!(a1 > .5)) errs.push('ambience weak at the dock: ' + a1); if (!(a3 < .1)) errs.push('ambience far inland: ' + a3);
+  } catch (e) { errs.push(e.message + ' ' + (e.stack || '').split('\n')[1]) }
+  win.Math.random = real;
+  const v = document.getElementById('verdict');
+  v.className = errs.length ? 'bad' : 'ok'; v.textContent = errs.length ? errs.length + ' errors' : 'No errors.';
+  document.getElementById('out').textContent = errs.slice(0, 25).join('\n') + '\n' + JSON.stringify(stats);
+  window.__done = { ok: !errs.length, errs, stats };
+});
+</script>

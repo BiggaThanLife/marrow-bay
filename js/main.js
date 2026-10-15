@@ -41,7 +41,7 @@ function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
   requestAnimationFrame(frame);
   try{if(G&&!modal)tick(dt)}catch(e){console.error(e)}
-  try{if(G){fishUpdate(now);ctxRefresh()}else if(FS.st!=='idle')fishCancel()}catch(e){console.error(e)}
+  try{if(G){fishUpdate(now);digUpdate(now);ctxRefresh()}else{if(FS.st!=='idle')fishCancel();if(DG.st!=='idle')digReset()}}catch(e){console.error(e)}
   if(G){
     /* an open sheet covers part of the map, so slide the view until the player sits in the part that is still showing */
     let tx=0,ty=0;
