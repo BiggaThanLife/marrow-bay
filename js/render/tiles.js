@@ -7,6 +7,20 @@ function drawTile(tx,ty,now){
   if(t===T.WATER){
     if(!drawGround('water',tx,ty,sx,sy,d)){cx.fillStyle='#2c5b78';cx.fillRect(sx,sy,TS,TS);
     if(Math.sin(now*.002+tx*.9+ty*.7)>.5){cx.fillStyle='#4f86a6';cx.fillRect(sx+3,sy+6,8,1)}}
+    /* mudflat strip going under or coming up: the shallows take a muddy tint as the tide nears the thresholds */
+    if(ty>=34&&ty<=35&&tx>=MUD_X0&&tx<=MUD_X1){const v=tideV(),k=clamp((-.1-v)/.5,0,.55);if(k>0){cx.fillStyle='rgba(138,118,86,'+k.toFixed(2)+')';cx.fillRect(sx,sy,TS,TS)}}
+  }else if(t===T.FLAT&&ty>=34){
+    /* mudflat strip: wet mud variants, a glossy wet edge toward the water, a few stranded weeds and pebbles; hash-driven so it never flickers */
+    if(!drawGround('flat',tx,ty,sx,sy,d)){cx.fillStyle=h%3?'#6b5638':'#5d4a30';cx.fillRect(sx,sy,TS,TS)}
+    const wetS=map[ty+1]&&map[ty+1][tx]===T.WATER,wetW=map[ty][tx-1]===T.WATER,wetE=map[ty][tx+1]===T.WATER;
+    cx.fillStyle='rgba(150,190,205,.28)';cx.fillRect(sx+2+(h>>2)%6,sy+3+(h>>4)%4,5,1);
+    if(wetS){cx.fillStyle='rgba(44,91,120,.55)';cx.fillRect(sx,sy+12,TS,4);cx.fillStyle='rgba(200,225,235,.6)';cx.fillRect(sx,sy+12,TS,1)}
+    if(wetW){cx.fillStyle='rgba(44,91,120,.5)';cx.fillRect(sx,sy,2,TS)}
+    if(wetE){cx.fillStyle='rgba(44,91,120,.5)';cx.fillRect(sx+TS-2,sy,2,TS)}
+    if(ty===34&&map[ty-1][tx]===T.DOCK){cx.fillStyle='rgba(30,22,14,.3)';cx.fillRect(sx,sy,TS,2)}
+    if(h%7===0){cx.fillStyle='#3e5a30';cx.fillRect(sx+4+(h>>3)%6,sy+6,1,3);cx.fillRect(sx+5+(h>>3)%6,sy+7,2,1);cx.fillRect(sx+3+(h>>3)%6,sy+8,1,2)}
+    else if(h%5===0){cx.fillStyle='rgba(230,222,205,.75)';cx.fillRect(sx+3+(h>>5)%9,sy+5+(h>>6)%6,2,1);cx.fillStyle='#8f877a';cx.fillRect(sx+9,sy+9,2,2)}
+    if(tideV()>-.45){cx.fillStyle='rgba(44,91,120,'+clamp((tideV()+.45)*1.2,0,.5).toFixed(2)+')';cx.fillRect(sx,sy,TS,TS)}
   }else if(t===T.FLAT){
     /* the low-tide walkway: exposed sand and mud with wet shine and a few shells, drawn from the tile hash so it never flickers */
     cx.fillStyle=h%3?'#8a7656':'#7d6a4c';cx.fillRect(sx,sy,TS,TS);

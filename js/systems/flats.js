@@ -20,13 +20,21 @@ Object.assign(SFX,{
 });
 const flatHash=(a,b)=>{let h=(a*374761393+b*668265263)|0;h=(h^(h>>>13))*1274126177|0;return((h^(h>>>16))>>>0)/4294967296};
 const flatTideIdx=()=>Math.floor((G.t+190)/(12.4*60));
-function flatsLow(){return !!G&&typeof flatsOpen!=='undefined'&&flatsOpen&&tideV()<-.4}
+function flatsLow(){return !!G&&typeof flatsOpen!=='undefined'&&(flatsOpen||mudOpen())&&tideV()<-.4}
+const MUD_SLOTS=14;
 /* the glints on show right now: [{slot,x,y (tile units, tile centre = integer),ph}] */
 function flatSpots(){
   if(!flatsLow())return[];
   const idx=flatTideIdx();if(DG.idx!==idx){DG.idx=idx;DG.dug={}}
   const cyc=tideCycle(),p=cyc==='spring'?.9:cyc==='neap'?.4:.55,out=[];
+  const pm=cyc==='spring'?.8:cyc==='neap'?.35:.5;
+  if(mudOpen())for(let s=FLAT_SLOTS;s<FLAT_SLOTS+MUD_SLOTS;s++){
+    if(DG.dug[s]||flatHash(idx,s)>=pm)continue;
+    const r=MUD_ROWS[1].on&&flatHash(idx,s+200)<.5?MUD_ROWS[1]:MUD_ROWS[0];
+    out.push({slot:s,x:MUD_X0+flatHash(idx,s+40)*(MUD_X1-MUD_X0),y:r.y+(flatHash(idx,s+80)-.5)*.5,ph:flatHash(idx,s+120)*6.28,two:flatHash(idx,s+160)<.45});
+  }
   for(let s=0;s<FLAT_SLOTS;s++){
+    if(!flatsOpen)break;
     if(DG.dug[s]||flatHash(idx,s)>=p)continue;
     out.push({slot:s,x:FLAT_X[s>>1]+(flatHash(idx,s+40)-.5)*.7,y:FLAT_Y+(flatHash(idx,s+80)-.5)*.5,ph:flatHash(idx,s+120)*6.28,two:flatHash(idx,s+160)<.45});
   }

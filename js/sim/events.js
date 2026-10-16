@@ -11,8 +11,33 @@ function setBridge(closed){
 const FLAT_X=[41,42,43,44],FLAT_Y=33;
 let flatsOpen=false,flatsWarned=false;
 const onFlatBand=e=>e.x>=40.6&&e.x<=44.4&&Math.abs(e.y-FLAT_Y)<1.6;
+/* The mudflat strip: two rows of shallow harbour south of the Dockside pier (x 22-37, y 34-35), walkable from the planks. Row 34 follows the walkway thresholds (opens below -0.5, closes above -0.3); row 35 is deeper and only dries on a good low (opens below -0.75, closes above -0.6), so spring tides show more of it. Derived from the tide each call, nothing is saved. */
+const MUD_X0=22,MUD_X1=37,MUD_ROWS=[{y:34,on:false,open:-.5,close:-.3},{y:35,on:false,open:-.75,close:-.6}];
+const mudOpen=()=>MUD_ROWS[0].on;
+const inMudBox=e=>e.x>=MUD_X0-.4&&e.x<=MUD_X1+.4&&e.y>33.5&&e.y<35.6;
+const onMudRow=(e,r)=>e.x>=MUD_X0-.4&&e.x<=MUD_X1+.4&&e.y>=r.y-.5&&e.y<r.y+.6;
+function applyMudStrip(v){
+  MUD_ROWS.forEach(r=>{
+    const want=r.on?v<r.close:v<r.open;
+    if(want===r.on)return;
+    r.on=want;for(let x=MUD_X0;x<=MUD_X1;x++)map[r.y][x]=want?T.FLAT:T.WATER;
+    if(!want&&G&&G.p.path&&G.p.path.some(q=>q[1]===r.y&&q[0]>=MUD_X0&&q[0]<=MUD_X1)){G.p.path=[];G.p.onArrive=null}
+    if(r.y===34){
+      if(want&&G&&Math.hypot(G.p.x-30,G.p.y-34)<14)notify('The tide is out. Mudflats show south of the pier.');
+      mudWarned=false;
+    }
+  });
+  if(!G)return;
+  if(mudOpen()&&v>-.4&&!mudWarned&&inMudBox(G.p)){mudWarned=true;notify('The water is creeping back over the mudflats. Move!')}
+  /* push anyone standing on a row that has flooded up to the pier planks (nearest dry tile) */
+  const fix=e=>{MUD_ROWS.forEach(r=>{if(!r.on&&onMudRow(e,r)){e.y=33;e.path=[]}})};
+  if(MUD_ROWS.some(r=>!r.on&&onMudRow(G.p,r))){fix(G.p);G.p.onArrive=null;notify('The tide comes in and you wade back to the pier.')}
+  NPCS.forEach(fix);
+}
+let mudWarned=false;
 function applyFlatsWalk(){
   const v=tideV(),want=flatsOpen?v<-.3:v<-.5;
+  applyMudStrip(v);
   if(want!==flatsOpen){
     flatsOpen=want;FLAT_X.forEach(x=>{map[FLAT_Y][x]=want?T.FLAT:T.WATER});
     if(want&&G&&Math.hypot(G.p.x-42.5,G.p.y-FLAT_Y)<12)notify('The tide is out. A walkway of mud and sand shows across the river mouth.');

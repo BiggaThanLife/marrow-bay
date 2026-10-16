@@ -187,6 +187,7 @@ function groundPick(kind,tx,ty,d){
     return['asphalt',a];
   }
   if(kind==='farm')return['tilled',h%2];
+  if(kind==='flat')return['mud',h%9===0?1:h%4===0?2:0];
   if(kind==='water')return['water',(Math.floor(performance.now()/900)+h%3)%3];
   if(kind==='plaza')return['paving',d==='Highline'?(h%4===0?1:0):v3];
   if(kind==='dock'){const low=typeof tideV==='function'&&tideV()<-.2;return['planks',low?1+h%2:(h%5===0?1:0)]}

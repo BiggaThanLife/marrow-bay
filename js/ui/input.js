@@ -61,6 +61,7 @@ cv.addEventListener('pointerdown',e=>{
   /* the pier now has a Fish button (js/ui/context.js); the menu is behind More. The crate step of the opening still lands on the menu. */
   if(t===T.DOCK)return walkTo(tx,ty,()=>{if(G.opening&&G.opening.step==='crate')waterfront()});
   if(t===T.FLAT)return walkTo(tx,ty);
+  if(t===T.WATER&&ty>=34&&ty<=35&&tx>=MUD_X0&&tx<=MUD_X1)return notify(tideV()>-.3?'Water covers the mudflats. They dry out at low tide.':'This part of the flats is still under water.');
   if(t===T.WATER)return notify(tideV()>-.3&&tx>=41&&tx<=44&&ty===33?'Water covers the river mouth. It dries out at low tide.':'Deep water.');
   walkTo(tx,ty);
 });
