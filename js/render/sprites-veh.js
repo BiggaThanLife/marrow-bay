@@ -1,7 +1,7 @@
 "use strict";
 /* Drawn vehicle sprites (original art for this game). Side views only, half map units per pixel, so a 48x32 car frame is drawn 24x16 map units.
    Sheet columns: right f0, right f1, left f0, left f1 (wheels turn). Sedan sheet has one row per PAINTS entry. Anchor for cars is (24,29), under the middle of the wheels.
-   Only the player's sedan, coupe, bike and scooter (32x24 frames, anchor 16,21) are drawn on the map today; taxi, police, van and tram sheets are loaded and can be drawn with drawVehSprite when those vehicles exist.
+   Only the player's sedan, coupe, bike and scooter (32x24 frames, anchor 16,21) are drawn on the map today; taxi, police, van and tram sheets are drawn by traffic.js (ambient traffic) with drawVehSprite.
    There is no top or front view in the game (travel up or down the screen faces left or right as before), so the side sprite is always correct.
    drawVeh uses the sprite when RS>=2 and the sheet has loaded; otherwise the procedural drawCarHD stays. */
 const VEH_V=1,VEH_IMG={};

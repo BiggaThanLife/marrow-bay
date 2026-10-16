@@ -31,6 +31,7 @@ function drawWorld(now){
     G.structs.forEach(s=>ents.push({y:s.y-.5,f:()=>drawStruct(s,now)}));
     NPCS.forEach(n=>{if(!n.indoors)ents.push({y:n.y,f:()=>person(n.x,n.y,n.col,false,n.path.length>0,now,false,NPC_LOOK[n.id])})});
     ambientEnts(now).forEach(e=>ents.push(e));
+    trafficEnts(now,ents);
     WALKERS.forEach(w=>{if(!w.indoors)ents.push({y:w.y,f:()=>person(w.x,w.y,w.col,false,w.path.length>0,now,false,w.look)})});
     if(G.companion&&NPC[G.companion]){const cn=NPC[G.companion],ct=compTrail.length>=8?compTrail[0]:[G.p.x-.9,G.p.y+.1];ents.push({y:ct[1],f:()=>person(ct[0],ct[1],cn.col,false,compTrail.length>=8,now,false,NPC_LOOK[cn.id])})}
     ents.push({y:G.p.y,f:()=>{
