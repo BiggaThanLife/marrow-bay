@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay street conversation test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:412px;height:800px;border:1px solid #888}</style>
+<h2>Talking in the street with speech bubbles</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Tapping a person opens a bubble + chips, not the menu; chips run the same effects as the menu; talk() called from story code still opens the menu;
+   walking away closes it; the person stands still while talking. Add ?shot=1 to leave a conversation on screen for a screenshot (?ask=1 for an Ask about town answer). */
+const f = document.getElementById('game'), Q = new URLSearchParams(location.search);
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document;
+  const api = win.eval(`({get G(){return G},get BUB(){return BUB},NPC,start,closeMenu,popClear,talk,talkStreet,bubUpdate,bubClose,bubSkip,npcS,tick,drawWorld,ctxCurrent,ctxRefresh,att,tier,day,hud})`);
+  const G = () => api.G, sheetOpen = () => !doc.getElementById('sheet').hidden, bub = () => doc.getElementById('bubble'), chips = () => [...doc.querySelectorAll('#bubchips .chip')], chip = rx => chips().find(x => rx.test(x.textContent));
+  const finish = () => { api.bubUpdate(performance.now() + 60000); };
+  try {
+    api.start('farm'); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; win.eval('SET.hints=false'); G().opening = { step: 'done', done: true };
+    const n = api.NPC.teo; n.indoors = false; n.path = []; n.x = Math.round(G().p.x) + 1; n.y = Math.round(G().p.y); G().met.teo = 1; G().npcs.teo.m = 80; G().npcs.teo.chat = -1; delete G().npcs.teo.heard; G().inv.meals = 2;
+    api.tick(.01); api.hud(); api.ctxRefresh();
+    const cc = api.ctxCurrent(); if (!cc || cc.id !== 'talk') errs.push('no Talk context button next to Teo: ' + (cc && cc.id));
+    api.talkStreet(n);
+    if (!api.BUB) errs.push('talkStreet opened no conversation');
+    if (sheetOpen()) errs.push('the menu opened');
+    if (bub().hidden) errs.push('no bubble');
+    if (!G().lastTalk.teo) errs.push('lastTalk not set');
+    if (api.ctxCurrent()) errs.push('context button still shown during a conversation');
+    const full = api.BUB.full; if (!full) errs.push('empty greeting');
+    if (api.BUB.shown >= full.length && full.length > 1) errs.push('no typewriter');
+    if (chips().length) errs.push('chips shown before the text finished');
+    api.bubSkip(); if (doc.getElementById('bub-txt').textContent !== full) errs.push('skip did not show the whole line');
+    if (!chips().length) errs.push('no chips');
+    n.path = [[n.x + 3, n.y]]; const x0 = n.x; api.tick(.5); if (n.x !== x0) errs.push('NPC moved while talking');
+    n.path = [];
+    const m0 = G().npcs.teo.m; chip(/^Chat$/).click(); finish();
+    if (G().npcs.teo.chat !== api.day() || G().npcs.teo.m !== m0 + 3) errs.push('Chat effects wrong');
+    if (!/"/.test(api.BUB.full)) errs.push('Chat showed no quoted line: ' + api.BUB.full);
+    if (sheetOpen()) errs.push('Chat opened the menu');
+    if (Object.keys(G().npcs.teo.heard || {}).length !== 1) errs.push('heard not recorded');
+    if (chip(/^Chat$/)) errs.push('Chat still offered after chatting today');
+    if (doc.getElementById('bubme').hidden) errs.push('no player bubble after a reply');
+    const t0 = G().t; chip(/^Ask about town$/).click(); finish();
+    if (!(G().t > t0)) errs.push('Ask took no time'); if (!/^"/.test(api.BUB.full)) errs.push('Ask answer not a quoted line');
+    chip(/^Give/).click(); finish(); if (!chip(/^A meal$/)) errs.push('no meal option');
+    const h0 = api.npcS(n).m; chip(/^A meal$/).click(); finish();
+    if (G().inv.meals !== 1 || api.npcS(n).m <= h0) errs.push('meal effects wrong'); if (!/accepts the meal/.test(api.BUB.full)) errs.push('meal reply missing');
+    G().items = { flowers: 1 }; api.npcS(n).gift = -1; finish(); chip(/^Give/).click(); finish();
+    chip(/^A gift$/).click(); if (!sheetOpen()) errs.push('gift choice menu did not open');
+    [...doc.querySelectorAll('#sheet #actions button')].find(b => /^Flowers/.test(b.innerText)).click(); finish();
+    if (sheetOpen()) errs.push('gift left the menu open'); if (!api.BUB || !/takes the flowers/.test(api.BUB.full)) errs.push('gift reply missing');
+    finish();
+    if (chip(/mind/)) {
+      chip(/mind/).click(); if (!sheetOpen()) errs.push('bond scene did not open');
+      [...doc.querySelectorAll('#sheet #actions button')][0].click(); finish();
+      if (sheetOpen()) errs.push('bond left the menu open'); if (!api.BUB) errs.push('bond closed the conversation');
+    } else errs.push('no mind chip for Teo at close friend');
+    finish(); chip(/^More/).click();
+    if (api.BUB) errs.push('More left the bubble up'); if (!sheetOpen()) errs.push('More did not open the menu');
+    if (!/Pickpocket/.test(doc.getElementById('sheet').innerText)) errs.push('menu lacks Pickpocket');
+    api.closeMenu();
+    api.talk(n); if (!sheetOpen() || api.BUB) errs.push('direct talk() did not open the menu'); api.closeMenu();
+    api.talkStreet(n); G().p.x -= 4; api.bubUpdate(performance.now()); if (api.BUB) errs.push('walking away did not close'); G().p.x += 4;
+    api.talkStreet(n); api.BUB.last -= 40000; api.bubUpdate(performance.now()); if (api.BUB) errs.push('timeout did not close');
+    api.talkStreet(n); finish(); chip(/^Bye$/).click(); if (api.BUB || !bub().hidden) errs.push('Bye did not close');
+    G().npcs.teo.m = -90; api.talkStreet(n); finish(); if (chip(/^Chat$/) || chip(/^Ask/)) errs.push('hostile person offers chat'); if (!chip(/^More/)) errs.push('hostile person has no More'); api.bubClose();
+    G().npcs.teo.m = 80;
+    if (Q.get('shot')) { win.eval('BUB_IDLE_MS=1e12');
+      G().npcs.teo.m = 80; G().npcs.teo.chat = -1; api.talkStreet(n); finish();
+      if (Q.get('ask')) { chip(/^Chat$/).click(); finish(); chip(/^Ask about town$/).click(); finish(); }
+      api.drawWorld(performance.now()); api.bubUpdate(performance.now());
+    }
+  } catch (e) { errs.push('exception: ' + e.message + ' ' + (e.stack || '').split('\n').slice(0, 3).join(' / ')); }
+  document.getElementById('verdict').innerHTML = errs.length ? '<span class="bad">' + errs.length + ' problems</span>' : '<span class="ok">No errors.</span>';
+  document.getElementById('out').textContent = errs.join('\n');
+  window.__done = true;
+});
+</script>

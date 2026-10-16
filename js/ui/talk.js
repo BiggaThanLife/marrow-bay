@@ -28,18 +28,8 @@ function pickpocket(n){
     notify('You were seen. Police will be looking for you.');talk(n,`${n.name} grabs your wrist. "Hey!"`);
   }
 }
-function talk(n,extra){
-  if(!G.met[n.id])G.met[n.id]=day();
-  G.lastTalk[n.id]=day();
-  const a=att(n),tr=tier(a),tg=tagsNow(),s=npcS(n);
-  let best=null,bv=-1;
-  tg.forEach(t=>{if(n.react[t]&&Math.abs(n.aff[t]||0)>=bv){bv=Math.abs(n.aff[t]||0);best=t}});
-  const why=tg.filter(t=>n.aff[t]);
-  if(!extra)extra=arcBusyText(n);
-  histTier(n,tr);
-  const heard=G.rumors.filter(r=>r.knows.includes(n.id)).map(r=>RUM[r.type].t);
-  const needsL=[];if(s.hunger<40)needsL.push('hungry');if(s.cash<15)needsL.push('short on cash');
-  const cls=tr>=3?'good':tr===0?'bad':tr===1?'amber':'';
+/* the choices a conversation offers; shared by the full menu and the street bubble chips so every effect is the same code */
+function talkBtnList(n,tr,s){
   const shop=Object.keys(OWNER).find(k=>OWNER[k]===n.id&&POIS[k]);
   const btns=[
     {label:'Chat',sub:s.chat===day()?'You already chatted today':'Small talk builds trust',off:s.chat===day()||tr===0,
@@ -58,6 +48,23 @@ function talk(n,extra){
   btns.push(...openingTalkButtons(n));
   btns.push({label:'Pickpocket',sub:'Risky. Raises your wanted level if caught.',cls:'quiet',fn:()=>pickpocket(n)});
   btns.push(leaveBtn);
+  return btns;
+}
+function talk(n,extra,forceMenu){
+  if(!forceMenu&&typeof bubIntercept==='function'&&bubIntercept(n,extra))return;
+  if(forceMenu&&typeof bubClose==='function')bubClose();
+  if(!G.met[n.id])G.met[n.id]=day();
+  G.lastTalk[n.id]=day();
+  const a=att(n),tr=tier(a),tg=tagsNow(),s=npcS(n);
+  let best=null,bv=-1;
+  tg.forEach(t=>{if(n.react[t]&&Math.abs(n.aff[t]||0)>=bv){bv=Math.abs(n.aff[t]||0);best=t}});
+  const why=tg.filter(t=>n.aff[t]);
+  if(!extra)extra=arcBusyText(n);
+  histTier(n,tr);
+  const heard=G.rumors.filter(r=>r.knows.includes(n.id)).map(r=>RUM[r.type].t);
+  const needsL=[];if(s.hunger<40)needsL.push('hungry');if(s.cash<15)needsL.push('short on cash');
+  const cls=tr>=3?'good':tr===0?'bad':tr===1?'amber':'';
+  const btns=talkBtnList(n,tr,s);
   ui(`<h2>${esc(n.name)}</h2><p class="muted">${esc(n.role)}, ${n.d}. Attitude: <span class="${cls}">${LAB[tr]}</span>${needsL.length?`. Seems ${needsL.join(' and ')}.`:'.'}</p>
   <p>${esc(n.tier[tr])}</p>${best?`<p>${esc(n.react[best])}</p>`:''}${heard.length&&!rumorLine(n)?`<p class="amber">${esc(shortName(n))} has heard: ${esc(heard[0])}</p>`:''}${rumorLine(n)?`<p>"${esc(rumorLine(n))}"</p>`:''}${extra?`<p class="amber">${esc(extra)}</p>`:''}
   ${why.length?`<p class="muted small">Shaped by: ${why.map(esc).join(', ')}.</p>`:''}`,btns);sceneCtx({who:n});

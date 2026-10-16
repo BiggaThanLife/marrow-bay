@@ -15,7 +15,7 @@ function tick(dt){
     if(Math.hypot(R.x-p.x,R.y-p.y)<1.2)return bust();
   }else if(R.chasing){R.chasing=false;assign(R,true);notify('You lost them. Lay low.')}
   NPCS.forEach(n=>{
-    if(n.indoors||(n===R&&R.chasing))return;
+    if(n.indoors||(n===R&&R.chasing)||(BUB&&BUB.n===n))return;
     moveEnt(n,dt,2.6);
     if(!n.path.length&&n.goHome&&n.act==='home')n.indoors=true;
   });
@@ -41,7 +41,7 @@ function frame(now){
   const dt=Math.min(.05,(now-last)/1000);last=now;
   requestAnimationFrame(frame);
   try{if(G&&!modal)tick(dt)}catch(e){console.error(e)}
-  try{if(G){fishUpdate(now);digUpdate(now);ctxRefresh()}else{if(FS.st!=='idle')fishCancel();if(DG.st!=='idle')digReset()}}catch(e){console.error(e)}
+  try{if(G){fishUpdate(now);digUpdate(now);ctxRefresh();bubUpdate(now)}else{if(FS.st!=='idle')fishCancel();if(DG.st!=='idle')digReset()}}catch(e){console.error(e)}
   if(G){
     /* an open sheet covers part of the map, so slide the view until the player sits in the part that is still showing */
     let tx=0,ty=0;

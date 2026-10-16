@@ -5,7 +5,7 @@
 const CTX_ACTIONS=[];
 function ctxRegister(a){CTX_ACTIONS.push(a)}
 function ctxCurrent(){
-  if(!G||modal||popOpen||G.jail||placing)return null;
+  if(!G||modal||popOpen||G.jail||placing||(typeof BUB!=='undefined'&&BUB))return null;
   return CTX_ACTIONS.find(a=>a.when())||null;
 }
 let ctxKey='';

@@ -8,6 +8,8 @@ let actx=null;const sfxLast={};
 /* each note: [frequency, seconds, wave, volume, delay, slideTo] */
 const SFX={
   tap:[[560,.04,'square',.05]],
+  blip:[[420,.025,'square',.025]],
+  blip2:[[330,.025,'square',.025]],
   open:[[330,.05,'triangle',.07],[440,.06,'triangle',.07,.05]],
   coin:[[880,.07,'square',.06],[1320,.12,'square',.06,.07]],
   spend:[[520,.07,'triangle',.07],[390,.1,'triangle',.07,.07]],
