@@ -1,13 +1,14 @@
 "use strict";
 /* Drawn vehicle sprites (original art for this game). Side views only, half map units per pixel, so a 48x32 car frame is drawn 24x16 map units.
    Sheet columns: right f0, right f1, left f0, left f1 (wheels turn). Sedan sheet has one row per PAINTS entry. Anchor for cars is (24,29), under the middle of the wheels.
-   Only the player's sedan is drawn on the map today; taxi, police, van and tram sheets are loaded and can be drawn with drawVehSprite when those vehicles exist.
+   Only the player's sedan, coupe, bike and scooter (32x24 frames, anchor 16,21) are drawn on the map today; taxi, police, van and tram sheets are loaded and can be drawn with drawVehSprite when those vehicles exist.
    There is no top or front view in the game (travel up or down the screen faces left or right as before), so the side sprite is always correct.
    drawVeh uses the sprite when RS>=2 and the sheet has loaded; otherwise the procedural drawCarHD stays. */
 const VEH_V=1,VEH_IMG={};
-['sedan_by_paint','taxi','police','van','tram'].forEach(n=>{const i=new Image();i.src='assets/vehicles/'+n+'.png?v='+VEH_V;VEH_IMG[n]=i});
+['sedan_by_paint','coupe_by_paint','bike_by_paint','scooter_by_paint','taxi','police','van','tram'].forEach(n=>{const i=new Image();i.src='assets/vehicles/'+n+'.png?v='+VEH_V;VEH_IMG[n]=i});
 const vehImgOk=n=>{const i=VEH_IMG[n];return !!(i&&i.complete&&i.naturalWidth>0)};
-const vehSpriteReady=k=>RS>=2&&k==='sedan'&&vehImgOk('sedan_by_paint');
+const VEH_SHEET={sedan:'sedan_by_paint',coupe:'coupe_by_paint',bike:'bike_by_paint',scooter:'scooter_by_paint'};
+const vehSpriteReady=k=>RS>=2&&!!VEH_SHEET[k]&&vehImgOk(VEH_SHEET[k]);
 /* row for a paint colour: exact PAINTS match, else the nearest by RGB; the stock sedan blue lands on Sky */
 function vehPaintRow(hex){
   const rgb=h=>{const n=parseInt((h||'#3a7ad0').slice(1),16);return [n>>16&255,n>>8&255,n&255]},a=rgb(hex);let best=1,bd=1e9;

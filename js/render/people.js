@@ -56,7 +56,7 @@ function drawVeh(k,x,y,now,mv,face){
     cx.fillStyle='#1c1c1c';cx.fillRect(px-6,py-2,3,3);cx.fillRect(px+3,py-2,3,3);
   }else{
     const c=G&&G.veh&&G.veh.paint&&G.veh.paint[k]?[G.veh.paint[k],shade(G.veh.paint[k],.75)]:k==='coupe'?['#d04030','#a02a20']:['#3a7ad0','#2a5aa0'];
-    if(vehSpriteReady(k)){drawVehSprite('sedan_by_paint',px,py,face||1,sp,vehPaintRow(G&&G.veh&&G.veh.paint&&G.veh.paint[k]),48,32,24,29);return}
+    if(vehSpriteReady(k)){drawVehSprite(VEH_SHEET[k],px,py,face||1,sp,vehPaintRow(G&&G.veh&&G.veh.paint&&G.veh.paint[k]),48,32,24,29);return}
     if(RS>=2){drawCarHD(px,py,k,c,sp);return}
     cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(px-9,py,19,2);
     cx.fillStyle=c[0];cx.fillRect(px-9,py-7,18,6);cx.fillStyle=c[1];cx.fillRect(px-5,py-11,10,5);
@@ -69,17 +69,20 @@ let pFace=1;
 function drawRide(k,x,y,now,mv){
   const px=Math.round(x*TS+8-camX),py=Math.round(y*TS+14-camY),bike=k==='bike';
   const ph=mv?now/110:0,L=G.look,oc=L?outfitOf(L.outfit).c:'#2f6fb3',sk=L?(SKIN[L.skin]||SKIN[1]):'#e8c39e';
+  const spr=vehSpriteReady(k);
+  if(spr)drawVehSprite(VEH_SHEET[k],px,py,pFace,mv?Math.floor(now/90)%2:0,vehPaintRow(G&&G.veh&&G.veh.paint&&G.veh.paint[k]),32,24,16,21);
   cx.save();cx.translate(px,py);cx.scale(pFace,1);
-  cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(-8,0,17,2);
+  if(!spr){cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(-8,0,17,2)}
   const wheel=(wx,r)=>{
     cx.lineWidth=2;cx.strokeStyle='#f2f2f2';cx.beginPath();cx.arc(wx,-3,r,0,7);cx.stroke();
     cx.lineWidth=1;cx.strokeStyle='#1c1c1c';cx.beginPath();cx.arc(wx,-3,r+.7,0,7);cx.stroke();
     cx.beginPath();cx.moveTo(wx+Math.cos(ph)*r,-3+Math.sin(ph)*r);cx.lineTo(wx-Math.cos(ph)*r,-3-Math.sin(ph)*r);cx.stroke();
   };
   if(bike){
-    wheel(-5,3);wheel(5,3);
-    cx.lineWidth=1.5;cx.strokeStyle=vehColor('bike','#e0402f');cx.beginPath();cx.moveTo(-5,-3);cx.lineTo(-2,-8);cx.lineTo(4,-8);cx.lineTo(5,-3);cx.moveTo(-2,-8);cx.lineTo(0,-3);cx.lineTo(4,-8);cx.moveTo(4,-8);cx.lineTo(4,-11);cx.stroke();
-    cx.fillStyle='#1c1c1c';cx.fillRect(-4,-9,4,1);cx.fillRect(3,-12,3,1);
+    if(!spr){wheel(-5,3);wheel(5,3);}
+    if(!spr){cx.lineWidth=1.5;cx.strokeStyle=vehColor('bike','#e0402f');cx.beginPath();cx.moveTo(-5,-3);cx.lineTo(-2,-8);cx.lineTo(4,-8);cx.lineTo(5,-3);cx.moveTo(-2,-8);cx.lineTo(0,-3);cx.lineTo(4,-8);cx.moveTo(4,-8);cx.lineTo(4,-11);cx.stroke();
+    cx.fillStyle='#1c1c1c';cx.fillRect(-4,-9,4,1);cx.fillRect(3,-12,3,1);}
+    if(spr)cx.translate(0,1);
     const fx=Math.cos(ph)*2,fy=Math.sin(ph)*2;
     cx.strokeStyle='#2b2118';cx.lineWidth=2;cx.beginPath();cx.moveTo(-2,-8);cx.lineTo(0+fx,-3+fy);cx.stroke();
     cx.fillStyle=oc;cx.fillRect(-3,-14,5,6);
@@ -87,8 +90,9 @@ function drawRide(k,x,y,now,mv){
     cx.fillStyle=sk;cx.fillRect(2,-12,3,2);
     if(L)drawPlayer(cx,1,RS>=2?-4:-6,L,0,true,0);else{cx.fillStyle=sk;cx.fillRect(0,-19,4,4)}
   }else{
-    wheel(-5,2);wheel(5,2);
-    cx.fillStyle=vehColor('scooter','#e0b83a');cx.fillRect(-6,-5,12,2);cx.fillRect(4,-14,2,10);cx.fillStyle='#1c1c1c';cx.fillRect(3,-15,4,1);
+    if(!spr){wheel(-5,2);wheel(5,2);
+    cx.fillStyle=vehColor('scooter','#e0b83a');cx.fillRect(-6,-5,12,2);cx.fillRect(4,-14,2,10);cx.fillStyle='#1c1c1c';cx.fillRect(3,-15,4,1);}
+    if(spr)cx.translate(0,3);
     cx.fillStyle='#2b2118';cx.fillRect(-2,-6,4,2);
     cx.fillStyle=oc;cx.fillRect(-3,-10,6,5);
     if(RS>=2){cx.fillStyle=tone(oc,1.22);cx.fillRect(-3,-10,1,5);cx.fillStyle=tone(oc,.78);cx.fillRect(2,-10,1,5);cx.fillStyle='rgba(255,255,255,.75)';cx.fillRect(-2.5,-10,5,.5)}
