@@ -20,14 +20,14 @@ function openPOI(poi){
   (MENUS[poi.id]||info)(poi,n);
 }
 function info(poi){ui(`<h2>${esc(poi.name)}</h2><p>Residents live here. Nobody answers the door.</p>`,[leaveBtn])}
-function gig(n,{hrs,base,mult=1,rep,label,job}){
+function gig(n,{hrs,base,mult=1,rep,label,job,perf}){
   const ef=job&&jobRank(job)>=4?.75:1;
   if(G.energy<hrs*7*ef)return `You are too tired for ${hrs} hours of work.`;
   engageAdd(rep,2);
-  const pay=Math.round(base*mult*(job?jobPayMul(job):1)*(G.fx.gloves?1.1:1)*(n?payF(n):1)*(G.quirk==='iron-stomach'?.95:1));
+  const pay=Math.round(base*mult*(job?jobPayMul(job):1)*(G.fx.gloves?1.1:1)*(n?payF(n):1)*(G.quirk==='iron-stomach'?.95:1)*(perf?perf.mul:1));
   G.cash+=pay;advance(hrs*60);G.energy=clamp(G.energy-hrs*4*ef,0,100);
   G.rep[rep]=clamp(G.rep[rep]+1,-100,100);
-  if(job)jobDone(job);
+  if(job){jobDone(job);if(perf&&perf.bump)jobDone(job)}
   return `You worked ${label} for ${hrs} hours and earned ${money(pay)}.`;
 }
 function sellScreen(mult,title,back,msg){

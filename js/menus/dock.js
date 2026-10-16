@@ -7,13 +7,13 @@ MENUS.dock=(poi,n,msg)=>{
   const nr=RODS[rodLevel()+1];
   ui(`<h2>${esc(poi.name)}</h2><p class="muted">${esc(n.name)} runs the hiring line. Cargo is ${meterWord(G.meters.Dockside)}. ${G.fac.shipping>=15?'Harbor Freight knows your face.':''}</p>${strike||(G.mod.closed.includes('dock'))?'<p class="bad">The piers are shut.</p>':''}${dockFactsHtml()}${jobLine('dock')}${msgP(msg)}`,[
     {label:'Haul cargo',sub:`4 hours, about ${money(26*mult*payF(n)*jobPayMul('dock'))}`,off:strike,need:28,fn:()=>{
-      const r=gig(n,{hrs:4,base:26,mult,rep:'Dockside',label:'hauling cargo',job:'dock'});
-      if(r.startsWith('You worked')){facAdd('shipping',1);meterAdd('Dockside',1)}
-      MENUS.dock(poi,n,r)}},
+      gigPlay('dock',n,{hrs:4,base:26,mult,rep:'Dockside',label:'hauling cargo',job:'dock'},r=>{
+        if(r.startsWith('You worked')){facAdd('shipping',1);meterAdd('Dockside',1)}
+        MENUS.dock(poi,n,r)})}},
     ...(jobRank('dock')>=2?[{label:'Night crane shift',sub:`6 hours, about ${money(46*mult*payF(n)*jobPayMul('dock'))}. Steady hand shift.`,off:strike,need:42,cls:'',fn:()=>{
-      const r=gig(n,{hrs:6,base:46,mult,rep:'Dockside',label:'on the night crane',job:'dock'});
-      if(r.startsWith('You worked')){facAdd('shipping',1);meterAdd('Dockside',1)}
-      MENUS.dock(poi,n,r)}}]:[]),
+      gigPlay('dock',n,{hrs:6,base:46,mult,rep:'Dockside',label:'on the night crane',job:'dock'},r=>{
+        if(r.startsWith('You worked')){facAdd('shipping',1);meterAdd('Dockside',1)}
+        MENUS.dock(poi,n,r)},true)}}]:[]),
     {label:'Cargo manifest',sub:done?'Done for today':'3 hours. Check crates, load them, or skim.',off:strike||done||G.energy<12,cls:'',fn:()=>manifestStart(poi,n)},
     ...(nr?[{label:`Buy a ${nr.n.toLowerCase()}`,sub:`${money(nr.price)}. ${nr.bonus} more fish per catch than before.`,off:G.cash<nr.price,cls:'',fn:()=>{G.cash-=nr.price;G.fx.rod=rodLevel()+1;MENUS.dock(poi,n,`You bought a ${nr.n.toLowerCase()}.`)}}]:[]),
     ...(!hasBoat()?[{label:'Buy a rowboat',sub:`${money(BOAT_PRICE)}. Fish offshore on any tide but low.`,off:G.cash<BOAT_PRICE,cls:'',fn:()=>{G.cash-=BOAT_PRICE;G.fx.boat=true;MENUS.dock(poi,n,'You bought a rowboat. It leaks only a little.')}}]:[]),

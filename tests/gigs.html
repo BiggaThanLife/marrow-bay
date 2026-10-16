@@ -1,0 +1,90 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Marrow Bay gig mini-games test</title>
+<style>body{font:14px system-ui;margin:16px}pre{white-space:pre-wrap}.ok{color:#2f7a3c}.bad{color:#b5472f}iframe{width:412px;height:700px;border:1px solid #888}</style>
+<h2>Hands-on gig shifts</h2>
+<p id="verdict">Running...</p>
+<pre id="out"></pre>
+<iframe id="game" src="../index.html"></iframe>
+<script>
+/* Each of the four games reaches a result when left alone; the tier multiplier (0.8/1/1.15/1.3) scales the same pay gig() always gave; Great adds rank progress;
+   Skip pays exactly the old instant shift; the rank-2 long shift opens the same game; instant paths (bot, tired, setting off) never open an overlay. */
+const f = document.getElementById('game');
+f.addEventListener('load', async () => {
+  const win = f.contentWindow, errs = [], doc = win.document, stats = {};
+  const api = win.eval(`({get G(){return G},BG,start,closeMenu,popClear,SET,gig,gigPlay,mgStep,mgTap,mgFinish,get MG(){return MG},jobExtra,jobRank,hud})`);
+  const G = () => api.G;
+  win.eval('MG_FORCE=true;MG_MANUAL=true');
+  const cfgs = {
+    dock: { hrs: 4, base: 100, rep: 'Dockside', label: 'x', job: 'dock' },
+    diner: { hrs: 4, base: 100, rep: 'Grid', label: 'x', job: 'diner' },
+    estate: { hrs: 4, base: 100, rep: 'Highline', label: 'x', job: 'estate' },
+    workshop: { hrs: 3, base: 100, rep: 'Grid', label: 'x', job: 'workshop' }
+  };
+  const open = () => doc.getElementById('mg');
+  const fresh = () => { G().energy = 100; G().jobs = {}; G().cash = 0; };
+  try {
+    api.start(Object.keys(api.BG)[0]); G().flags.customDone = true; api.closeMenu(); api.popClear(); G().flags.onboarded = true; api.SET.hints = false;
+    fresh(); api.gig(null, cfgs.dock); const basePay = G().cash; stats.basePay = basePay;
+    for (const k of Object.keys(cfgs)) {
+      // 1. left alone, the game ends by itself
+      fresh(); let msg = null; api.gigPlay(k, null, cfgs[k], m => msg = m);
+      if (!open()) { errs.push(k + ': overlay did not open'); continue; }
+      for (let t = 0; t <= 60000 && api.MG && api.MG.st === 'play'; t += 100) api.mgStep(1000 + t);
+      if (!api.MG || api.MG.st !== 'result') errs.push(k + ': no result after 60 s idle');
+      else {
+        if (!doc.getElementById('mg-res') || doc.getElementById('mg-res').hidden) errs.push(k + ': result card hidden');
+        if (G().cash <= 0) errs.push(k + ': nothing paid');
+        stats[k + 'IdleTier'] = api.MG.perf.tier;
+        doc.getElementById('mg-go').click();
+        if (open()) errs.push(k + ': overlay stayed after Continue');
+        if (!msg || !msg.startsWith('You worked')) errs.push(k + ': done() not called with the shift message: ' + msg);
+      }
+      // 2. tiers scale the normal pay
+      for (const [score, mul] of [[.1, .8], [.5, 1], [.7, 1.15], [.95, 1.3]]) {
+        fresh(); api.gigPlay(k, null, cfgs[k], () => {}); api.mgStep(5000); const e0 = G().energy, t0 = G().t;
+        api.mgFinish(score);
+        const exp = cfgs[k].base * mul * (1);
+        if (Math.abs(G().cash - exp) > 1.01) errs.push(`${k} score ${score}: paid ${G().cash}, expected about ${exp}`);
+        if (!(G().energy < e0) || !(G().t > t0)) errs.push(k + ': time/energy not spent');
+        const wantJobs = mul === 1.3 ? 2 : 1;
+        if ((G().jobs[k] || 0) !== wantJobs) errs.push(`${k} score ${score}: jobs ${G().jobs[k]} expected ${wantJobs}`);
+        doc.getElementById('mg-go').click();
+      }
+      // 3. skip = old instant shift at 1.0x
+      fresh(); api.gigPlay(k, null, cfgs[k], () => {}); doc.getElementById('mg-skip').click();
+      if (open()) errs.push(k + ': skip left the overlay');
+      if (G().cash !== cfgs[k].base) errs.push(k + ': skip paid ' + G().cash);
+    }
+    // dock: tapping at the swing centre scores well
+    fresh(); api.gigPlay('dock', null, cfgs.dock, () => {});
+    const w = i => .0028 + i * .00028; let t = 0, guard = 0;
+    api.mgStep(0);
+    while (api.MG && api.MG.st === 'play' && guard++ < 400) {
+      const s = api.MG.g, p = Math.PI / w(s.i);
+      if (s.st === 'swing') { const tt = Math.ceil((t + 1) / p) * p; t = tt; api.mgStep(t - 5); api.mgTap(80, 50, t); }
+      t += 300; api.mgStep(t);
+    }
+    stats.dockPerfect = api.MG && api.MG.perf && api.MG.perf.tier;
+    if (!api.MG || api.MG.perf.score < .6) errs.push('dock centre taps scored poorly: ' + (api.MG && api.MG.perf && api.MG.perf.score));
+    doc.getElementById('mg-go') && doc.getElementById('mg-go').click();
+    // diner: correct taps score great
+    fresh(); api.gigPlay('diner', null, cfgs.diner, () => {}); api.mgStep(0);
+    for (let g = 0; g < 80 && api.MG && api.MG.st === 'play'; g++) { const k = api.MG.g.tk; api.mgTap(k.seq[k.p] * 32 + 10, 70, 100 + g * 5); }
+    stats.dinerPerfect = api.MG && api.MG.perf && api.MG.perf.tier;
+    if (!api.MG || api.MG.perf.mul < 1.15) errs.push('diner perfect taps should be good or great');
+    doc.getElementById('mg-go') && doc.getElementById('mg-go').click();
+    // instant paths
+    fresh(); G().energy = 5; let m2 = null; api.gigPlay('dock', null, cfgs.dock, m => m2 = m);
+    if (open() || !/too tired/.test(m2 || '')) errs.push('tired player should get the tired message, no overlay: ' + m2);
+    fresh(); api.SET.minigames = false; api.gigPlay('dock', null, cfgs.dock, m => m2 = m);
+    if (open() || G().cash !== 100) errs.push('setting off should pay instantly'); api.SET.minigames = true;
+    // rank-2 long shift
+    fresh(); G().jobs.dock = 10; const ex = api.jobExtra('dock', 'Long', 'sub', { hrs: 6, base: 46, rep: 'Dockside', label: 'x' }, () => {});
+    if (ex.length !== 1) errs.push('long shift button missing at rank 2'); else { ex[0].fn(); if (!open() || !api.MG.long) errs.push('long shift did not open the long game'); doc.getElementById('mg-skip').click(); }
+    if (api.jobRank('dock') < 2) errs.push('rank setup');
+  } catch (e) { errs.push('exception: ' + e.stack) }
+  document.getElementById('out').textContent = JSON.stringify(stats) + '\n' + errs.join('\n');
+  document.getElementById('verdict').innerHTML = errs.length ? '<b class="bad">' + errs.length + ' error(s)</b>' : '<b class="ok">No errors.</b>';
+});
+</script>

@@ -90,5 +90,5 @@ function jobDone(j){
 /* the harder shift unlocked at rank 2 */
 function jobExtra(j,label,sub,cfg,back,n){
   if(jobRank(j)<2)return[];
-  return[{label,sub:`${sub} Rank ${JOB_RANKS[2].toLowerCase()} shift.`,need:cfg.hrs*7,cls:'',fn:()=>back(gig(n||null,Object.assign({job:j},cfg)))}];
+  return[{label,sub:`${sub} Rank ${JOB_RANKS[2].toLowerCase()} shift.`,need:cfg.hrs*7,cls:'',fn:()=>gigPlay(j,n||null,Object.assign({job:j},cfg),back,true)}];
 }
